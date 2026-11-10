@@ -13,6 +13,11 @@ dependencies = [
     "pyjwt>=2.15,<3",
     "argon2-cffi>=25.1,<26",
     "httpx>=0.28,<1",
+    # Teachers can upload their material instead of pasting it
+    "python-multipart>=0.0.33,<1",
+    "pypdf>=7.0,<8",
+    "python-docx>=1.2,<2",
+    "python-pptx>=1.0,<2",
 ]
 
 [project.optional-dependencies]

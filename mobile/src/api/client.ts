@@ -92,7 +92,9 @@ export class ApiClient {
     authenticated: boolean,
   ): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
-    if (body !== undefined) {
+    // File uploads go as FormData; fetch then sets the multipart Content-Type with its boundary
+    const isForm = body instanceof FormData;
+    if (body !== undefined && !isForm) {
       headers['Content-Type'] = 'application/json';
     }
     if (authenticated && this.accessToken !== null) {
@@ -105,7 +107,7 @@ export class ApiClient {
       return await fetchFunction(`${this.baseUrl}${path}`, {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: isForm ? body : body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {
       throw new ApiError(0, "Can't reach Telmi. Check your connection and try again.");
