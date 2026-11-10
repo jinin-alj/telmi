@@ -220,7 +220,7 @@ Strokes, not screenshots: every device (web, iOS, Android, Expo Go) gives the mo
 
 | Setting | Used when | Default |
 | --- | --- | --- |
-| `AI_VISION_MODEL` | `AI_PROVIDER=hosted` | `qwen/qwen3.8-27b` (Groq) |
+| `AI_VISION_MODEL` | `AI_PROVIDER=hosted` | `qwen/qwen3.8-27b` (Groq, **Preview**) |
 | `OLLAMA_VISION_MODEL` | `AI_PROVIDER=ollama` | `qwen2.5vl:7b` (`ollama pull qwen2.5vl:7b`) |
 
 It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's free tier **scratchpad reads use the same daily budget** (about 1,300 tokens per read).
@@ -312,6 +312,7 @@ To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://
 - **Tokens can't be revoked early.** A stolen refresh token works until it expires. A server-side denylist would fix this if needed.
 - Anyone can sign up as a teacher. Teachers only see classes that students choose to join.
 - **The scratchpad hasn't been tried on a phone or tablet yet**, only in a desktop browser and in tests. Check touch drawing and that the page doesn't scroll while drawing. Screen-reader users are better served by typing, which stays available.
+- **The scratchpad's default model is a Groq Preview model** (checked November 2026). Groq says Preview models are for evaluation and can be discontinued at short notice, and it had no Production vision model at the time. Fine for demos; if it's withdrawn, students see "try again, or type instead" until `AI_VISION_MODEL` is switched (see "Switching the vision model"). On a paid Groq plan it costs about $0.001 per drawing read.
 - **Scratchpad reading accuracy is unmeasured.** One check with an unbalanced equation was copied correctly without being fixed, but test it on a set of team-made drawings before relying on it.
 - Starlette prints a deprecation warning about `httpx` in tests. It is harmless; the suggested replacement has not been vetted yet.
 
