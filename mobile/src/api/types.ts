@@ -100,6 +100,25 @@ export type StudentProgress = {
   classrooms: { classroom: Classroom; units: UnitProgress[] }[];
 };
 
+export type PenColor = 'black' | 'blue' | 'red' | 'green';
+
+export type Point = [number, number];
+
+export type Stroke = {
+  color: PenColor;
+  points: Point[];
+};
+
+export type Drawing = {
+  width: number;
+  height: number;
+  strokes: Stroke[];
+};
+
+export type DrawingText = {
+  text: string;
+};
+
 export type Unit = {
   id: string;
   classroom_id: string;

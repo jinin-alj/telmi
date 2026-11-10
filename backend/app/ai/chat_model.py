@@ -18,5 +18,9 @@ class ChatModel(ABC):
         messages: list[ChatMessage],
         temperature: float,
         response_schema: dict[str, Any] | None = None,
+        images: list[bytes] | None = None,
     ) -> str:
-        """Return the model's reply text; with a schema, the reply must be JSON matching it."""
+        """Return the model's reply text; with a schema, the reply must be JSON matching it.
+
+        Images are PNG bytes shown with the last message; only vision models accept them.
+        """

@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 
 import httpx
@@ -30,11 +31,18 @@ class OllamaChatModel(ChatModel):
         messages: list[ChatMessage],
         temperature: float,
         response_schema: dict[str, Any] | None = None,
+        images: list[bytes] | None = None,
     ) -> str:
         """Send the chat to Ollama and return the reply text."""
+        sent_messages: list[dict[str, Any]] = [dict(message) for message in messages]
+        if images:
+            # Ollama takes images as base64 strings on the message they belong to
+            sent_messages[-1]["images"] = [
+                base64.b64encode(image).decode("ascii") for image in images
+            ]
         payload: dict[str, Any] = {
             "model": self.model_name,
-            "messages": messages,
+            "messages": sent_messages,
             "stream": False,
             "options": {"temperature": temperature, "num_ctx": self.context_tokens},
         }

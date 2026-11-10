@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.ai.checker import ApplicationResult, CheckerFeedback
 from app.models import SessionStatus, Speaker
@@ -21,6 +22,44 @@ class StudentTurnRequest(BaseModel):
     """What the student just said, already turned into text on the device."""
 
     text: TrimmedText = Field(min_length=1, max_length=TURN_MAX_CHARACTERS)
+
+
+# Mirror mobile/src/features/session/drawing.ts; far more than a page of working needs
+MAX_STROKES = 400
+MAX_POINTS = 20000
+MAX_CANVAS_SIZE = 10000.0
+
+PenColor = Literal["black", "blue", "red", "green"]
+# Bounded, so infinities and NaN are refused too
+Coordinate = Annotated[float, Field(ge=0, le=MAX_CANVAS_SIZE)]
+
+
+class Stroke(BaseModel):
+    """One line drawn without lifting the pen, as points in canvas coordinates."""
+
+    color: PenColor
+    points: list[tuple[Coordinate, Coordinate]] = Field(min_length=1, max_length=MAX_POINTS)
+
+
+class DrawingRequest(BaseModel):
+    """A scratchpad drawing: the canvas size and the strokes on it."""
+
+    width: float = Field(gt=0, le=MAX_CANVAS_SIZE)
+    height: float = Field(gt=0, le=MAX_CANVAS_SIZE)
+    strokes: list[Stroke] = Field(min_length=1, max_length=MAX_STROKES)
+
+    @model_validator(mode="after")
+    def limit_total_points(self) -> "DrawingRequest":
+        """Cap the whole drawing, not just each stroke, so one request stays small."""
+        if sum(len(stroke.points) for stroke in self.strokes) > MAX_POINTS:
+            raise ValueError(f"A drawing can have at most {MAX_POINTS} points")
+        return self
+
+
+class DrawingText(BaseModel):
+    """What the vision model read from a drawing, for the student to check before sending."""
+
+    text: str
 
 
 class TurnPublic(BaseModel):
