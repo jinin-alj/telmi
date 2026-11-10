@@ -136,7 +136,7 @@ The PWA files are `mobile/public/manifest.json`, the icons, and the manifest lin
 ### Classes, units and study sessions
 
 1. A **teacher** creates a class and gets a six-character join code. The code avoids 0/O and 1/I/L so it can be read aloud.
-2. The teacher adds **units**: a title plus their own material (50–12,000 characters). Students never receive the material through the API, so sessions stay closed-book.
+2. The teacher adds **units**: a title plus their own material (50–12,000 characters), pasted or uploaded from files (see "Uploading material" below). Students never receive the material through the API, so sessions stay closed-book.
 3. A **student** joins with the code, picks a unit and starts a session. The buddy, Pip, greets them with a fixed line, so there's no wait.
 4. Each time the student speaks, the buddy replies with one curious question. About once every three replies it says a plausible mistake for the student to correct. It never confirms whether the student is right.
 5. On **finish**, the checker grades the whole conversation against the unit's **fixed key ideas** and returns:
@@ -153,6 +153,7 @@ Sessions are capped at **15 minutes and 8 student turns** (`SESSION_MINUTES`, `M
 | `POST` | `/classrooms` | teacher | Create a class |
 | `GET` | `/classrooms` | both | Classes you own or joined |
 | `POST` | `/classrooms/join` | student | Join with a code |
+| `POST` | `/classrooms/{id}/material-text` | owner teacher | Read the text from an uploaded file (saves nothing) |
 | `POST` | `/classrooms/{id}/units` | teacher | Add a unit with material |
 | `GET` | `/classrooms/{id}/units` | members | List units (no material) |
 | `POST` | `/sessions` | student | Start a session on a unit |
@@ -162,6 +163,16 @@ Sessions are capped at **15 minutes and 8 student turns** (`SESSION_MINUTES`, `M
 | `POST` | `/sessions/{id}/application-answer` | student | Answer the question, get it graded |
 | `GET` | `/classrooms/{id}/dashboard` | owner teacher | Class and per-student results |
 | `GET` | `/progress/me` | student | Own progress and mascot |
+
+### Uploading material
+
+Teachers can upload files instead of pasting (`app/services/material_files.py`). The backend only **reads the text and sends it back**; it never stores the file. The text lands in the material box, where the teacher checks and trims it, and the normal "add unit" request saves it like pasted text. So the 12,000-character limit, grading and the database are unchanged.
+
+- **Types:** PDF, Word (`.docx`), PowerPoint (`.pptx`, including speaker notes), `.txt` and Markdown (`.md`, kept as written), in UTF-8 or the older Windows encoding. Old `.doc`/`.ppt` files must be saved as the new format first. Android labels Markdown files inconsistently, so check there that `.md` files can be picked.
+- **Several files:** they're read one at a time and added after the existing text, in the order picked. A file that fails doesn't stop the others; each failure is listed with its reason.
+- **Limits:** files up to 20 MB. Word and PowerPoint files that would unpack to over 200 MB are refused, as protection against zip bombs. At most 60,000 characters come back per file, so a teacher can pick what to keep from a long file; if it's cut, the app says so.
+- **Errors:** wrong type → 415, too big → 413, damaged, password-protected or no text → 422 with a message the app shows as is.
+- **Not read:** text inside images (scanned PDFs, photos of slides), Word headers and footers, and text boxes. Scans need OCR, which isn't built yet; teachers are asked to paste instead.
 
 **Fixed key ideas.** The first time any session on a unit finishes, the model extracts 3–8 key ideas from the material. They're stored on the unit (`units.key_ideas`), and the row is locked during extraction so two students finishing at once can't get different lists. Every later session is graded on that same list, which is what makes results comparable across students. Adding a unit never waits on the model.
 
@@ -224,7 +235,7 @@ If the model fails, the app gets a **503 and nothing is saved**, so the student 
 - **Class screen** (`app/classroom/[classroomId].tsx`):
   - the join code and number of students
   - a reminder that results come from AI and are not grades
-  - **Units:** each card shows how many students explained it and the average share of key ideas. "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000).
+  - **Units:** each card shows how many students explained it and the average share of key ideas. "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000). "Upload a file" adds the text of one or more files to the box for the teacher to check before saving; saving waits until uploads finish.
   - **Students:** listed by name, never ranked. Each shows their latest result per unit ("4 of 6 key ideas") and the ideas still to explain.
 - **Role guards:** `_layout.tsx` nests `Stack.Protected`, so only students reach `session/[sessionId]` and only teachers reach `classroom/[classroomId]`. The API enforces the same rules; the guards just keep people off screens they can't use.
 

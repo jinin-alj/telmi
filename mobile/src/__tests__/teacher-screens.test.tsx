@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 
+import { ApiError } from '@/api/client';
 import * as teachingApi from '@/api/teaching';
 import type { StudentSummary, UnitSummary } from '@/api/types';
 import { AddUnitForm } from '@/features/teacher/add-unit-form';
@@ -10,6 +12,7 @@ import { describeUnitReach, UnitSummaryCard } from '@/features/teacher/unit-summ
 import { validateClassName, validateMaterial } from '@/features/teacher/validation';
 
 jest.mock('@/api/teaching');
+jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 jest.mock('expo-router', () => {
   // Run focus effects straight away, since there is no navigator in these tests
   const { useEffect } = jest.requireActual('react');
@@ -20,6 +23,15 @@ jest.mock('expo-router', () => {
 });
 
 const mockedApi = jest.mocked(teachingApi);
+const mockedPicker = jest.mocked(DocumentPicker);
+
+/** What the picker returns when the teacher chooses these files. */
+function pickedFiles(...names: string[]): DocumentPicker.DocumentPickerResult {
+  return {
+    canceled: false,
+    assets: names.map((name) => ({ name, uri: `file:///${name}`, lastModified: 0 })),
+  };
+}
 const teacher = {
   id: 'teacher-1',
   username: 'ms_lopez',
@@ -138,6 +150,51 @@ describe('AddUnitForm', () => {
 
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
     expect(mockedApi.addUnit).toHaveBeenCalledWith('class-1', 'Cell respiration', GOOD_MATERIAL);
+  });
+
+  it('adds the text of each uploaded file after what was typed, in order', async () => {
+    mockedPicker.getDocumentAsync.mockResolvedValue(pickedFiles('notes.pdf', 'slides.pptx'));
+    mockedApi.readMaterialFile
+      .mockResolvedValueOnce({ text: 'Notes text', truncated: false })
+      .mockResolvedValueOnce({ text: 'Slides text', truncated: true });
+    await render(<AddUnitForm classroomId="class-1" onAdded={jest.fn()} onCancel={jest.fn()} />);
+    await fireEvent.changeText(screen.getByLabelText('Your material'), 'Typed intro');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Upload a file' }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Your material').props.value).toBe(
+        'Typed intro\n\nNotes text\n\nSlides text',
+      ),
+    );
+    expect(mockedApi.readMaterialFile.mock.calls[0][1].name).toBe('notes.pdf');
+    expect(screen.getByText(/Added the text from notes.pdf, slides.pptx/)).toBeTruthy();
+    expect(screen.getByText(/slides.pptx is very long/)).toBeTruthy();
+  });
+
+  it('keeps the files that worked and explains the one that did not', async () => {
+    mockedPicker.getDocumentAsync.mockResolvedValue(pickedFiles('scan.pdf', 'notes.txt'));
+    mockedApi.readMaterialFile
+      .mockRejectedValueOnce(new ApiError(422, 'We could not find any text in this file.'))
+      .mockResolvedValueOnce({ text: 'Notes text', truncated: false });
+    await render(<AddUnitForm classroomId="class-1" onAdded={jest.fn()} onCancel={jest.fn()} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Upload a file' }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Your material').props.value).toBe('Notes text'),
+    );
+    expect(screen.getByText('scan.pdf: We could not find any text in this file.')).toBeTruthy();
+  });
+
+  it('changes nothing when the teacher closes the picker', async () => {
+    mockedPicker.getDocumentAsync.mockResolvedValue({ canceled: true, assets: null });
+    await render(<AddUnitForm classroomId="class-1" onAdded={jest.fn()} onCancel={jest.fn()} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Upload a file' }));
+
+    expect(mockedApi.readMaterialFile).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Your material').props.value).toBe('');
   });
 });
 

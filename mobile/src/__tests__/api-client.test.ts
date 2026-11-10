@@ -39,6 +39,27 @@ describe('ApiClient', () => {
     expect(sentHeaders(fakeFetch, 0)['Content-Type']).toBe('application/json');
   });
 
+  it('sends files as FormData and lets fetch set the multipart type', async () => {
+    const fakeFetch = createFakeFetch([
+      { status: 401, body: { detail: 'Session expired or invalid' } },
+      { status: 200, body: { text: 'Notes', truncated: false } },
+    ]);
+    const client = new ApiClient('https://api.test', fakeFetch);
+    client.setRefreshHandler(async () => {
+      client.setAccessToken('new-token');
+      return 'new-token';
+    });
+    const form = new FormData();
+    form.append('file', 'notes');
+
+    await client.request('POST', '/classrooms/class-1/material-text', { body: form });
+
+    // The same form is sent again after the token refresh
+    expect(fakeFetch.mock.calls[1][1]?.body).toBe(form);
+    expect(sentHeaders(fakeFetch, 1)['Content-Type']).toBeUndefined();
+    expect(sentHeaders(fakeFetch, 1).Authorization).toBe('Bearer new-token');
+  });
+
   it('leaves out the token for unauthenticated requests', async () => {
     const fakeFetch = createFakeFetch([{ status: 200, body: {} }]);
     const client = new ApiClient('https://api.test', fakeFetch);

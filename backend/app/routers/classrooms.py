@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, UploadFile, status
 
 from app.dependencies import CurrentUser, DbSession, StudentUser, TeacherUser
 from app.models import Classroom
@@ -8,10 +8,11 @@ from app.schemas.classrooms import (
     ClassroomCreate,
     ClassroomPublic,
     JoinClassroomRequest,
+    MaterialText,
     UnitCreate,
     UnitPublic,
 )
-from app.services import classrooms
+from app.services import classrooms, material_files
 from app.services.errors import ConflictError, NotFoundError
 
 router = APIRouter(prefix="/classrooms", tags=["classrooms"])
@@ -65,6 +66,34 @@ def add_unit(
     except NotFoundError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     return UnitPublic.model_validate(unit)
+
+
+@router.post("/{classroom_id}/material-text")
+def read_material_file(
+    classroom_id: uuid.UUID, file: UploadFile, db: DbSession, teacher: TeacherUser
+) -> MaterialText:
+    """Read the text from a teacher's file; nothing is saved until they add the unit."""
+    try:
+        classrooms.get_classroom_for_member(db, teacher, classroom_id)
+    except NotFoundError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+    # One byte past the limit is enough to know it's too big, without holding all of it in memory
+    content = file.file.read(material_files.MAX_FILE_BYTES + 1)
+    try:
+        return material_files.read_material_file(file.filename or "", content)
+    except material_files.FileTooLargeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(error)
+        ) from error
+    except material_files.UnsupportedFileError as error:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(error)
+        ) from error
+    except material_files.UnreadableFileError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)
+        ) from error
 
 
 @router.get("/{classroom_id}/units")
