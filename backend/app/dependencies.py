@@ -115,5 +115,40 @@ def get_checker_model() -> ChatModel:
     return build_chat_model(get_settings().ai_checker_model, for_grading=True)
 
 
+# A transcription is a line or two of text; the cap only guards against runaway replies
+VISION_MAX_TOKENS = 600
+
+
+def build_vision_model() -> ChatModel:
+    """Create the model client that reads scratchpad drawings, from the configured provider."""
+    settings = get_settings()
+    if settings.ai_provider == "hosted":
+        return HostedChatModel(
+            base_url=settings.ai_base_url,
+            api_key=settings.ai_api_key or "",
+            model_name=settings.ai_vision_model,
+            timeout_seconds=settings.ai_timeout_seconds,
+            max_completion_tokens=VISION_MAX_TOKENS,
+            json_schema_supported=False,
+            # Copying out handwriting needs no reasoning, and not every vision model accepts it
+            reasoning_effort=None,
+        )
+
+    return OllamaChatModel(
+        base_url=settings.ollama_base_url,
+        model_name=settings.ollama_vision_model,
+        timeout_seconds=settings.ollama_timeout_seconds,
+        context_tokens=settings.ollama_context_tokens,
+        api_key=settings.ollama_api_key,
+    )
+
+
+@lru_cache
+def get_vision_model() -> ChatModel:
+    """The drawing reader, one shared client per process; tests swap in a fake."""
+    return build_vision_model()
+
+
 BuddyModel = Annotated[ChatModel, Depends(get_buddy_model)]
 CheckerModel = Annotated[ChatModel, Depends(get_checker_model)]
+VisionModel = Annotated[ChatModel, Depends(get_vision_model)]

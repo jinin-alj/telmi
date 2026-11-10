@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
+import { readDrawing } from '@/api/study';
+import type { Drawing } from '@/api/types';
 import { Button } from '@/components/button';
+import { appendReading } from '@/features/session/drawing';
+import { DrawingPad } from '@/features/session/drawing-pad';
 import type { SpeechLanguage } from '@/speech/languages';
 import { useSpeechToText } from '@/speech/use-speech-to-text';
 import { colors, minimumTouchSize, spacing } from '@/theme';
@@ -17,7 +21,16 @@ const NO_VOICE_NOTE =
     ? "Voice isn't available in this browser. Use Chrome or Safari to talk, or type below."
     : 'Voice needs the full Telmi app. For now, type below.';
 
+type InputMode = 'talk' | 'type' | 'draw';
+
+const MODE_LINKS: Record<InputMode, string> = {
+  talk: 'Talk instead',
+  type: 'Type instead',
+  draw: 'Draw instead',
+};
+
 type VoiceInputProps = {
+  sessionId: string;
   language: SpeechLanguage;
   prompt: string;
   typingPrompt: string;
@@ -25,8 +38,9 @@ type VoiceInputProps = {
   onSubmit: (text: string) => Promise<void>;
 };
 
-/** Speak (or type) an answer, review and fix the transcript, then send it. */
+/** Speak, type or draw an answer, review and fix the text, then send it. */
 export function VoiceInput({
+  sessionId,
   language,
   prompt,
   typingPrompt,
@@ -34,7 +48,7 @@ export function VoiceInput({
   onSubmit,
 }: VoiceInputProps) {
   const speech = useSpeechToText();
-  const [typing, setTyping] = useState(!speech.isAvailable);
+  const [mode, setMode] = useState<InputMode>(speech.isAvailable ? 'talk' : 'type');
   const [editedText, setEditedText] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -42,6 +56,23 @@ export function VoiceInput({
   // Once the student edits the transcript, their version wins over what was heard
   const text = editedText ?? speech.transcript;
   const hasText = text.trim() !== '';
+  const typing = mode === 'type';
+  const otherModes = (['talk', 'type', 'draw'] as const).filter(
+    (option) => option !== mode && (option !== 'talk' || speech.isAvailable),
+  );
+
+  function switchMode(next: InputMode) {
+    if (speech.isListening) {
+      speech.stopListening();
+    }
+    setMode(next);
+  }
+
+  async function handleReadDrawing(drawing: Drawing) {
+    const reading = await readDrawing(sessionId, drawing);
+    // Add to what's already there, so a student can mix speaking, typing and drawing
+    setEditedText((current) => appendReading(current ?? speech.transcript, reading.text));
+  }
 
   function handleMicrophonePress() {
     if (speech.isListening) {
@@ -84,7 +115,7 @@ export function VoiceInput({
     <View style={styles.container}>
       {!speech.isAvailable ? <Text style={styles.note}>{NO_VOICE_NOTE}</Text> : null}
 
-      {!typing ? (
+      {mode === 'talk' ? (
         <View style={styles.microphoneArea}>
           <Pressable
             accessibilityRole="button"
@@ -108,9 +139,17 @@ export function VoiceInput({
         </Text>
       ) : null}
 
+      {mode === 'draw' ? <DrawingPad onRead={handleReadDrawing} /> : null}
+
       {showTranscriptBox ? (
         <TextInput
-          accessibilityLabel={typing ? typingPrompt : 'What Pip heard. You can fix mistakes here.'}
+          accessibilityLabel={
+            typing
+              ? typingPrompt
+              : mode === 'draw'
+                ? 'What Pip read from your drawing. You can fix mistakes here.'
+                : 'What Pip heard. You can fix mistakes here.'
+          }
           placeholder={typing ? typingPrompt : ''}
           placeholderTextColor={colors.mutedText}
           value={text}
@@ -137,16 +176,17 @@ export function VoiceInput({
         </>
       ) : null}
 
-      {speech.isAvailable ? (
+      {otherModes.map((option) => (
         <Pressable
+          key={option}
           accessibilityRole="button"
-          accessibilityLabel={typing ? 'Talk instead' : 'Type instead'}
-          onPress={() => setTyping(!typing)}
+          accessibilityLabel={MODE_LINKS[option]}
+          onPress={() => switchMode(option)}
           style={styles.switchMode}
         >
-          <Text style={styles.switchModeLabel}>{typing ? 'Talk instead' : 'Type instead'}</Text>
+          <Text style={styles.switchModeLabel}>{MODE_LINKS[option]}</Text>
         </Pressable>
-      ) : null}
+      ))}
     </View>
   );
 }

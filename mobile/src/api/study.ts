@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/client';
-import type { Classroom, StudentProgress, StudySession } from '@/api/types';
+import type { Classroom, Drawing, DrawingText, StudentProgress, StudySession } from '@/api/types';
 
 /** Join a class with the code the teacher shared. */
 export function joinClassroom(joinCode: string): Promise<Classroom> {
@@ -46,5 +46,14 @@ export function answerApplicationQuestion(sessionId: string, text: string): Prom
     'POST',
     `/sessions/${encodeURIComponent(sessionId)}/application-answer`,
     { body: { text } },
+  );
+}
+
+/** Read a scratchpad drawing into text for the student to check; nothing is saved. */
+export function readDrawing(sessionId: string, drawing: Drawing): Promise<DrawingText> {
+  return apiClient.request<DrawingText>(
+    'POST',
+    `/sessions/${encodeURIComponent(sessionId)}/drawing-text`,
+    { body: drawing },
   );
 }

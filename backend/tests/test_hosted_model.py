@@ -142,3 +142,18 @@ def test_error_message_from_the_provider_is_kept_for_the_log() -> None:
 
     with pytest.raises(ChatModelError, match="404: model not found"):
         model.complete(MESSAGES, temperature=0.7)
+
+
+def test_images_go_with_the_last_message_as_data_urls() -> None:
+    model, sent = model_with(reply("H₂O"))
+
+    model.complete(MESSAGES, temperature=0, images=[b"png-bytes"])
+
+    messages = sent[0]["body"]["messages"]
+    assert messages[0] == MESSAGES[0]
+    assert messages[1]["content"] == [
+        {"type": "text", "text": "Hi"},
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,cG5nLWJ5dGVz"}},
+    ]
+    # The caller's messages are left as they were
+    assert MESSAGES[1]["content"] == "Hi"

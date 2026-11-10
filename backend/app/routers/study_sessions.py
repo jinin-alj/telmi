@@ -7,9 +7,18 @@ from sqlalchemy.orm import Session
 from app.ai.chat_model import ChatModelError
 from app.ai.checker import ApplicationResult, CheckerFeedback
 from app.config import Settings
-from app.dependencies import AppSettings, BuddyModel, CheckerModel, DbSession, StudentUser
+from app.dependencies import (
+    AppSettings,
+    BuddyModel,
+    CheckerModel,
+    DbSession,
+    StudentUser,
+    VisionModel,
+)
 from app.models import StudySession, User
 from app.schemas.study_sessions import (
+    DrawingRequest,
+    DrawingText,
     SessionDetail,
     StartSessionRequest,
     StudentTurnRequest,
@@ -157,3 +166,33 @@ def answer_application_question(
         db.rollback()
         raise buddy_unavailable(error) from error
     return build_session_detail(db, study_session, settings)
+
+
+@router.post("/{session_id}/drawing-text")
+def read_drawing(
+    session_id: uuid.UUID,
+    request: DrawingRequest,
+    db: DbSession,
+    chat_model: VisionModel,
+    student: StudentUser,
+) -> DrawingText:
+    """Copy out what the student wrote on the scratchpad, for them to check before sending."""
+    study_session = load_own_session(db, student, session_id)
+    try:
+        text = study_sessions.read_session_drawing(chat_model, study_session, request)
+    except ConflictError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+    except ChatModelError as error:
+        # Only the error is logged, never the drawing or what it said
+        logger.error("Vision model failed: %s", error)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Pip can't read your drawing right now. Try again, or type instead.",
+        ) from error
+
+    if text == "":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="We couldn't find any writing. Try writing bigger, or type instead.",
+        )
+    return DrawingText(text=text)
