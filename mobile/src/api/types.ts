@@ -107,6 +107,12 @@ export type Unit = {
   created_at: string;
 };
 
+export type MaterialText = {
+  text: string;
+  // True when the file was very long and only its first part was read
+  truncated: boolean;
+};
+
 export type MisconceptionExample = {
   student_said: string;
   correction: string;

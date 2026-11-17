@@ -49,6 +49,14 @@ class UnitCreate(BaseModel):
     material: TrimmedText = Field(min_length=50, max_length=MATERIAL_MAX_CHARACTERS)
 
 
+class MaterialText(BaseModel):
+    """Text read from an uploaded file, for the teacher to check before saving a unit."""
+
+    text: str
+    # True when the file was very long and only its first part was read
+    truncated: bool
+
+
 class UnitPublic(BaseModel):
     """A unit without its material, so sessions stay closed-book."""
 
