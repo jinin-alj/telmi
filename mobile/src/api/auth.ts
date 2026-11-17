@@ -24,3 +24,11 @@ export function refresh(refreshToken: string): Promise<AuthResponse> {
     authenticated: false,
   });
 }
+
+/** End this device's sign-in on the server, so its saved token stops working. */
+export async function logout(refreshToken: string): Promise<void> {
+  await apiClient.request<null>('POST', '/auth/logout', {
+    body: { refresh_token: refreshToken },
+    authenticated: false,
+  });
+}

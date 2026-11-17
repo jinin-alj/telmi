@@ -1,21 +1,20 @@
-// SecureStore has no web version. sessionStorage survives reloads but is cleared when the
-// tab closes, which limits how long a stolen token is useful compared with localStorage.
+// localStorage keeps the installed app signed in; safe because each refresh token works only once
 const REFRESH_TOKEN_KEY = 'telmi.refresh_token';
 
-/** Read the saved refresh token for this browser tab, or null. */
+/** Read the saved refresh token for this browser, or null. */
 export async function loadRefreshToken(): Promise<string | null> {
   try {
-    return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    return window.localStorage.getItem(REFRESH_TOKEN_KEY);
   } catch (error) {
     console.warn('Could not read the saved session', error);
     return null;
   }
 }
 
-/** Save the refresh token for this browser tab. */
+/** Save the refresh token for this browser. */
 export async function saveRefreshToken(refreshToken: string): Promise<void> {
   try {
-    window.sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   } catch (error) {
     console.warn('Could not save the session', error);
   }
@@ -24,7 +23,7 @@ export async function saveRefreshToken(refreshToken: string): Promise<void> {
 /** Remove the saved refresh token, for sign-out. */
 export async function clearRefreshToken(): Promise<void> {
   try {
-    window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   } catch (error) {
     console.warn('Could not clear the saved session', error);
   }

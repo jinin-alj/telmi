@@ -91,6 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const signOut = useCallback(async () => {
+    const refreshToken = await loadRefreshToken();
+    if (refreshToken !== null) {
+      // Best effort: when offline the token still expires on its own, so sign out here anyway
+      try {
+        await authApi.logout(refreshToken);
+      } catch (error) {
+        console.warn('Could not end the session on the server', error);
+      }
+    }
+    await endSession();
+  }, [endSession]);
+
   const signUp = useCallback(
     async (form: RegisterForm) => {
       const response = await authApi.register(form);
@@ -100,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ status, user, signIn, signUp, signOut: endSession }),
-    [status, user, signIn, signUp, endSession],
+    () => ({ status, user, signIn, signUp, signOut }),
+    [status, user, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

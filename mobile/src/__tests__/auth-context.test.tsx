@@ -108,3 +108,31 @@ it('signs in and out', async () => {
   await waitFor(() => expect(screen.getByText('status:signedOut')).toBeTruthy());
   expect(screen.getByText('user:none')).toBeTruthy();
 });
+
+it('ends the session on the server when signing out', async () => {
+  mockedStorage.loadRefreshToken.mockResolvedValue('refresh-1');
+  mockedAuthApi.refresh.mockResolvedValue(SIGNED_IN);
+  mockedAuthApi.logout.mockResolvedValue();
+  await renderProbe();
+  await waitFor(() => expect(screen.getByText('user:Ana')).toBeTruthy());
+  mockedStorage.loadRefreshToken.mockResolvedValue('refresh-2');
+
+  await fireEvent.press(screen.getByText('sign out'));
+
+  await waitFor(() => expect(screen.getByText('status:signedOut')).toBeTruthy());
+  expect(mockedAuthApi.logout).toHaveBeenCalledWith('refresh-2');
+  expect(mockedStorage.clearRefreshToken).toHaveBeenCalled();
+});
+
+it('still signs out on this device when offline', async () => {
+  mockedStorage.loadRefreshToken.mockResolvedValue('refresh-1');
+  mockedAuthApi.refresh.mockResolvedValue(SIGNED_IN);
+  mockedAuthApi.logout.mockRejectedValue(new ApiError(0, "Can't reach Telmi."));
+  await renderProbe();
+  await waitFor(() => expect(screen.getByText('user:Ana')).toBeTruthy());
+
+  await fireEvent.press(screen.getByText('sign out'));
+
+  await waitFor(() => expect(screen.getByText('status:signedOut')).toBeTruthy());
+  expect(mockedStorage.clearRefreshToken).toHaveBeenCalled();
+});
