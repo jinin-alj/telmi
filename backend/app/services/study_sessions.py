@@ -127,6 +127,7 @@ def add_student_turn(
     settings: Settings,
     study_session: StudySession,
     text: str,
+    input_mode: str | None = None,
 ) -> StudySession:
     """Save what the student said and the buddy's reply, or neither if the model fails."""
     turns = list_turns(db, study_session.id)
@@ -138,6 +139,7 @@ def add_student_turn(
         position=len(turns),
         speaker=Speaker.STUDENT,
         text=text,
+        input_mode=input_mode,
     )
     conversation = turns + [student_turn]
     release_connection(db)

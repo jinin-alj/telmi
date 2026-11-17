@@ -140,7 +140,9 @@ def add_turn(
     """Send what the student said and get the buddy's reply."""
     study_session = load_own_session(db, student, session_id)
     try:
-        study_sessions.add_student_turn(db, chat_model, settings, study_session, request.text)
+        study_sessions.add_student_turn(
+            db, chat_model, settings, study_session, request.text, request.input_mode
+        )
     except ConflictError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except ChatModelError as error:

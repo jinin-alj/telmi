@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { ApiError } from '@/api/client';
 import { readDrawing } from '@/api/study';
-import type { Drawing } from '@/api/types';
+import type { Drawing, InputMode } from '@/api/types';
 import { Button } from '@/components/button';
 import { appendReading } from '@/features/session/drawing';
 import { DrawingPad } from '@/features/session/drawing-pad';
@@ -21,8 +21,6 @@ const NO_VOICE_NOTE =
     ? "Voice isn't available in this browser. Use Chrome or Safari to talk, or type below."
     : 'Voice needs the full Telmi app. For now, type below.';
 
-type InputMode = 'talk' | 'type' | 'draw';
-
 const MODE_LINKS: Record<InputMode, string> = {
   talk: 'Talk instead',
   type: 'Type instead',
@@ -35,7 +33,8 @@ type VoiceInputProps = {
   prompt: string;
   typingPrompt: string;
   submitLabel: string;
-  onSubmit: (text: string) => Promise<void>;
+  // The mode is how the answer was given when it was sent, even if it was edited by typing
+  onSubmit: (text: string, inputMode: InputMode) => Promise<void>;
 };
 
 /** Speak, type or draw an answer, review and fix the text, then send it. */
@@ -121,7 +120,7 @@ export function VoiceInput({
     setSending(true);
     setSendError(null);
     try {
-      await onSubmit(text.trim().slice(0, MAX_CHARACTERS));
+      await onSubmit(text.trim().slice(0, MAX_CHARACTERS), mode);
       setEditedText(null);
       speech.clearTranscript();
     } catch (error) {

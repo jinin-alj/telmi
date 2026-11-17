@@ -48,7 +48,7 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
-      - run: mypy app tests gateway
+      - run: mypy app tests gateway scripts
       # Migrations must apply cleanly, reverse cleanly and match the models
       - run: alembic upgrade head
       - run: alembic downgrade base

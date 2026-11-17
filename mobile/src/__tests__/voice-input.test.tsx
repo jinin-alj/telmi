@@ -75,7 +75,9 @@ it('lets the student fix what was heard before sending', async () => {
   );
   await fireEvent.press(screen.getByRole('button', { name: 'Send to Pip' }));
 
-  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('Plants make food in chloroplasts'));
+  await waitFor(() =>
+    expect(onSubmit).toHaveBeenCalledWith('Plants make food in chloroplasts', 'talk'),
+  );
   expect(clearTranscript).toHaveBeenCalled();
 });
 
@@ -91,7 +93,7 @@ it('falls back to typing when the browser cannot recognise speech', async () => 
   );
   await fireEvent.press(screen.getByRole('button', { name: 'Send to Pip' }));
 
-  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('Plants make food.'));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('Plants make food.', 'type'));
 });
 
 it('keeps the text and shows the error when sending fails', async () => {
@@ -192,7 +194,7 @@ describe('drawing', () => {
     });
 
     await fireEvent.press(screen.getByRole('button', { name: 'Send to Pip' }));
-    expect(onSubmit).toHaveBeenCalledWith('H₂ + O₂ → H₂O');
+    expect(onSubmit).toHaveBeenCalledWith('H₂ + O₂ → H₂O', 'draw');
   });
 
   it('erases a line the eraser touches', async () => {

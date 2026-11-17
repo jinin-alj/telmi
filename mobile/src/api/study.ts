@@ -1,5 +1,12 @@
 import { apiClient } from '@/api/client';
-import type { Classroom, Drawing, DrawingText, StudentProgress, StudySession } from '@/api/types';
+import type {
+  Classroom,
+  Drawing,
+  DrawingText,
+  InputMode,
+  StudentProgress,
+  StudySession,
+} from '@/api/types';
 
 /** Join a class with the code the teacher shared. */
 export function joinClassroom(joinCode: string): Promise<Classroom> {
@@ -24,11 +31,15 @@ export function getSession(sessionId: string): Promise<StudySession> {
 }
 
 /** Send what the student said and get Pip's reply. */
-export function sendTurn(sessionId: string, text: string): Promise<StudySession> {
+export function sendTurn(
+  sessionId: string,
+  text: string,
+  inputMode: InputMode,
+): Promise<StudySession> {
   return apiClient.request<StudySession>(
     'POST',
     `/sessions/${encodeURIComponent(sessionId)}/turns`,
-    { body: { text } },
+    { body: { text, input_mode: inputMode } },
   );
 }
 

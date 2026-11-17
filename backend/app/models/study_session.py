@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -73,4 +73,6 @@ class SessionTurn(Base):
         Enum(Speaker, name="speaker", values_callable=enum_values)
     )
     text: Mapped[str] = mapped_column(Text)
+    # "talk", "type" or "draw" for student turns, so the pilot shows how students answer
+    input_mode: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
