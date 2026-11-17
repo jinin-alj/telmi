@@ -1,4 +1,4 @@
-import { ApiClient, ApiError, readErrorMessage } from '@/api/client';
+import { ApiClient, ApiError, readErrorMessage, REQUEST_TIMEOUT_MILLISECONDS } from '@/api/client';
 
 type FakeResponse = { status: number; body: unknown };
 
@@ -133,6 +133,49 @@ describe('ApiClient', () => {
     const client = new ApiClient('https://api.test', failingFetch);
 
     await expect(client.request('GET', '/me')).rejects.toMatchObject({ status: 0 });
+  });
+});
+
+describe('request timeout', () => {
+  /** A fetch that never answers, but stops when its request is cancelled, like a real one. */
+  function hangingFetch(_input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+    });
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('gives up with a friendly error instead of spinning for ever', async () => {
+    const client = new ApiClient('https://api.test', hangingFetch);
+
+    const request = client.request('GET', '/things');
+    const expectation = expect(request).rejects.toThrow('took too long');
+    await jest.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MILLISECONDS);
+
+    await expectation;
+  });
+
+  it('lets slow requests such as uploads wait longer', async () => {
+    const client = new ApiClient('https://api.test', hangingFetch);
+    let settled = false;
+
+    client
+      .request('POST', '/upload', { timeoutMilliseconds: REQUEST_TIMEOUT_MILLISECONDS * 3 })
+      .catch(() => {
+        settled = true;
+      });
+    await jest.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MILLISECONDS + 1000);
+
+    expect(settled).toBe(false);
+    await jest.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MILLISECONDS * 2);
+    expect(settled).toBe(true);
   });
 });
 

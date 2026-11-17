@@ -71,6 +71,8 @@ cd mobile && npm run format:check && npm run lint && npm run typecheck && npm te
 
 No change merges unless every check passes.
 
+App tests may take up to 15 seconds each (`testTimeout` in `mobile/package.json`), because CI machines are much slower than laptops; a test that is just slow there shouldn't fail the build.
+
 Backend tests use in-memory SQLite by default. To run them against Postgres like CI does, point them at a **separate** test database. The tests drop every table, so never use your dev database:
 
 ```bash

@@ -1,12 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { getMyProgress, startSession } from '@/api/study';
 import type { StudentProgress, User } from '@/api/types';
 import { Button } from '@/components/button';
 import { Mascot } from '@/components/mascot';
+import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { JoinClassForm } from '@/features/student/join-class-form';
 import { UnitRow } from '@/features/student/unit-row';
@@ -69,9 +70,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
         </Text>
       ) : null}
 
-      {progress === null && errorMessage === null ? (
-        <ActivityIndicator accessibilityLabel="Loading your classes" color={colors.primary} />
-      ) : null}
+      {progress === null && errorMessage === null ? <Loading label="Loading your classes" /> : null}
 
       {progress !== null ? (
         <>

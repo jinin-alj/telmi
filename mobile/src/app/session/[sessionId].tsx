@@ -1,11 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/study';
 import type { StudySession } from '@/api/types';
 import { BackToHome } from '@/components/back-to-home';
+import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { ActiveSession } from '@/features/session/active-session';
 import { SessionResults } from '@/features/session/session-results';
@@ -58,9 +59,7 @@ export default function SessionScreen() {
           {loadError}
         </Text>
       ) : null}
-      {session === null && loadError === null ? (
-        <ActivityIndicator accessibilityLabel="Opening your session" color={colors.primary} />
-      ) : null}
+      {session === null && loadError === null ? <Loading label="Opening your session" /> : null}
 
       {session !== null ? (
         <>

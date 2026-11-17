@@ -1,6 +1,6 @@
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { getClassroomDashboard } from '@/api/teaching';
@@ -8,6 +8,7 @@ import type { ClassroomDashboard } from '@/api/types';
 import { Button } from '@/components/button';
 import { JoinCode } from '@/components/join-code';
 import { BackToHome } from '@/components/back-to-home';
+import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { StudentSummaryRow } from '@/features/teacher/student-summary-row';
@@ -47,9 +48,7 @@ export default function ClassroomScreen() {
           {loadError}
         </Text>
       ) : null}
-      {dashboard === null && loadError === null ? (
-        <ActivityIndicator accessibilityLabel="Loading the class" color={colors.primary} />
-      ) : null}
+      {dashboard === null && loadError === null ? <Loading label="Loading the class" /> : null}
 
       {dashboard !== null ? (
         <>

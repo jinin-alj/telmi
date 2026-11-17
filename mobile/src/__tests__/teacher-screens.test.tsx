@@ -221,6 +221,32 @@ describe('UnitSummaryCard', () => {
     expect(screen.getByText('1 common mistake')).toBeTruthy();
     expect(screen.getByText('“It makes more energy”')).toBeTruthy();
   });
+
+  it('shows two students who said the same thing without a list error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const example = { student_said: 'It makes more energy', correction: 'It releases less' };
+    const repeated = {
+      ...UNIT,
+      ideas: [
+        {
+          idea_number: 2,
+          idea: 'Anaerobic respiration releases less energy.',
+          students_covered: 0,
+          students_missing: 2,
+          misconception_count: 2,
+          examples: [example, example],
+        },
+      ],
+    };
+    await render(<UnitSummaryCard unit={repeated} />);
+
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Show key ideas for Cell respiration' }),
+    );
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
 });
 
 describe('StudentSummaryRow', () => {
@@ -252,5 +278,18 @@ describe('StudentSummaryRow', () => {
 
     expect(screen.getByText('Cell respiration: 1 of 2 key ideas')).toBeTruthy();
     expect(screen.getByText('• Anaerobic respiration releases less energy.')).toBeTruthy();
+  });
+
+  it('lists repeated ideas without a list error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const repeated = {
+      ...student,
+      units: [{ ...student.units[0], missing_ideas: ['Same idea', 'Same idea'] }],
+    };
+
+    await render(<StudentSummaryRow student={repeated} units={[UNIT]} />);
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

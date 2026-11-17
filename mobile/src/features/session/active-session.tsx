@@ -124,7 +124,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Show conversation"
+        accessibilityLabel={showConversation ? 'Hide conversation' : 'Show conversation'}
         accessibilityState={{ expanded: showConversation }}
         onPress={() => setShowConversation(!showConversation)}
         style={styles.toggle}

@@ -27,6 +27,9 @@ export function addUnit(classroomId: string, title: string, material: string): P
   });
 }
 
+// A 20 MB file on a slow school connection can take minutes to send
+const UPLOAD_TIMEOUT_MILLISECONDS = 5 * 60 * 1000;
+
 /** Read the text from a teacher's file; nothing is saved until they add the unit. */
 export function readMaterialFile(
   classroomId: string,
@@ -47,7 +50,7 @@ export function readMaterialFile(
   return apiClient.request<MaterialText>(
     'POST',
     `/classrooms/${encodeURIComponent(classroomId)}/material-text`,
-    { body: form },
+    { body: form, timeoutMilliseconds: UPLOAD_TIMEOUT_MILLISECONDS },
   );
 }
 

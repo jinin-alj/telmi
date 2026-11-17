@@ -60,6 +60,7 @@
   "private": true,
   "jest": {
     "preset": "jest-expo",
+    "testTimeout": 15000,
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/.expo/"

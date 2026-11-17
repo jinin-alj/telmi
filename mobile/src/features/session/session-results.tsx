@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ApiError } from '@/api/client';
 import { answerApplicationQuestion, startSession } from '@/api/study';
 import type { ApplicationResult, StudySession } from '@/api/types';
+import { goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
 import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
@@ -57,11 +58,12 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
       <Text accessibilityRole="header" style={styles.sectionTitle}>
         Key ideas
       </Text>
-      {feedback.key_ideas.map((keyIdea) => {
+      {/* Keys by position, since the checker can repeat the same text */}
+      {feedback.key_ideas.map((keyIdea, index) => {
         const covered = keyIdea.status === 'covered';
         return (
           <View
-            key={keyIdea.idea}
+            key={index}
             style={[styles.idea, covered ? styles.ideaCovered : styles.ideaMissing]}
           >
             <Text style={[styles.ideaStatus, covered ? styles.coveredText : null]}>
@@ -77,8 +79,8 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
           <Text accessibilityRole="header" style={styles.sectionTitle}>
             Things to fix
           </Text>
-          {feedback.misconceptions.map((misconception) => (
-            <View key={misconception.student_said} style={styles.fix}>
+          {feedback.misconceptions.map((misconception, index) => (
+            <View key={index} style={styles.fix}>
               <Text style={styles.fixLabel}>You said</Text>
               <Text style={styles.fixText}>{misconception.student_said}</Text>
               <Text style={styles.fixLabel}>Actually</Text>
@@ -123,11 +125,7 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
       ) : null}
       <View style={styles.actions}>
         <Button label="Explain it again" onPress={handleTryAgain} loading={restarting} />
-        <Button
-          label="Back to my classes"
-          variant="secondary"
-          onPress={() => router.replace('/')}
-        />
+        <Button label="Back to my classes" variant="secondary" onPress={goHome} />
       </View>
     </View>
   );

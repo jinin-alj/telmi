@@ -1,12 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { listClassrooms } from '@/api/teaching';
 import type { Classroom, User } from '@/api/types';
 import { Button } from '@/components/button';
 import { JoinCode } from '@/components/join-code';
+import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { CreateClassForm } from '@/features/teacher/create-class-form';
 import { colors, spacing } from '@/theme';
@@ -50,7 +51,7 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
         </Text>
       ) : null}
       {classrooms === null && errorMessage === null ? (
-        <ActivityIndicator accessibilityLabel="Loading your classes" color={colors.primary} />
+        <Loading label="Loading your classes" />
       ) : null}
 
       {classrooms !== null && classrooms.length === 0 ? (

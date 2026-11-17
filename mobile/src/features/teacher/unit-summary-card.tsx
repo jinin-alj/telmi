@@ -21,8 +21,9 @@ export function describeUnitReach(unit: UnitSummary): string {
 function MisconceptionList({ examples }: { examples: MisconceptionExample[] }) {
   return (
     <>
-      {examples.map((example) => (
-        <View key={example.student_said} style={styles.example}>
+      {/* Keys by position, since two students can say exactly the same thing */}
+      {examples.map((example, index) => (
+        <View key={index} style={styles.example}>
           <Text style={styles.exampleSaid}>“{example.student_said}”</Text>
           <Text style={styles.exampleCorrection}>Correct idea: {example.correction}</Text>
         </View>

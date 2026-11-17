@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react-native';
 
+import { Loading } from '@/components/loading';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 
 const NOTICE = 'Waking up the server, this can take up to a minute.';
@@ -41,4 +42,15 @@ it('disappears when the request finishes', async () => {
   await rerender(<SlowRequestNotice waiting={false} />);
 
   expect(screen.queryByText(NOTICE)).toBeNull();
+});
+
+it('explains a slow page load too, not just slow sign-ins', async () => {
+  await render(<Loading label="Opening your session" />);
+
+  await act(async () => {
+    jest.advanceTimersByTime(5000);
+  });
+
+  expect(screen.getByLabelText('Opening your session')).toBeTruthy();
+  expect(screen.getByText(NOTICE)).toBeTruthy();
 });
