@@ -71,6 +71,8 @@ cd mobile && npm run format:check && npm run lint && npm run typecheck && npm te
 
 No change merges unless every check passes.
 
+App tests may take up to 15 seconds each (`testTimeout` in `mobile/package.json`), because CI machines are much slower than laptops; a test that is just slow there shouldn't fail the build.
+
 Backend tests use in-memory SQLite by default. To run them against Postgres like CI does, point them at a **separate** test database. The tests drop every table, so never use your dev database:
 
 ```bash
@@ -263,7 +265,8 @@ It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's 
 | `auth/token-storage.ts` / `.web.ts` | Where the refresh token lives (see below). |
 | `auth/validation.ts` | The same username, password and nickname rules as the backend, so errors show before sending. |
 | `components/` | Accessible text field, button, role picker and page wrapper. |
-| `theme.ts` | Colours that meet WCAG 2.1 AA contrast, and the 44-point minimum touch size. |
+| `hooks/use-is-wide.ts`, `components/card.tsx`, `columns.tsx`, `top-bar.tsx` | **Desktop layout.** Browser windows 900 px or wider get a grey page with white cards, a top bar with the name and Sign out, and two columns per page (classes and the create form, units and students, Pip and the answer area, results and next steps). Phones and the native app keep the single column. Columns keep the phone's reading order, so screen readers read both layouts the same way. |
+| `theme.ts` | Colours that meet WCAG 2.1 AA contrast, the 44-point minimum touch size, and the desktop widths. |
 
 ### Student experience
 
@@ -291,7 +294,7 @@ It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's 
 - **Class screen** (`app/classroom/[classroomId].tsx`):
   - the join code and number of students
   - a reminder that results come from AI and are not grades
-  - **Units:** each card shows how many students explained it and the average share of key ideas. "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000). "Upload a file" adds the text of one or more files to the box for the teacher to check before saving; saving waits until uploads finish.
+  - **Units:** each card shows how many students explained it and the average share of key ideas, plus how many sessions ran out of time unfinished (these are graded the next time the student opens them). "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000). "Upload a file" adds the text of one or more files to the box for the teacher to check before saving; saving waits until uploads finish.
   - **Students:** listed by name, never ranked. Each shows their latest result per unit ("4 of 6 key ideas") and the ideas still to explain.
 - **Role guards:** `_layout.tsx` nests `Stack.Protected`, so only students reach `session/[sessionId]` and only teachers reach `classroom/[classroomId]`. The API enforces the same rules; the guards just keep people off screens they can't use.
 

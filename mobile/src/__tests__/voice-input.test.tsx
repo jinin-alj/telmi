@@ -107,6 +107,23 @@ it('keeps the text and shows the error when sending fails', async () => {
   expect(clearTranscript).not.toHaveBeenCalled();
 });
 
+it('stops recording when the student switches language mid-sentence', async () => {
+  mockSpeech({ isListening: true, transcript: 'Plants make' });
+  const props = {
+    sessionId: 'session-1',
+    prompt: 'Tap and explain it from memory',
+    typingPrompt: 'Type your explanation from memory',
+    submitLabel: 'Send to Pip',
+    onSubmit: jest.fn(),
+  };
+  const { rerender } = await render(<VoiceInput {...props} language="es-ES" />);
+  expect(stopListening).not.toHaveBeenCalled();
+
+  await rerender(<VoiceInput {...props} language="en-US" />);
+
+  expect(stopListening).toHaveBeenCalledTimes(1);
+});
+
 it('ignores a second tap while the microphone is still starting', async () => {
   mockSpeech({});
   let taps = 0;

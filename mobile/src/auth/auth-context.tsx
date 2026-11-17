@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 
 import * as authApi from '@/api/auth';
-import { apiClient } from '@/api/client';
+import { ApiError, apiClient } from '@/api/client';
 import type { AuthResponse, RegisterForm, User } from '@/api/types';
 import { clearRefreshToken, loadRefreshToken, saveRefreshToken } from '@/auth/token-storage';
 
@@ -37,7 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut');
   }, []);
 
-  // Trade a saved refresh token for a new session, or sign out if that fails
+  // Offline or a waking server: leave the loading screen, but keep the saved token for next time
+  const keepSavedSession = useCallback(() => {
+    setStatus((current) => {
+      if (current === 'loading') {
+        return 'signedOut';
+      }
+      return current;
+    });
+  }, []);
+
+  // Trade a saved refresh token for a new session; only a rejected token signs the user out
   const resumeSession = useCallback(
     async (refreshToken: string | null): Promise<string | null> => {
       if (refreshToken === null) {
@@ -48,12 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await authApi.refresh(refreshToken);
         await applySession(response);
         return response.access_token;
-      } catch {
-        await endSession();
+      } catch (error) {
+        const tokenRejected =
+          error instanceof ApiError && (error.status === 401 || error.status === 403);
+        if (tokenRejected) {
+          await endSession();
+        } else {
+          keepSavedSession();
+        }
         return null;
       }
     },
-    [applySession, endSession],
+    [applySession, endSession, keepSavedSession],
   );
 
   // Called by the API client when the access token expires mid-use

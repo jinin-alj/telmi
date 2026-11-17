@@ -42,7 +42,7 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
   }
 
   return (
-    <View style={styles.container}>
+    <View>
       <Text accessibilityRole="header" style={styles.heading}>
         Create a class
       </Text>
@@ -65,9 +65,6 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: spacing.large,
-  },
   heading: {
     fontSize: 20,
     fontWeight: '700',

@@ -33,7 +33,7 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View>
       <Text accessibilityRole="header" style={styles.heading}>
         Join a class
       </Text>
@@ -54,9 +54,6 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: spacing.large,
-  },
   heading: {
     fontSize: 20,
     fontWeight: '700',

@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import * as studyApi from '@/api/study';
 import type { StudentProgress, StudySession } from '@/api/types';
 import { ActiveSession } from '@/features/session/active-session';
+import { SessionResults } from '@/features/session/session-results';
 import { StudentHome } from '@/features/student/student-home';
 
 jest.mock('@/api/study');
@@ -117,6 +118,50 @@ describe('ActiveSession', () => {
 
     await waitFor(() => expect(onSessionChange).toHaveBeenCalled());
     expect(mockedApi.finishSession).toHaveBeenCalledWith('session-1');
+  });
+});
+
+describe('SessionResults', () => {
+  it('shows two identical mistakes without a list error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const mistake = {
+      student_said: 'Plants eat soil',
+      correction: 'They make glucose',
+      idea_number: 1,
+    };
+    const finished: StudySession = {
+      ...ACTIVE_SESSION,
+      status: 'completed',
+      coverage_percent: 0,
+      feedback: {
+        key_ideas: [
+          { idea: 'Plants make glucose', status: 'missing' },
+          { idea: 'Plants make glucose', status: 'missing' },
+        ],
+        misconceptions: [mistake, mistake],
+        application_question: 'Why do plants need light?',
+        next_step: 'Explain where glucose comes from.',
+      },
+    };
+
+    await render(
+      <SessionResults session={finished} language="en-US" onSessionChange={jest.fn()} />,
+    );
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+});
+
+describe('Conversation toggle', () => {
+  it('tells screen readers what the button does now', async () => {
+    await render(
+      <ActiveSession session={ACTIVE_SESSION} language="en-US" onSessionChange={jest.fn()} />,
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Show conversation' }));
+
+    expect(screen.getByRole('button', { name: 'Hide conversation' })).toBeTruthy();
   });
 });
 

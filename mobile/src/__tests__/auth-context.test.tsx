@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { Pressable, Text } from 'react-native';
 
 import * as authApi from '@/api/auth';
+import { ApiError } from '@/api/client';
 import type { AuthResponse } from '@/api/types';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
 import * as tokenStorage from '@/auth/token-storage';
@@ -72,12 +73,26 @@ it('restores a saved session on launch', async () => {
 
 it('clears an expired saved session', async () => {
   mockedStorage.loadRefreshToken.mockResolvedValue('expired');
-  mockedAuthApi.refresh.mockRejectedValue(new Error('401'));
+  mockedAuthApi.refresh.mockRejectedValue(new ApiError(401, 'Session expired'));
 
   await renderProbe();
 
   await waitFor(() => expect(screen.getByText('status:signedOut')).toBeTruthy());
   expect(mockedStorage.clearRefreshToken).toHaveBeenCalled();
+});
+
+it.each([
+  ['offline', new ApiError(0, "Can't reach Telmi.")],
+  ['the server is waking up', new ApiError(503, 'Something went wrong on our side.')],
+])('keeps the saved session when %s', async (_reason, error) => {
+  mockedStorage.loadRefreshToken.mockResolvedValue('refresh-1');
+  mockedAuthApi.refresh.mockRejectedValue(error);
+
+  await renderProbe();
+
+  await waitFor(() => expect(screen.getByText('status:signedOut')).toBeTruthy());
+  // Kept, so opening the app again once online signs the student straight back in
+  expect(mockedStorage.clearRefreshToken).not.toHaveBeenCalled();
 });
 
 it('signs in and out', async () => {

@@ -18,11 +18,23 @@ export function describeUnitReach(unit: UnitSummary): string {
   return `${unit.students_attempted} ${studentWord} explained this.${average}`;
 }
 
+/** A note about sessions left open past their time, or null when there are none. */
+export function describeUnfinished(unit: UnitSummary): string | null {
+  if (unit.unfinished_sessions === 0) {
+    return null;
+  }
+  if (unit.unfinished_sessions === 1) {
+    return '1 session ran out of time before it was finished, so it has no results yet.';
+  }
+  return `${unit.unfinished_sessions} sessions ran out of time before they were finished, so they have no results yet.`;
+}
+
 function MisconceptionList({ examples }: { examples: MisconceptionExample[] }) {
   return (
     <>
-      {examples.map((example) => (
-        <View key={example.student_said} style={styles.example}>
+      {/* Keys by position, since two students can say exactly the same thing */}
+      {examples.map((example, index) => (
+        <View key={index} style={styles.example}>
           <Text style={styles.exampleSaid}>“{example.student_said}”</Text>
           <Text style={styles.exampleCorrection}>Correct idea: {example.correction}</Text>
         </View>
@@ -35,6 +47,7 @@ function MisconceptionList({ examples }: { examples: MisconceptionExample[] }) {
 export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
   const [expanded, setExpanded] = useState(false);
   const hasDetails = unit.ideas !== null && unit.students_attempted > 0;
+  const unfinishedNote = describeUnfinished(unit);
 
   return (
     <View style={styles.card}>
@@ -42,6 +55,7 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
         {unit.title}
       </Text>
       <Text style={styles.reach}>{describeUnitReach(unit)}</Text>
+      {unfinishedNote !== null ? <Text style={styles.unfinished}>{unfinishedNote}</Text> : null}
 
       {hasDetails ? (
         <Pressable
@@ -93,6 +107,7 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.surface,
     borderRadius: 12,
@@ -107,6 +122,11 @@ const styles = StyleSheet.create({
   reach: {
     fontSize: 15,
     color: colors.text,
+    marginTop: 4,
+  },
+  unfinished: {
+    fontSize: 14,
+    color: colors.mutedText,
     marginTop: 4,
   },
   toggle: {

@@ -8,7 +8,11 @@ import type { StudentSummary, UnitSummary } from '@/api/types';
 import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { describeStudentResult, StudentSummaryRow } from '@/features/teacher/student-summary-row';
 import { TeacherHome } from '@/features/teacher/teacher-home';
-import { describeUnitReach, UnitSummaryCard } from '@/features/teacher/unit-summary-card';
+import {
+  describeUnfinished,
+  describeUnitReach,
+  UnitSummaryCard,
+} from '@/features/teacher/unit-summary-card';
 import { validateClassName, validateMaterial } from '@/features/teacher/validation';
 
 jest.mock('@/api/teaching');
@@ -46,6 +50,7 @@ const UNIT: UnitSummary = {
   unit_id: 'unit-1',
   title: 'Cell respiration',
   students_attempted: 2,
+  unfinished_sessions: 0,
   average_coverage_percent: 42,
   ideas: [
     {
@@ -208,6 +213,22 @@ describe('UnitSummaryCard', () => {
     );
   });
 
+  it('says how many sessions ran out of time unfinished', () => {
+    expect(describeUnfinished(UNIT)).toBeNull();
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 1 })).toBe(
+      '1 session ran out of time before it was finished, so it has no results yet.',
+    );
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 3 })).toBe(
+      '3 sessions ran out of time before they were finished, so they have no results yet.',
+    );
+  });
+
+  it('shows unfinished sessions on the card', async () => {
+    await render(<UnitSummaryCard unit={{ ...UNIT, unfinished_sessions: 2 }} />);
+
+    expect(screen.getByText(/2 sessions ran out of time/)).toBeTruthy();
+  });
+
   it('shows each idea and its common mistakes when expanded', async () => {
     await render(<UnitSummaryCard unit={UNIT} />);
     expect(screen.queryByText('2 of 2 students explained this')).toBeNull();
@@ -220,6 +241,32 @@ describe('UnitSummaryCard', () => {
     expect(screen.getByText('0 of 2 students explained this')).toBeTruthy();
     expect(screen.getByText('1 common mistake')).toBeTruthy();
     expect(screen.getByText('“It makes more energy”')).toBeTruthy();
+  });
+
+  it('shows two students who said the same thing without a list error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const example = { student_said: 'It makes more energy', correction: 'It releases less' };
+    const repeated = {
+      ...UNIT,
+      ideas: [
+        {
+          idea_number: 2,
+          idea: 'Anaerobic respiration releases less energy.',
+          students_covered: 0,
+          students_missing: 2,
+          misconception_count: 2,
+          examples: [example, example],
+        },
+      ],
+    };
+    await render(<UnitSummaryCard unit={repeated} />);
+
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Show key ideas for Cell respiration' }),
+    );
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });
 
@@ -252,5 +299,18 @@ describe('StudentSummaryRow', () => {
 
     expect(screen.getByText('Cell respiration: 1 of 2 key ideas')).toBeTruthy();
     expect(screen.getByText('• Anaerobic respiration releases less energy.')).toBeTruthy();
+  });
+
+  it('lists repeated ideas without a list error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const repeated = {
+      ...student,
+      units: [{ ...student.units[0], missing_ideas: ['Same idea', 'Same idea'] }],
+    };
+
+    await render(<StudentSummaryRow student={repeated} units={[UNIT]} />);
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

@@ -4,9 +4,13 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type FetchFunction = typeof fetch;
 type RefreshHandler = () => Promise<string | null>;
 
+// Enough for the free server to wake up and for grading; after that a spinner would just hang
+export const REQUEST_TIMEOUT_MILLISECONDS = 120000;
+
 type RequestOptions = {
   body?: unknown;
   authenticated?: boolean;
+  timeoutMilliseconds?: number;
 };
 
 /** An HTTP error with a message that is safe to show the user. */
@@ -69,12 +73,13 @@ export class ApiClient {
     options: RequestOptions = {},
   ): Promise<ResponseBody> {
     const authenticated = options.authenticated ?? true;
-    let response = await this.send(method, path, options.body, authenticated);
+    const timeoutMilliseconds = options.timeoutMilliseconds ?? REQUEST_TIMEOUT_MILLISECONDS;
+    let response = await this.send(method, path, options.body, authenticated, timeoutMilliseconds);
 
     if (response.status === 401 && authenticated && this.refreshHandler !== null) {
       const newAccessToken = await this.refreshOnce();
       if (newAccessToken !== null) {
-        response = await this.send(method, path, options.body, authenticated);
+        response = await this.send(method, path, options.body, authenticated, timeoutMilliseconds);
       }
     }
 
@@ -90,6 +95,7 @@ export class ApiClient {
     path: string,
     body: unknown,
     authenticated: boolean,
+    timeoutMilliseconds: number,
   ): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     // File uploads go as FormData; fetch then sets the multipart Content-Type with its boundary
@@ -103,14 +109,25 @@ export class ApiClient {
 
     // Browsers throw "Illegal invocation" if fetch runs with `this` set to our client
     const fetchFunction = this.fetchFunction;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMilliseconds);
     try {
       return await fetchFunction(`${this.baseUrl}${path}`, {
         method,
         headers,
         body: isForm ? body : body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
       });
     } catch {
+      if (controller.signal.aborted) {
+        throw new ApiError(
+          0,
+          'Telmi took too long to answer. Check your connection and try again.',
+        );
+      }
       throw new ApiError(0, "Can't reach Telmi. Check your connection and try again.");
+    } finally {
+      clearTimeout(timer);
     }
   }
 

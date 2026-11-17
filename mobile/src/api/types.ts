@@ -150,6 +150,8 @@ export type UnitSummary = {
   unit_id: string;
   title: string;
   students_attempted: number;
+  // Sessions whose time ran out before the student finished, e.g. the app was closed
+  unfinished_sessions: number;
   average_coverage_percent: number | null;
   ideas: IdeaSummary[] | null;
   other_misconceptions: MisconceptionExample[];

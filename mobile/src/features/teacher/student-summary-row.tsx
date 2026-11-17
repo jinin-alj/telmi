@@ -40,8 +40,9 @@ export function StudentSummaryRow({ student, units }: StudentSummaryRowProps) {
             {result.missing_ideas.length > 0 ? (
               <>
                 <Text style={styles.missing}>Still to explain:</Text>
-                {result.missing_ideas.map((idea) => (
-                  <Text key={idea} style={styles.missing}>
+                {/* Keys by position, since the checker can repeat the same text */}
+                {result.missing_ideas.map((idea, index) => (
+                  <Text key={index} style={styles.missing}>
                     • {idea}
                   </Text>
                 ))}
