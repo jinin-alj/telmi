@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import type { StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ReportProblemLink } from '@/components/report-problem-link';
 import { TopBar } from '@/components/top-bar';
 import { useIsWide } from '@/hooks/use-is-wide';
 import { colors, contentWidth, cornerRadius, spacing } from '@/theme';
@@ -15,7 +16,7 @@ type ScreenProps = {
   children: ReactNode;
   // "narrow" for forms like sign-in; "wide" for dashboards and sessions on big screens
   width?: 'narrow' | 'wide';
-  // The desktop header, for pages people see once signed in
+  // For pages people see once signed in: the desktop header and a "Report a problem" link
   topBar?: boolean;
 };
 
@@ -55,6 +56,7 @@ export function Screen({ children, width = 'narrow', topBar = false }: ScreenPro
             scrollEnabled={!scrollLocked}
           >
             {body}
+            {topBar ? <ReportProblemLink /> : null}
           </ScrollView>
         </ScrollLockContext.Provider>
       </KeyboardAvoidingView>

@@ -8,6 +8,7 @@ import { speak } from '@/speech/text-to-speech';
 jest.mock('expo-router', () => ({
   router: { canDismiss: jest.fn(), dismissTo: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({ sessionId: 'session-1' }),
+  usePathname: () => '/session/session-1',
 }));
 jest.mock('@/api/study');
 jest.mock('@/speech/text-to-speech', () => ({ speak: jest.fn(), stopSpeaking: jest.fn() }));

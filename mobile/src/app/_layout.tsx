@@ -43,6 +43,7 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn} redirectTo="/sign-in">
         <Stack.Screen name="index" />
+        <Stack.Screen name="report-problem" />
         {/* The API enforces these roles too; the guards just keep people off screens they can't use */}
         <Stack.Protected guard={isStudent} redirectTo="/">
           <Stack.Screen name="session/[sessionId]" />

@@ -4,7 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.body_limit import limit_body_size
 from app.config import get_settings
-from app.routers import auth, classrooms, dashboard, study_sessions
+from app.routers import auth, classrooms, dashboard, feedback, study_sessions
 from app.security.rate_limit import RateLimiter
 
 # Generous per address, since a whole class may share one school connection
@@ -13,6 +13,8 @@ LOGINS_PER_USERNAME = 10
 LOGIN_WINDOW_SECONDS = 5 * 60
 SIGN_UPS_PER_ADDRESS = 60
 SIGN_UP_WINDOW_SECONDS = 60 * 60
+REPORTS_PER_PERSON = 5
+REPORT_WINDOW_SECONDS = 60 * 60
 
 
 def create_app() -> FastAPI:
@@ -31,6 +33,7 @@ def create_app() -> FastAPI:
     app.state.login_address_limiter = RateLimiter(LOGINS_PER_ADDRESS, LOGIN_WINDOW_SECONDS)
     app.state.login_username_limiter = RateLimiter(LOGINS_PER_USERNAME, LOGIN_WINDOW_SECONDS)
     app.state.sign_up_limiter = RateLimiter(SIGN_UPS_PER_ADDRESS, SIGN_UP_WINDOW_SECONDS)
+    app.state.feedback_limiter = RateLimiter(REPORTS_PER_PERSON, REPORT_WINDOW_SECONDS)
 
     @app.get("/health")
     def read_health() -> dict[str, str]:
@@ -41,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(classrooms.router)
     app.include_router(study_sessions.router)
     app.include_router(dashboard.router)
+    app.include_router(feedback.router)
     return app
 
 

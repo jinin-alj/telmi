@@ -10,7 +10,7 @@ from app.schemas.auth import (
     RegisterRequest,
     UserPublic,
 )
-from app.security.rate_limit import RateLimiter
+from app.security.rate_limit import check_rate_limit
 from app.security.tokens import InvalidTokenError, create_access_token
 from app.services.accounts import UsernameTakenError, authenticate_user, register_user
 from app.services.refresh_tokens import (
@@ -21,25 +21,12 @@ from app.services.refresh_tokens import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Long enough to make guessing passwords slow, short enough not to lock out a real student
-RETRY_AFTER_SECONDS = 60
-
 
 def client_address(request: Request) -> str:
     """The caller's address; behind Render's proxy it can be faked, so it's only a rough limit."""
     if request.client is None:
         return "unknown"
     return request.client.host
-
-
-def check_rate_limit(limiter: RateLimiter, key: str) -> None:
-    """Answer 429 once this key has used up its attempts."""
-    if not limiter.allow(key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many tries. Wait a minute, then try again.",
-            headers={"Retry-After": str(RETRY_AFTER_SECONDS)},
-        )
 
 
 def build_auth_response(user: User, refresh_token: str, settings: Settings) -> AuthResponse:

@@ -343,6 +343,17 @@ To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://
 
 ## Maintenance
 
+**Problem reports from the pilot.** Every signed-in page has a "Report a problem" link at the bottom. Reports go to `POST /feedback` (any signed-in user, at most 5 an hour) and are saved in the `feedback` table with the person's role, the page they were on and the app version. Reports are deleted after 6 months, and with the account. To read the newest ones, run this in the Neon SQL editor:
+
+```sql
+SELECT created_at, role, page, app_version, message
+FROM feedback
+ORDER BY created_at DESC
+LIMIT 50;
+```
+
+Reports can contain whatever people type, so treat them as personal data: read them in the Neon console only and don't copy them elsewhere.
+
 - CI runs `pip-audit` and `npm audit` for known vulnerabilities.
 - `npm audit` currently reports issues inside the Expo CLI (build tooling, not shipped code). The audit step is non-blocking until Expo patches them.
 
