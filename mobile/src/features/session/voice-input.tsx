@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -54,6 +54,16 @@ export function VoiceInput({
   const [sendError, setSendError] = useState<string | null>(null);
   // A ref rather than state, so a second tap in the same moment already sees it
   const startingMicrophone = useRef(false);
+  // The language the current recording started in
+  const recordingLanguage = useRef(language);
+
+  // Recognition can't change language mid-recording, so stop; the next tap uses the new one
+  useEffect(() => {
+    if (speech.isListening && language !== recordingLanguage.current) {
+      recordingLanguage.current = language;
+      speech.stopListening();
+    }
+  }, [language, speech]);
 
   // Once the student edits the transcript, their version wins over what was heard
   const text = editedText ?? speech.transcript;
@@ -86,6 +96,7 @@ export function VoiceInput({
       return;
     }
     startingMicrophone.current = true;
+    recordingLanguage.current = language;
     setEditedText(null);
     speech.clearTranscript();
     try {

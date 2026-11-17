@@ -51,11 +51,15 @@ export function isSpeechRecognitionAvailable(module: SpeechModule | null = speec
   }
 }
 
+// Finished phrases plus the one still being recognised, kept together so updates never race
+type Heard = { finished: string; inProgress: string };
+
+const NOTHING_HEARD: Heard = { finished: '', inProgress: '' };
+
 /** Live speech-to-text for one input: start, stop, and the transcript so far. */
 export function useSpeechToText() {
   const [isListening, setIsListening] = useState(false);
-  const [finishedText, setFinishedText] = useState('');
-  const [inProgressText, setInProgressText] = useState('');
+  const [heard, setHeard] = useState<Heard>(NOTHING_HEARD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAvailable] = useState(isSpeechRecognitionAvailable);
   const eventSource = speechModule ?? silentEmitter;
@@ -63,15 +67,21 @@ export function useSpeechToText() {
   useEventListener(eventSource, 'start', () => setIsListening(true));
   useEventListener(eventSource, 'end', () => {
     setIsListening(false);
-    setInProgressText('');
+    // Some browsers stop without a final result; keep the last phrase instead of losing it
+    setHeard((previous) => ({
+      finished: appendPhrase(previous.finished, previous.inProgress),
+      inProgress: '',
+    }));
   });
   useEventListener(eventSource, 'result', (event) => {
     const phrase = event.results[0]?.transcript ?? '';
     if (event.isFinal) {
-      setFinishedText((previous) => appendPhrase(previous, phrase));
-      setInProgressText('');
+      setHeard((previous) => ({
+        finished: appendPhrase(previous.finished, phrase),
+        inProgress: '',
+      }));
     } else {
-      setInProgressText(phrase);
+      setHeard((previous) => ({ finished: previous.finished, inProgress: phrase }));
     }
   });
   useEventListener(eventSource, 'error', (event) => {
@@ -126,15 +136,14 @@ export function useSpeechToText() {
   }
 
   function clearTranscript() {
-    setFinishedText('');
-    setInProgressText('');
+    setHeard(NOTHING_HEARD);
     setErrorMessage(null);
   }
 
   return {
     isAvailable,
     isListening,
-    transcript: joinTranscript(finishedText, inProgressText),
+    transcript: joinTranscript(heard.finished, heard.inProgress),
     errorMessage,
     startListening,
     stopListening,

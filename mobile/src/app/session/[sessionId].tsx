@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -34,8 +34,14 @@ export default function SessionScreen() {
 
   // Speak each new buddy line, and the summary once the session is checked
   const spokenLine = session === null ? '' : lineToSpeak(session);
+  // Remembered so changing the language or voice setting never repeats a line already heard
+  const lastLine = useRef('');
   useEffect(() => {
-    if (voiceOn && spokenLine !== '') {
+    if (spokenLine === '' || spokenLine === lastLine.current) {
+      return;
+    }
+    lastLine.current = spokenLine;
+    if (voiceOn) {
       speak(spokenLine, language);
     }
   }, [spokenLine, voiceOn, language]);
