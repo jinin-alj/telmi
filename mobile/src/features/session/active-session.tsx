@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { ApiError } from '@/api/client';
 import { finishSession, sendTurn } from '@/api/study';
-import type { StudySession } from '@/api/types';
+import type { InputMode, StudySession } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
@@ -41,10 +41,10 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   const timeLeft = minutesLeft(session.ends_at, now);
   const canTalk = session.student_turns_left > 0 && timeLeft > 0;
 
-  async function handleSend(text: string) {
+  async function handleSend(text: string, inputMode: InputMode) {
     sendingTurn.current = true;
     try {
-      const updated = await sendTurn(session.id, text);
+      const updated = await sendTurn(session.id, text, inputMode);
       onSessionChange(updated);
     } finally {
       sendingTurn.current = false;

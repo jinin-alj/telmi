@@ -100,6 +100,9 @@ export type StudentProgress = {
   classrooms: { classroom: Classroom; units: UnitProgress[] }[];
 };
 
+// How a student gave an answer, recorded so the pilot shows whether voice is used
+export type InputMode = 'talk' | 'type' | 'draw';
+
 export type PenColor = 'black' | 'blue' | 'red' | 'green';
 
 export type Point = [number, number];

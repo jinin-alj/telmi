@@ -18,10 +18,15 @@ class StartSessionRequest(BaseModel):
     unit_id: uuid.UUID
 
 
+InputMode = Literal["talk", "type", "draw"]
+
+
 class StudentTurnRequest(BaseModel):
     """What the student just said, already turned into text on the device."""
 
     text: TrimmedText = Field(min_length=1, max_length=TURN_MAX_CHARACTERS)
+    # How the answer was given; older app versions don't send it
+    input_mode: InputMode | None = None
 
 
 # Mirror mobile/src/features/session/drawing.ts; far more than a page of working needs

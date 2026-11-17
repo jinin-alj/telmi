@@ -99,7 +99,7 @@ describe('ActiveSession', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Send to Pip' }));
 
     await waitFor(() => expect(onSessionChange).toHaveBeenCalledWith(updated));
-    expect(mockedApi.sendTurn).toHaveBeenCalledWith('session-1', 'Plants make food.');
+    expect(mockedApi.sendTurn).toHaveBeenCalledWith('session-1', 'Plants make food.', 'type');
   });
 
   it('hides the microphone when no turns are left and lets the student finish', async () => {

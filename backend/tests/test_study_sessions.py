@@ -524,3 +524,47 @@ def test_opening_a_timed_out_session_still_works_when_grading_fails(
 
     assert response.status_code == 200
     assert response.json()["status"] == "active"
+
+
+def test_turns_remember_whether_they_were_spoken_typed_or_drawn(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+
+    response = client.post(
+        f"/sessions/{session['id']}/turns",
+        json={"text": "H2O is water", "input_mode": "draw"},
+        headers=student,
+    )
+
+    assert response.status_code == 200
+    student_turn = db.query(SessionTurn).filter(SessionTurn.speaker == Speaker.STUDENT).one()
+    assert student_turn.input_mode == "draw"
+
+
+def test_turns_from_older_app_versions_still_work_without_a_mode(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+
+    say(client, student, session["id"], "Plants make food.")
+
+    student_turn = db.query(SessionTurn).filter(SessionTurn.speaker == Speaker.STUDENT).one()
+    assert student_turn.input_mode is None
+
+
+def test_unknown_input_modes_are_refused(client: TestClient) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+
+    response = client.post(
+        f"/sessions/{session['id']}/turns",
+        json={"text": "Hi", "input_mode": "telepathy"},
+        headers=student,
+    )
+
+    assert response.status_code == 422

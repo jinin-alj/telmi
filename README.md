@@ -65,7 +65,7 @@ npm run web
 ## Checks (same as CI)
 
 ```bash
-cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app tests && .venv/bin/pytest
+cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app tests gateway scripts && .venv/bin/pytest
 cd mobile && npm run format:check && npm run lint && npm run typecheck && npm test
 ```
 
@@ -169,7 +169,7 @@ Sessions are capped at **15 minutes, 8 student turns and 6,000 characters of exp
 | `GET` | `/classrooms/{id}/units` | members | List units (no material) |
 | `POST` | `/sessions` | student | Start a session on a unit |
 | `GET` | `/sessions/{id}` | student | Conversation and feedback |
-| `POST` | `/sessions/{id}/turns` | student | Send what you said, get the buddy's reply |
+| `POST` | `/sessions/{id}/turns` | student | Send what you said (`text`, and `input_mode`: `talk`, `type` or `draw`), get the buddy's reply |
 | `POST` | `/sessions/{id}/finish` | student | Get the gap map, question and next step |
 | `POST` | `/sessions/{id}/application-answer` | student | Answer the question, get it graded |
 | `POST` | `/sessions/{id}/drawing-text` | student | Read a scratchpad drawing into text (saves nothing) |
@@ -361,6 +361,20 @@ LIMIT 50;
 ```
 
 Reports can contain whatever people type, so treat them as personal data: read them in the Neon console only and don't copy them elsewhere.
+
+**Weekly pilot report.** `backend/scripts/pilot_report.py` prints the week's numbers as plain sentences, ready to paste into the team chat:
+- new accounts by role, and classes with sessions
+- sessions started, finished and left open, and the average share of key ideas explained
+- answers spoken, typed or drawn (each student turn records `input_mode`; turns from before this change show as "not recorded")
+- drawings read, and problem reports by page
+
+It opens the database read-only and never prints anyone's words. Copy the Neon connection string, then from `backend/`:
+
+```bash
+DATABASE_URL='<Neon connection string>' .venv/bin/python -m scripts.pilot_report --days 7
+```
+
+Crashes and AI errors aren't in the database: see Sentry and the Render logs.
 
 - CI runs `pip-audit` and `npm audit` for known vulnerabilities.
 - `npm audit` currently reports issues inside the Expo CLI (build tooling, not shipped code). The audit step is non-blocking until Expo patches them.
