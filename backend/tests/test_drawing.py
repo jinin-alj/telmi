@@ -5,16 +5,20 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
+from sqlalchemy.orm import Session
 
 from app.ai import drawing
 from app.ai.chat_model import ChatModelError
+from app.models import StudySession
 from app.schemas.study_sessions import MAX_POINTS, DrawingRequest
 from tests.fakes import FakeChatModel
 from tests.helpers import (
     APPLICATION_REPLY,
+    change_settings,
     checker_reply,
     enrolled_student_with_unit,
     finish_session,
+    run_out_of_time,
     sign_up_as,
 )
 
@@ -189,13 +193,22 @@ def test_teachers_cannot_use_it(client: TestClient) -> None:
         {**DRAWING, "strokes": [{"color": "yellow", "points": [[1, 1]]}]},
         {**DRAWING, "strokes": [{"color": "black", "points": [[-5, 1]]}]},
         {**DRAWING, "width": 0},
+        # A tiny canvas would scale the pen to millions of pixels wide
+        {**DRAWING, "width": 0.001, "height": 0.001},
         # Each stroke is within its own limit, but together they are over the drawing's
         {
             **DRAWING,
             "strokes": [{"color": "black", "points": [[1, 1]] * (MAX_POINTS // 4 + 1)}] * 4,
         },
     ],
-    ids=["no strokes", "unknown colour", "negative point", "zero width", "too many points"],
+    ids=[
+        "no strokes",
+        "unknown colour",
+        "negative point",
+        "zero width",
+        "tiny canvas",
+        "too many points",
+    ],
 )
 def test_refuses_invalid_drawings(client: TestClient, body: dict[str, Any]) -> None:
     student, session_id = start_session(client)
@@ -203,3 +216,31 @@ def test_refuses_invalid_drawings(client: TestClient, body: dict[str, Any]) -> N
     response = read(client, student, session_id, body)
 
     assert response.status_code == 422
+
+
+def test_refuses_once_the_session_is_out_of_time(client: TestClient, db: Session) -> None:
+    student, session_id = start_session(client)
+    study_session = db.query(StudySession).one()
+    run_out_of_time(db, study_session)
+
+    response = read(client, student, session_id)
+
+    assert response.status_code == 409
+
+
+def test_stops_after_the_session_read_limit(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    change_settings(client, {"max_drawing_reads": 2})
+    student, session_id = start_session(client)
+    fake_chat_model.queue_reply("H₂")
+
+    first = read(client, student, session_id)
+    # A failed read still counts, so it can't be retried without end
+    second = read(client, student, session_id)
+    third = read(client, student, session_id)
+
+    assert first.status_code == 200
+    assert second.status_code == 503
+    assert third.status_code == 409
+    assert len(fake_chat_model.requests) == 2

@@ -28,6 +28,8 @@ class StudentTurnRequest(BaseModel):
 MAX_STROKES = 400
 MAX_POINTS = 20000
 MAX_CANVAS_SIZE = 10000.0
+# Smaller than any real screen; tinier sizes would scale the pen to millions of pixels
+MIN_CANVAS_SIZE = 50.0
 
 PenColor = Literal["black", "blue", "red", "green"]
 # Bounded, so infinities and NaN are refused too
@@ -44,8 +46,8 @@ class Stroke(BaseModel):
 class DrawingRequest(BaseModel):
     """A scratchpad drawing: the canvas size and the strokes on it."""
 
-    width: float = Field(gt=0, le=MAX_CANVAS_SIZE)
-    height: float = Field(gt=0, le=MAX_CANVAS_SIZE)
+    width: float = Field(ge=MIN_CANVAS_SIZE, le=MAX_CANVAS_SIZE)
+    height: float = Field(ge=MIN_CANVAS_SIZE, le=MAX_CANVAS_SIZE)
     strokes: list[Stroke] = Field(min_length=1, max_length=MAX_STROKES)
 
     @model_validator(mode="after")

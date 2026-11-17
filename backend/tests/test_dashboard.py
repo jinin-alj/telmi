@@ -1,7 +1,9 @@
 from typing import Any
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from app.models import SessionStatus, StudySession, User
 from app.services.dashboard import calculate_mascot
 from tests.fakes import FakeChatModel
 from tests.helpers import (
@@ -10,6 +12,7 @@ from tests.helpers import (
     checker_reply,
     create_class_with_unit,
     finish_session,
+    run_out_of_time,
     sign_up_as,
 )
 
@@ -192,3 +195,26 @@ def test_mascot_levels_up_every_five_ideas() -> None:
     assert calculate_mascot(5).ideas_to_next_level == 5
     assert calculate_mascot(12).level == 3
     assert calculate_mascot(12).ideas_to_next_level == 3
+
+
+def test_dashboard_counts_sessions_left_unfinished(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    setup = class_with_two_students(client)
+    unit_id = setup["unit_id"]
+    run_session(client, fake_chat_model, setup["ana"], unit_id, [1, 2], first_on_unit=True)
+    # Bea starts but closes the app, and her time runs out
+    client.post("/sessions", json={"unit_id": unit_id}, headers=setup["bea"])
+    # A session still within its time is not counted yet
+    client.post("/sessions", json={"unit_id": unit_id}, headers=setup["ana"])
+    bea = db.query(User).filter(User.username == "bea_m").one()
+    bea_session = (
+        db.query(StudySession)
+        .filter(StudySession.student_id == bea.id, StudySession.status == SessionStatus.ACTIVE)
+        .one()
+    )
+    run_out_of_time(db, bea_session)
+
+    body = read_dashboard(client, setup)
+
+    assert body["units"][0]["unfinished_sessions"] == 1

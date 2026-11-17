@@ -30,6 +30,8 @@ class UnitSummary(BaseModel):
     unit_id: uuid.UUID
     title: str
     students_attempted: int
+    # Sessions whose time ran out before the student finished, e.g. the app was closed
+    unfinished_sessions: int
     average_coverage_percent: int | None
     # None until the first session on this unit finishes and the key ideas are extracted
     ideas: list[IdeaSummary] | None

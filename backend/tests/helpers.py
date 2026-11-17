@@ -1,8 +1,13 @@
 import json
+from datetime import UTC, datetime, timedelta
 
 import httpx
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from app.config import Settings, get_settings
+from app.models import StudySession
 from tests.fakes import FakeChatModel
 
 TEST_PASSWORD = "correct-horse-battery"
@@ -110,3 +115,21 @@ def finish_session(
     fake_chat_model.queue_reply(verdict)
     response: httpx.Response = client.post(f"/sessions/{session_id}/finish", headers=student)
     return response
+
+
+def run_out_of_time(db: Session, study_session: StudySession) -> None:
+    """Move a session's start an hour back, so its time is up."""
+    study_session.started_at = datetime.now(UTC) - timedelta(hours=1)
+    db.commit()
+
+
+def change_settings(client: TestClient, changes: dict[str, int]) -> None:
+    """Make the app use its normal settings with these values changed."""
+    changed = get_settings().model_copy(update=changes)
+
+    def changed_settings() -> Settings:
+        return changed
+
+    app = client.app
+    assert isinstance(app, FastAPI)
+    app.dependency_overrides[get_settings] = changed_settings

@@ -9,6 +9,10 @@ class ChatModelError(Exception):
     """Raised when the language model can't be reached or returns something unusable."""
 
 
+class ChatModelBusyError(ChatModelError):
+    """Raised when the AI service's rate limit is hit; trying again in a minute usually works."""
+
+
 class ChatModel(ABC):
     """Any language model the app can talk to. Swap Ollama for a hosted model by subclassing."""
 

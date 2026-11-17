@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -174,3 +175,21 @@ def test_refresh_rejects_an_access_token(client: TestClient) -> None:
     response = client.post("/auth/refresh", json={"refresh_token": access_token})
 
     assert response.status_code == 401
+
+
+def test_login_upgrades_a_password_hash_made_with_old_settings(
+    client: TestClient, db: Session
+) -> None:
+    sign_up(client)
+    user = db.query(User).one()
+    heavy_hasher = PasswordHasher(memory_cost=65536, time_cost=3, parallelism=4)
+    user.password_hash = heavy_hasher.hash("correct-horse-battery")
+    db.commit()
+
+    response = client.post(
+        "/auth/login", json={"username": "ana_g", "password": "correct-horse-battery"}
+    )
+
+    assert response.status_code == 200
+    db.refresh(user)
+    assert "m=19456" in user.password_hash

@@ -1,4 +1,5 @@
 import json
+import socket
 import threading
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -6,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import httpx
 import pytest
 
-from gateway.ai_gateway import MAX_BODY_BYTES, GatewayServer
+from gateway.ai_gateway import GATEWAY_TIMEOUT_SECONDS, MAX_BODY_BYTES, GatewayServer
 
 API_KEY = "k" * 40
 CHAT_REPLY = {"message": {"role": "assistant", "content": "Why do plants need light?"}}
@@ -114,3 +115,21 @@ def test_reports_ollama_being_down_as_bad_gateway() -> None:
 def test_refuses_to_start_with_a_non_http_ollama_address() -> None:
     with pytest.raises(ValueError):
         GatewayServer(("127.0.0.1", 0), API_KEY, "file:///etc/passwd")
+
+
+def test_silent_connections_are_closed(gateway_url: str) -> None:
+    host, port = gateway_url.removeprefix("http://").split(":")
+    with socket.create_connection((host, int(port))) as connection:
+        connection.settimeout(GATEWAY_TIMEOUT_SECONDS + 5)
+        # Say nothing; the gateway should hang up rather than wait for ever
+        assert connection.recv(1024) == b""
+
+
+def test_chat_without_a_declared_length_is_refused(gateway_url: str) -> None:
+    response = httpx.post(
+        f"{gateway_url}/api/chat",
+        content=iter([b'{"model": "x"}']),
+        headers=authorised(),
+    )
+
+    assert response.status_code == 411

@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.ai.chat_model import ChatModelError
+from app.ai.chat_model import ChatModelBusyError, ChatModelError
 from app.ai.checker import ApplicationResult, CheckerFeedback
 from app.config import Settings
 from app.dependencies import (
@@ -76,13 +76,23 @@ def load_own_session(db: Session, student: User, session_id: uuid.UUID) -> Study
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
 
 
-def buddy_unavailable(error: ChatModelError) -> HTTPException:
+# The free AI tier counts tokens per minute, so a minute's wait is usually enough
+BUSY_RETRY_SECONDS = 60
+
+
+def buddy_unavailable(error: ChatModelError, message: str) -> HTTPException:
     """Log the model failure and give the app a retryable 503."""
     logger.error("Chat model failed: %s", error)
-    return HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Your buddy can't answer right now. Please try again.",
-    )
+    if isinstance(error, ChatModelBusyError):
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Pip is busy right now. Wait a minute, then try again.",
+            headers={"Retry-After": str(BUSY_RETRY_SECONDS)},
+        )
+    return HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=message)
+
+
+BUDDY_DOWN_MESSAGE = "Your buddy can't answer right now. Please try again."
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -99,10 +109,21 @@ def start_session(
 
 @router.get("/{session_id}")
 def read_session(
-    session_id: uuid.UUID, db: DbSession, settings: AppSettings, student: StudentUser
+    session_id: uuid.UUID,
+    db: DbSession,
+    settings: AppSettings,
+    chat_model: CheckerModel,
+    student: StudentUser,
 ) -> SessionDetail:
     """The conversation and, once finished, the feedback."""
     study_session = load_own_session(db, student, session_id)
+    # A session left open past its time, e.g. the app was closed, is graded when next opened
+    if study_sessions.time_ran_out_unfinished(db, settings, study_session):
+        try:
+            study_sessions.finish_session(db, chat_model, study_session)
+        except (ChatModelError, ConflictError) as error:
+            db.rollback()
+            logger.warning("Could not grade a timed-out session yet: %s", error)
     return build_session_detail(db, study_session, settings)
 
 
@@ -123,7 +144,7 @@ def add_turn(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error) from error
+        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -143,7 +164,7 @@ def finish_session(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error) from error
+        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -164,7 +185,7 @@ def answer_application_question(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error) from error
+        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -173,21 +194,20 @@ def read_drawing(
     session_id: uuid.UUID,
     request: DrawingRequest,
     db: DbSession,
+    settings: AppSettings,
     chat_model: VisionModel,
     student: StudentUser,
 ) -> DrawingText:
     """Copy out what the student wrote on the scratchpad, for them to check before sending."""
     study_session = load_own_session(db, student, session_id)
     try:
-        text = study_sessions.read_session_drawing(chat_model, study_session, request)
+        text = study_sessions.read_session_drawing(db, chat_model, settings, study_session, request)
     except ConflictError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except ChatModelError as error:
         # Only the error is logged, never the drawing or what it said
-        logger.error("Vision model failed: %s", error)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Pip can't read your drawing right now. Try again, or type instead.",
+        raise buddy_unavailable(
+            error, "Pip can't read your drawing right now. Try again, or type instead."
         ) from error
 
     if text == "":

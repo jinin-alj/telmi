@@ -18,6 +18,9 @@ OLLAMA_TIMEOUT_SECONDS = 180
 
 MIN_KEY_LENGTH = 32
 
+# A connection that sends nothing for this long is closed, so idle ones can't hold threads
+GATEWAY_TIMEOUT_SECONDS = 5
+
 
 class GatewayServer(ThreadingHTTPServer):
     """An HTTP server that remembers the shared key and where Ollama is."""
@@ -32,6 +35,8 @@ class GatewayServer(ThreadingHTTPServer):
 
 class GatewayHandler(BaseHTTPRequestHandler):
     """Checks each request, then passes chat requests through to Ollama."""
+
+    timeout = GATEWAY_TIMEOUT_SECONDS
 
     def do_POST(self) -> None:
         """Forward an authorised chat request to Ollama and relay its answer."""
@@ -50,6 +55,10 @@ class GatewayHandler(BaseHTTPRequestHandler):
             self.send_json(401, b'{"error": "unauthorised"}')
             return
 
+        # Chunked uploads have no length; the backend always sends one, so refuse them
+        if self.headers.get("Content-Length") is None:
+            self.send_json(411, b'{"error": "length required"}')
+            return
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
