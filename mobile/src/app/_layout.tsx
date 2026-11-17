@@ -1,6 +1,7 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
+import type { Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { wakeBackend } from '@/api/health';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
@@ -11,11 +12,22 @@ SplashScreen.preventAutoHideAsync();
 // The free backend sleeps when idle; start waking it while the person is still typing
 wakeBackend();
 
+// Pages that are never worth coming back to after signing in
+const START_PAGES = ['/', '/sign-in', '/sign-up'];
+
 function RootNavigator() {
   const { status, user } = useAuth();
   const signedIn = status === 'signedIn';
   const isStudent = user?.role === 'student';
   const isTeacher = user?.role === 'teacher';
+  // The page the app was opened on, e.g. a bookmarked class, so signing in goes back there
+  const pathname = usePathname();
+  const [openedPage] = useState(pathname);
+  let pageAfterSignIn: Href = '/';
+  if (!START_PAGES.includes(openedPage)) {
+    // The router gave us this path, so it is a real page even though its type is a plain string
+    pageAfterSignIn = openedPage as Href;
+  }
 
   useEffect(() => {
     if (status !== 'loading') {
@@ -39,7 +51,7 @@ function RootNavigator() {
           <Stack.Screen name="classroom/[classroomId]" />
         </Stack.Protected>
       </Stack.Protected>
-      <Stack.Protected guard={!signedIn} redirectTo="/">
+      <Stack.Protected guard={!signedIn} redirectTo={pageAfterSignIn}>
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="sign-up" />
       </Stack.Protected>
