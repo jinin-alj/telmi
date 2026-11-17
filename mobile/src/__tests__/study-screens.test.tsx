@@ -25,6 +25,7 @@ jest.mock('expo-router', () => {
   return {
     router: { push: jest.fn(), replace: jest.fn() },
     useFocusEffect: (effect: () => void) => useEffect(effect, [effect]),
+    usePathname: () => '/',
   };
 });
 

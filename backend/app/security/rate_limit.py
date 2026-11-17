@@ -1,6 +1,11 @@
 import threading
 import time
 
+from fastapi import HTTPException, status
+
+# Long enough to make guessing passwords slow, short enough not to lock out a real student
+RETRY_AFTER_SECONDS = 60
+
 # Once this many keys are tracked, keys with no recent attempts are dropped to save memory
 CLEANUP_AFTER_KEYS = 10000
 
@@ -44,3 +49,13 @@ class RateLimiter:
                 quiet_keys.append(key)
         for key in quiet_keys:
             del self.attempts[key]
+
+
+def check_rate_limit(limiter: RateLimiter, key: str) -> None:
+    """Answer 429 once this key has used up its attempts."""
+    if not limiter.allow(key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many tries. Wait a minute, then try again.",
+            headers={"Retry-After": str(RETRY_AFTER_SECONDS)},
+        )
