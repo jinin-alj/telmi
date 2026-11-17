@@ -13,7 +13,7 @@ import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
 import type { SpeechLanguage } from '@/speech/languages';
-import { colors, spacing } from '@/theme';
+import { colors, cornerRadius, spacing } from '@/theme';
 
 const VERDICT_LABELS: Record<ApplicationResult['verdict'], string> = {
   correct: 'Correct',
@@ -147,10 +147,11 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
 }
 
 const styles = StyleSheet.create({
+  // The one thing to remember on this screen, so it gets the brand's emphasis colour
   summary: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.emphasis,
   },
   sectionTitle: {
     fontSize: 18,
@@ -163,12 +164,12 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   idea: {
-    borderRadius: 8,
+    borderRadius: cornerRadius,
     padding: 12,
     marginBottom: spacing.small,
   },
   ideaCovered: {
-    backgroundColor: colors.successSoft,
+    backgroundColor: colors.dataSoft,
   },
   ideaMissing: {
     backgroundColor: colors.warningSoft,
@@ -179,18 +180,19 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   coveredText: {
-    color: colors.success,
+    color: colors.data,
   },
   ideaText: {
     fontSize: 16,
     color: colors.text,
     marginTop: 2,
   },
+  // Mistakes sit on a calm peach panel: Pip never marks anything in red
   fix: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.error,
-    paddingLeft: 12,
-    marginBottom: spacing.medium,
+    backgroundColor: colors.primarySoft,
+    borderRadius: cornerRadius,
+    padding: 12,
+    marginBottom: spacing.small,
   },
   fixLabel: {
     fontSize: 14,
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   verdict: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.data,
     marginVertical: spacing.small,
   },
   error: {

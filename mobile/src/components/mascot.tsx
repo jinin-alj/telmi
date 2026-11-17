@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Mascot as MascotProgress } from '@/api/types';
-import { colors, spacing } from '@/theme';
+import { colors, cornerRadius, spacing } from '@/theme';
 
 const BASE_SIZE = 72;
 const GROWTH_PER_LEVEL = 12;
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.medium,
     padding: spacing.medium,
-    borderRadius: 12,
+    borderRadius: cornerRadius,
     backgroundColor: colors.primarySoft,
     marginBottom: spacing.large,
   },

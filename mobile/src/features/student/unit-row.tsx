@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   row: {
     paddingVertical: spacing.medium,
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    borderTopColor: colors.divider,
   },
   tile: {
     flexBasis: 260,

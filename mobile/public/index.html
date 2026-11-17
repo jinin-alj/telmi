@@ -11,7 +11,7 @@
     <title>%WEB_TITLE%</title>
     <!-- Installable web app: manifest for Android and desktop, apple-* tags for iPhone and iPad -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#1D4ED8" />
+    <meta name="theme-color" content="#FFF6EF" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Telmi" />
@@ -27,6 +27,11 @@
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
         overflow: hidden;
+      }
+      /* Telmi brand: a clear denim ring shows where keyboard focus is */
+      *:focus-visible {
+        outline: 3px solid #3b6699;
+        outline-offset: 2px;
       }
       /* These styles make the root element full-height */
       #root {

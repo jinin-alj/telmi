@@ -37,7 +37,7 @@ export function TopBar() {
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.panel,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
   },
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: '800',
-    color: colors.primary,
+    color: colors.text,
   },
   account: {
     flexDirection: 'row',
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   signOut: {
     fontSize: 15,
-    color: colors.primary,
+    color: colors.link,
     textDecorationLine: 'underline',
   },
 });

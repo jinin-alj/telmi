@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, pillRadius, spacing } from '@/theme';
 
 type ChoiceGroupProps<Value extends string> = {
   label: string;
@@ -52,13 +52,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: pillRadius,
+    backgroundColor: colors.panel,
     paddingHorizontal: spacing.small,
   },
   selected: {
-    borderColor: colors.primary,
+    borderColor: colors.link,
     borderWidth: 2,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.dataSoft,
   },
   label: {
     fontSize: 16,
@@ -66,6 +67,6 @@ const styles = StyleSheet.create({
   },
   selectedLabel: {
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.link,
   },
 });

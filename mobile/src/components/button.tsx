@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, pillRadius, spacing } from '@/theme';
 
 type ButtonProps = {
   label: string;
@@ -36,7 +36,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? colors.onPrimary : colors.primary} />
+        <ActivityIndicator color={isPrimary ? colors.onPrimary : colors.link} />
       ) : (
         <Text style={[styles.label, isPrimary ? styles.primaryLabel : styles.secondaryLabel]}>
           {label}
@@ -49,7 +49,7 @@ export function Button({
 const styles = StyleSheet.create({
   button: {
     minHeight: minimumTouchSize,
-    borderRadius: 8,
+    borderRadius: pillRadius,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.medium,
@@ -59,9 +59,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   secondary: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.panel,
+    // A faint edge so a white button still shows on a white card
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.divider,
   },
   pressed: {
     opacity: 0.85,
@@ -77,6 +78,6 @@ const styles = StyleSheet.create({
     color: colors.onPrimary,
   },
   secondaryLabel: {
-    color: colors.primary,
+    color: colors.text,
   },
 });

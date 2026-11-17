@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.large,
     paddingTop: spacing.medium,
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    borderTopColor: colors.divider,
   },
   voiceRow: {
     minHeight: minimumTouchSize,

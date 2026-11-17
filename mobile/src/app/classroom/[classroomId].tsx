@@ -16,7 +16,7 @@ import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { StudentSummaryRow } from '@/features/teacher/student-summary-row';
 import { UnitSummaryCard } from '@/features/teacher/unit-summary-card';
 import { useIsWide } from '@/hooks/use-is-wide';
-import { colors, spacing } from '@/theme';
+import { colors, cornerRadius, spacing } from '@/theme';
 
 export default function ClassroomScreen() {
   const { classroomId } = useLocalSearchParams<{ classroomId: string }>();
@@ -91,13 +91,11 @@ export default function ClassroomScreen() {
                   <UnitSummaryCard key={unit.unit_id} unit={unit} />
                 ))}
                 {addingUnit ? (
-                  <Card>
-                    <AddUnitForm
-                      classroomId={dashboard.classroom.id}
-                      onAdded={handleUnitAdded}
-                      onCancel={() => setAddingUnit(false)}
-                    />
-                  </Card>
+                  <AddUnitForm
+                    classroomId={dashboard.classroom.id}
+                    onAdded={handleUnitAdded}
+                    onCancel={() => setAddingUnit(false)}
+                  />
                 ) : (
                   <Button label="Add a unit" onPress={() => setAddingUnit(true)} />
                 )}
@@ -150,7 +148,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     backgroundColor: colors.warningSoft,
-    borderRadius: 8,
+    borderRadius: cornerRadius,
     padding: spacing.small,
     marginTop: spacing.medium,
   },

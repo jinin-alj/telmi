@@ -10,7 +10,7 @@ import { Columns } from '@/components/columns';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
 import type { SpeechLanguage } from '@/speech/languages';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing } from '@/theme';
 
 // Refreshing the countdown every few seconds is enough for a whole-minute display
 const CLOCK_TICK_MILLISECONDS = 5000;
@@ -69,7 +69,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   if (finishing) {
     return (
       <View style={styles.checking} accessibilityLiveRegion="polite">
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.link} />
         <Text style={styles.checkingText}>
           Checking your explanation against your teacher&apos;s notes…
         </Text>
@@ -162,14 +162,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   bubble: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: 12,
+    backgroundColor: colors.panel,
+    boxShadow: panelShadow,
+    borderRadius: cornerRadius,
     padding: spacing.medium,
   },
   speaker: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.mutedText,
     marginBottom: 4,
   },
   buddyLine: {
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.small,
   },
   toggleLabel: {
-    color: colors.primary,
+    color: colors.link,
     fontSize: 16,
     textDecorationLine: 'underline',
   },

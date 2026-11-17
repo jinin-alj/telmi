@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { colors, cornerRadius, spacing } from '@/theme';
 
 /** A class's join code in large spaced letters, easy to read out or copy onto a board. */
 export function JoinCode({ code }: { code: string }) {
@@ -20,8 +20,8 @@ export function JoinCode({ code }: { code: string }) {
 
 const styles = StyleSheet.create({
   box: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+    borderRadius: cornerRadius,
     paddingVertical: spacing.small,
     paddingHorizontal: spacing.medium,
     alignSelf: 'flex-start',

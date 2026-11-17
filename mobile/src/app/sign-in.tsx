@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   link: {
-    color: colors.primary,
+    color: colors.link,
     fontSize: 16,
     textAlign: 'center',
     textDecorationLine: 'underline',

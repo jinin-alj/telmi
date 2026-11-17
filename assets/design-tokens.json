@@ -1,0 +1,414 @@
+{
+  "$description": "Telmi brand v3 design tokens. Generated from docs/brand-guidelines.md; edit that file first.",
+  "brand": "Telmi v3",
+  "primitive": {
+    "color": {
+      "coral": {
+        "500": {
+          "$value": "#FF8C69",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#F2734F",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#FFB094",
+          "$type": "color"
+        }
+      },
+      "denim": {
+        "500": {
+          "$value": "#3B6699",
+          "$type": "color"
+        },
+        "700": {
+          "$value": "#2C4F78",
+          "$type": "color"
+        },
+        "100": {
+          "$value": "#E3ECF7",
+          "$type": "color"
+        }
+      },
+      "rust": {
+        "500": {
+          "$value": "#B5462A",
+          "$type": "color"
+        },
+        "700": {
+          "$value": "#8F3620",
+          "$type": "color"
+        },
+        "100": {
+          "$value": "#FFE6D8",
+          "$type": "color"
+        }
+      },
+      "neutral": {
+        "canvas": {
+          "$value": "#FFF6EF",
+          "$type": "color"
+        },
+        "panel": {
+          "$value": "#FFFFFF",
+          "$type": "color"
+        },
+        "butter": {
+          "$value": "#FFEDBF",
+          "$type": "color"
+        },
+        "line": {
+          "$value": "#F1DED2",
+          "$type": "color"
+        },
+        "ink": {
+          "$value": "#3A2540",
+          "$type": "color"
+        },
+        "muted": {
+          "$value": "#6E5A6B",
+          "$type": "color"
+        }
+      },
+      "night": {
+        "bg": {
+          "$value": "#1E1420",
+          "$type": "color"
+        },
+        "panel": {
+          "$value": "#2A1D2E",
+          "$type": "color"
+        },
+        "line": {
+          "$value": "#4A3550",
+          "$type": "color"
+        },
+        "text": {
+          "$value": "#FFF6EF",
+          "$type": "color"
+        },
+        "muted": {
+          "$value": "#C9B6C4",
+          "$type": "color"
+        },
+        "denim": {
+          "$value": "#9DBBE3",
+          "$type": "color"
+        },
+        "emphasis": {
+          "$value": "#FFB59E",
+          "$type": "color"
+        }
+      },
+      "status": {
+        "error": {
+          "$value": "#B3261E",
+          "$type": "color"
+        },
+        "success": {
+          "$value": "#2E6B4A",
+          "$type": "color"
+        }
+      }
+    },
+    "font": {
+      "body": {
+        "$value": "'Figtree', 'Segoe UI', sans-serif",
+        "$type": "fontFamily"
+      },
+      "heading": {
+        "$value": "'Fredoka', 'Trebuchet MS', sans-serif",
+        "$type": "fontFamily"
+      }
+    },
+    "radius": {
+      "panel": {
+        "$value": "16px",
+        "$type": "dimension"
+      },
+      "panel-slide": {
+        "$value": "32px",
+        "$type": "dimension"
+      },
+      "bubble": {
+        "$value": "40px",
+        "$type": "dimension"
+      },
+      "pill": {
+        "$value": "999px",
+        "$type": "dimension"
+      }
+    },
+    "shadow": {
+      "soft": {
+        "$value": "0 18px 44px rgba(58,37,64,0.10)",
+        "$type": "shadow"
+      }
+    },
+    "size": {
+      "touch-target": {
+        "$value": "44px",
+        "$type": "dimension"
+      }
+    }
+  },
+  "semantic": {
+    "color": {
+      "light": {
+        "background": {
+          "$value": "{primitive.color.neutral.canvas}",
+          "$type": "color"
+        },
+        "surface": {
+          "$value": "{primitive.color.neutral.panel}",
+          "$type": "color"
+        },
+        "surface-warm": {
+          "$value": "{primitive.color.rust.100}",
+          "$type": "color"
+        },
+        "text": {
+          "$value": "{primitive.color.neutral.ink}",
+          "$type": "color"
+        },
+        "text-muted": {
+          "$value": "{primitive.color.neutral.muted}",
+          "$type": "color"
+        },
+        "divider": {
+          "$value": "{primitive.color.neutral.line}",
+          "$type": "color"
+        },
+        "primary": {
+          "$value": "{primitive.color.coral.500}",
+          "$type": "color"
+        },
+        "primary-pressed": {
+          "$value": "{primitive.color.coral.600}",
+          "$type": "color"
+        },
+        "primary-hover": {
+          "$value": "{primitive.color.coral.300}",
+          "$type": "color"
+        },
+        "on-primary": {
+          "$value": "{primitive.color.neutral.ink}",
+          "$type": "color"
+        },
+        "link": {
+          "$value": "{primitive.color.denim.500}",
+          "$type": "color"
+        },
+        "link-hover": {
+          "$value": "{primitive.color.denim.700}",
+          "$type": "color"
+        },
+        "data": {
+          "$value": "{primitive.color.denim.500}",
+          "$type": "color"
+        },
+        "data-track": {
+          "$value": "{primitive.color.denim.100}",
+          "$type": "color"
+        },
+        "emphasis": {
+          "$value": "{primitive.color.rust.500}",
+          "$type": "color"
+        },
+        "emphasis-surface": {
+          "$value": "{primitive.color.rust.100}",
+          "$type": "color"
+        },
+        "error": {
+          "$value": "{primitive.color.status.error}",
+          "$type": "color"
+        },
+        "success": {
+          "$value": "{primitive.color.status.success}",
+          "$type": "color"
+        },
+        "warning-surface": {
+          "$value": "{primitive.color.neutral.butter}",
+          "$type": "color"
+        },
+        "info": {
+          "$value": "{primitive.color.denim.500}",
+          "$type": "color"
+        },
+        "info-surface": {
+          "$value": "{primitive.color.denim.100}",
+          "$type": "color"
+        },
+        "focus-ring": {
+          "$value": "{primitive.color.denim.500}",
+          "$type": "color"
+        }
+      },
+      "dark": {
+        "background": {
+          "$value": "{primitive.color.night.bg}",
+          "$type": "color"
+        },
+        "surface": {
+          "$value": "{primitive.color.night.panel}",
+          "$type": "color"
+        },
+        "surface-warm": {
+          "$value": "{primitive.color.night.panel}",
+          "$type": "color"
+        },
+        "text": {
+          "$value": "{primitive.color.night.text}",
+          "$type": "color"
+        },
+        "text-muted": {
+          "$value": "{primitive.color.night.muted}",
+          "$type": "color"
+        },
+        "divider": {
+          "$value": "{primitive.color.night.line}",
+          "$type": "color"
+        },
+        "primary": {
+          "$value": "{primitive.color.coral.500}",
+          "$type": "color"
+        },
+        "primary-pressed": {
+          "$value": "{primitive.color.coral.600}",
+          "$type": "color"
+        },
+        "primary-hover": {
+          "$value": "{primitive.color.coral.300}",
+          "$type": "color"
+        },
+        "on-primary": {
+          "$value": "{primitive.color.neutral.ink}",
+          "$type": "color"
+        },
+        "link": {
+          "$value": "{primitive.color.night.denim}",
+          "$type": "color"
+        },
+        "link-hover": {
+          "$value": "{primitive.color.night.text}",
+          "$type": "color"
+        },
+        "data": {
+          "$value": "{primitive.color.night.denim}",
+          "$type": "color"
+        },
+        "data-track": {
+          "$value": "{primitive.color.night.line}",
+          "$type": "color"
+        },
+        "emphasis": {
+          "$value": "{primitive.color.night.emphasis}",
+          "$type": "color"
+        },
+        "emphasis-surface": {
+          "$value": "{primitive.color.night.panel}",
+          "$type": "color"
+        },
+        "error": {
+          "$value": "{primitive.color.coral.300}",
+          "$type": "color"
+        },
+        "success": {
+          "$value": "{primitive.color.night.denim}",
+          "$type": "color"
+        },
+        "warning-surface": {
+          "$value": "{primitive.color.night.panel}",
+          "$type": "color"
+        },
+        "info": {
+          "$value": "{primitive.color.night.denim}",
+          "$type": "color"
+        },
+        "info-surface": {
+          "$value": "{primitive.color.night.panel}",
+          "$type": "color"
+        },
+        "focus-ring": {
+          "$value": "{primitive.color.night.denim}",
+          "$type": "color"
+        }
+      }
+    }
+  },
+  "component": {
+    "button": {
+      "primary": {
+        "bg": {
+          "$value": "{primitive.color.coral.500}",
+          "$type": "color"
+        },
+        "text": {
+          "$value": "{primitive.color.neutral.ink}",
+          "$type": "color"
+        },
+        "bg-pressed": {
+          "$value": "{primitive.color.coral.600}",
+          "$type": "color"
+        }
+      },
+      "secondary": {
+        "bg": {
+          "$value": "{primitive.color.neutral.panel}",
+          "$type": "color"
+        },
+        "text": {
+          "$value": "{primitive.color.neutral.ink}",
+          "$type": "color"
+        }
+      }
+    },
+    "bubble": {
+      "bg": {
+        "$value": "{primitive.color.neutral.panel}",
+        "$type": "color"
+      },
+      "text": {
+        "$value": "{primitive.color.neutral.ink}",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "{primitive.radius.bubble}",
+        "$type": "dimension"
+      }
+    },
+    "panel": {
+      "bg": {
+        "$value": "{primitive.color.neutral.panel}",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "{primitive.radius.panel}",
+        "$type": "dimension"
+      },
+      "shadow": {
+        "$value": "{primitive.shadow.soft}",
+        "$type": "shadow"
+      }
+    },
+    "chart": {
+      "bar": {
+        "$value": "{primitive.color.denim.500}",
+        "$type": "color"
+      },
+      "track": {
+        "$value": "{primitive.color.denim.100}",
+        "$type": "color"
+      },
+      "bar-emphasis": {
+        "$value": "{primitive.color.rust.500}",
+        "$type": "color"
+      },
+      "track-emphasis": {
+        "$value": "{primitive.color.rust.100}",
+        "$type": "color"
+      }
+    }
+  }
+}

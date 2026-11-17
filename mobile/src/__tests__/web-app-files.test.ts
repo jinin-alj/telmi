@@ -1,6 +1,8 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+import { colors } from '@/theme';
+
 const publicFolder = join(__dirname, '..', '..', 'public');
 
 function readPublicFile(name: string): string {
@@ -28,4 +30,20 @@ it('uses the HTML spelling of http-equiv, not the React one', () => {
 
   expect(page).toContain('http-equiv=');
   expect(page).not.toContain('httpEquiv=');
+});
+
+it('uses the brand canvas for the browser bar and the install screen', () => {
+  const manifest = JSON.parse(readPublicFile('manifest.json'));
+  const page = readPublicFile('index.html');
+
+  expect(manifest.theme_color).toBe(colors.background);
+  expect(manifest.background_color).toBe(colors.background);
+  expect(page).toContain(`<meta name="theme-color" content="${colors.background}" />`);
+});
+
+it('shows keyboard focus with the brand denim ring', () => {
+  const page = readPublicFile('index.html');
+
+  // The formatter writes colours in lowercase, so compare without case
+  expect(page.toLowerCase()).toContain(`outline: 3px solid ${colors.link.toLowerCase()}`);
 });

@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   classroom: {
     paddingVertical: spacing.medium,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
+    borderBottomColor: colors.divider,
     gap: spacing.small,
   },
   classroomName: {

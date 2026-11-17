@@ -9,7 +9,7 @@ import { appendReading } from '@/features/session/drawing';
 import { DrawingPad } from '@/features/session/drawing-pad';
 import type { SpeechLanguage } from '@/speech/languages';
 import { useSpeechToText } from '@/speech/use-speech-to-text';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, cornerRadius, minimumTouchSize, spacing } from '@/theme';
 
 // Matches TURN_MAX_CHARACTERS in backend/app/schemas/study_sessions.py
 const MAX_CHARACTERS = 2000;
@@ -239,8 +239,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Pip never shows red, so recording is a darker coral with a soft ring
   microphoneListening: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.primaryPressed,
+    borderWidth: 8,
+    borderColor: colors.primarySoft,
   },
   microphoneIcon: {
     width: 22,
@@ -258,7 +261,8 @@ const styles = StyleSheet.create({
     minHeight: 96,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: cornerRadius,
+    backgroundColor: colors.panel,
     padding: 12,
     fontSize: 17,
     color: colors.text,
@@ -276,7 +280,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.small,
   },
   switchModeLabel: {
-    color: colors.primary,
+    color: colors.link,
     fontSize: 16,
     textDecorationLine: 'underline',
   },
