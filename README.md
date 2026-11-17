@@ -104,6 +104,7 @@ Phone / laptop (PWA) -> Vercel (web app)
 4. **App:** on vercel.com, create a new project from this repo with **Root Directory** `mobile`, **Framework** Other, and the environment variable `EXPO_PUBLIC_API_URL` set to `https://telmi-api.onrender.com`. Deploy.
 5. **Connect:** on Render, set `CORS_ORIGINS` to the Vercel address and save.
 6. **Install:** open the Vercel address on a phone. On iPhone, use Share → Add to Home Screen; on Android, use Install app.
+7. **Crash reports (optional):** on sentry.io, create an organisation in the **EU data region** (this can't be changed later), then two projects: Python (FastAPI) and React. Put the Python project's DSN in `SENTRY_DSN` on Render, and the React project's DSN in `EXPO_PUBLIC_SENTRY_DSN` on Vercel, then redeploy both. With either one empty, that side sends nothing.
 
 Render only deploys `main` after CI passes, and runs database migrations on every start. Supabase also works as the database: use its **Session pooler** string (port 5432). Free Supabase projects pause after a week without use.
 
@@ -342,6 +343,13 @@ To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://
 - Starlette prints a deprecation warning about `httpx` in tests. It is harmless; the suggested replacement has not been vetted yet.
 
 ## Maintenance
+
+**Crash reports (Sentry).** The API (`app/error_reporting.py`) and the web app (`monitoring/error-reporting.web.ts`) send crashes to Sentry when a DSN is set. Because the users are minors, both are set up to send **nothing about people**:
+- Every data-collection category is off: user info, cookies, headers, request bodies, URL query parameters and local variables.
+- Our own scrubbing removes the user and request details again before anything is sent.
+- The web app drops console, typing and click breadcrumbs, and never adds session replay or performance tracing.
+
+What is sent: the error type and message, the stack trace with a few lines of our source code around each step, the page or endpoint, the browser or server version, and the release (the Render commit, or `telmi-web@<app version>`). This was checked by sending real crashes to a fake Sentry server: typed text, console messages, tokens, cookies, query strings and IP addresses did not arrive. The phone apps don't report crashes yet.
 
 **Problem reports from the pilot.** Every signed-in page has a "Report a problem" link at the bottom. Reports go to `POST /feedback` (any signed-in user, at most 5 an hour) and are saved in the `feedback` table with the person's role, the page they were on and the app version. Reports are deleted after 6 months, and with the account. To read the newest ones, run this in the Neon SQL editor:
 

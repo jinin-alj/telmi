@@ -29,3 +29,6 @@ services:
         value: hosted
       - key: AI_API_KEY
         sync: false
+      # Crash reports; leave empty to send none (see "Crash reports" in the README)
+      - key: SENTRY_DSN
+        sync: false

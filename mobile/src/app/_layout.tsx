@@ -5,12 +5,16 @@ import { useEffect, useState } from 'react';
 
 import { wakeBackend } from '@/api/health';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
+import { startErrorReporting } from '@/monitoring/error-reporting';
 
 // Keep the splash up until we know whether a saved session exists, to avoid a sign-in flash
 SplashScreen.preventAutoHideAsync();
 
 // The free backend sleeps when idle; start waking it while the person is still typing
 wakeBackend();
+
+// Crash reports go to Sentry only when the build has a Sentry address
+startErrorReporting();
 
 // Pages that are never worth coming back to after signing in
 const START_PAGES = ['/', '/sign-in', '/sign-up'];

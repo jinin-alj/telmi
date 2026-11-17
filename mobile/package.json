@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/ui": "~58.0.24",
+    "@sentry/react": "^11.13.0",
     "expo": "~58.0.20",
     "expo-constants": "~58.0.13",
     "expo-device": "~58.0.5",

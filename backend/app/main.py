@@ -4,6 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.body_limit import limit_body_size
 from app.config import get_settings
+from app.error_reporting import start_error_reporting
 from app.routers import auth, classrooms, dashboard, feedback, study_sessions
 from app.security.rate_limit import RateLimiter
 
@@ -48,4 +49,5 @@ def create_app() -> FastAPI:
     return app
 
 
+start_error_reporting(get_settings())
 app = create_app()
