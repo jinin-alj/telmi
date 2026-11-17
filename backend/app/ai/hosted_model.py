@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.chat_model import ChatMessage, ChatModel, ChatModelError
+from app.ai.chat_model import ChatMessage, ChatModel, ChatModelBusyError, ChatModelError
 
 RATE_LIMITED = 429
 
@@ -109,7 +109,7 @@ class HostedChatModel(ChatModel):
             raise ChatModelError(f"AI service unreachable: {error}") from error
 
         if response.status_code == RATE_LIMITED:
-            raise ChatModelError("The AI service is busy (free-tier rate limit)")
+            raise ChatModelBusyError("The AI service is busy (free-tier rate limit)")
         if response.status_code >= 400:
             raise ChatModelError(
                 f"AI service error {response.status_code}: {read_error_message(response)}"

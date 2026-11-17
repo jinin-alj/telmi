@@ -1,23 +1,26 @@
-from datetime import UTC, datetime, timedelta
-
 import httpx
-from fastapi import FastAPI
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.ai.chat_model import ChatModelBusyError
 from app.ai.checker import CheckerVerdict, build_feedback, calculate_coverage_percent
 from app.ai.transcript import wrap_student_text
-from app.config import Settings, get_settings
-from app.models import SessionTurn, StudySession
+from app.config import get_settings
+from app.models import SessionStatus, SessionTurn, Speaker, StudySession
 from tests.fakes import FakeChatModel
 from tests.helpers import (
     APPLICATION_REPLY,
     KEY_IDEAS,
     KEY_IDEAS_REPLY,
     MATERIAL,
+    change_settings,
     checker_reply,
     enrolled_student_with_unit,
     finish_session,
+    run_out_of_time,
     sign_up_as,
 )
 
@@ -141,15 +144,8 @@ def test_other_student_cannot_read_session(client: TestClient) -> None:
     assert response.status_code == 404
 
 
-def low_turn_cap_settings() -> Settings:
-    """Settings that allow only one student turn."""
-    return get_settings().model_copy(update={"max_student_turns": 1})
-
-
 def test_turns_stop_at_the_cap(client: TestClient, fake_chat_model: FakeChatModel) -> None:
-    app = client.app
-    assert isinstance(app, FastAPI)
-    app.dependency_overrides[get_settings] = low_turn_cap_settings
+    change_settings(client, {"max_student_turns": 1})
     student, unit_id = enrolled_student_with_unit(client)
     session = start(client, student, unit_id)
     fake_chat_model.queue_reply("Why?")
@@ -166,8 +162,7 @@ def test_turns_stop_when_time_is_up(client: TestClient, db: Session) -> None:
     student, unit_id = enrolled_student_with_unit(client)
     session = start(client, student, unit_id)
     study_session = db.query(StudySession).one()
-    study_session.started_at = datetime.now(UTC) - timedelta(hours=1)
-    db.commit()
+    run_out_of_time(db, study_session)
 
     response = say(client, student, session["id"], "Plants make food.")
 
@@ -233,7 +228,7 @@ def test_key_ideas_are_extracted_once_per_unit(
     assert extraction_requests == 1
 
 
-def test_finished_session_rejects_turns_and_second_finish(
+def test_finished_session_rejects_turns_and_returns_results_again(
     client: TestClient, fake_chat_model: FakeChatModel
 ) -> None:
     student, unit_id = enrolled_student_with_unit(client)
@@ -242,8 +237,14 @@ def test_finished_session_rejects_turns_and_second_finish(
     say(client, student, session["id"], "Plants make food.")
     finish_session(client, fake_chat_model, student, session["id"], CHECKER_REPLY)
 
+    requests_before = len(fake_chat_model.requests)
+
     assert say(client, student, session["id"], "One more thing").status_code == 409
-    assert client.post(f"/sessions/{session['id']}/finish", headers=student).status_code == 409
+    # A retry after a dropped connection gets the saved results instead of an error
+    second = client.post(f"/sessions/{session['id']}/finish", headers=student)
+    assert second.status_code == 200
+    assert second.json()["coverage_percent"] == 67
+    assert len(fake_chat_model.requests) == requests_before
 
 
 def test_checker_retries_once_after_malformed_output(
@@ -305,7 +306,9 @@ def test_application_answer_is_graded_once(
     assert answer.status_code == 200
     assert answer.json()["application_result"]["verdict"] == "partly_correct"
     assert answer.json()["application_answer"] == "No light means no energy"
-    assert second.status_code == 409
+    # Answering again keeps the first, graded answer
+    assert second.status_code == 200
+    assert second.json()["application_answer"] == "No light means no energy"
 
 
 def test_coverage_counts_only_covered_ideas() -> None:
@@ -347,3 +350,177 @@ def test_buddys_planted_mistake_is_never_blamed_on_the_student(
 
     assert response.status_code == 200
     assert response.json()["feedback"]["misconceptions"] == []
+
+
+def test_connection_goes_back_to_the_pool_while_pip_thinks(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    transaction_open_while_thinking: list[bool] = []
+
+    def record_transaction() -> None:
+        transaction_open_while_thinking.append(db.in_transaction())
+
+    fake_chat_model.while_thinking = record_transaction
+    fake_chat_model.queue_reply("Why?")
+    say(client, student, session["id"], "Plants make food.")
+    finish_session(client, fake_chat_model, student, session["id"], CHECKER_REPLY)
+
+    # Pip's reply, key ideas and grading: no database connection is held during any of them
+    assert transaction_open_while_thinking == [False, False, False]
+
+
+def test_turn_sent_twice_while_pip_thinks_is_saved_once(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    study_session = db.query(StudySession).one()
+
+    def other_request_saves_first() -> None:
+        # The first tap's request finishes while this one is still waiting for Pip
+        db.add(
+            SessionTurn(session_id=study_session.id, position=1, speaker=Speaker.STUDENT, text="Hi")
+        )
+        db.add(
+            SessionTurn(session_id=study_session.id, position=2, speaker=Speaker.BUDDY, text="Oh?")
+        )
+        db.commit()
+
+    fake_chat_model.while_thinking = other_request_saves_first
+    fake_chat_model.queue_reply("Why?")
+
+    response = say(client, student, session["id"], "Hi")
+
+    assert response.status_code == 409
+    assert db.query(SessionTurn).count() == 3
+
+
+def test_turn_that_lands_after_finishing_is_not_saved(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    study_session = db.query(StudySession).one()
+
+    def finish_meanwhile() -> None:
+        db.execute(
+            update(StudySession)
+            .where(StudySession.id == study_session.id)
+            .values(status=SessionStatus.COMPLETED)
+        )
+        db.commit()
+
+    fake_chat_model.while_thinking = finish_meanwhile
+    fake_chat_model.queue_reply("Why?")
+
+    response = say(client, student, session["id"], "Plants make food.")
+
+    assert response.status_code == 409
+    assert db.query(SessionTurn).count() == 1
+
+
+def test_two_finishes_at_once_keep_the_first_result(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+    say(client, student, session["id"], "Plants make food.")
+    study_session = db.query(StudySession).one()
+
+    def other_finish_saves_first() -> None:
+        if len(fake_chat_model.queued_replies) == 1:
+            db.execute(
+                update(StudySession)
+                .where(StudySession.id == study_session.id)
+                .values(status=SessionStatus.COMPLETED, coverage_percent=100)
+            )
+            db.commit()
+
+    fake_chat_model.while_thinking = other_finish_saves_first
+    response = finish_session(client, fake_chat_model, student, session["id"], CHECKER_REPLY)
+
+    assert response.status_code == 200
+    assert response.json()["coverage_percent"] == 100
+
+
+def test_turn_positions_are_unique_in_the_database(client: TestClient, db: Session) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    start(client, student, unit_id)
+    study_session = db.query(StudySession).one()
+
+    db.add(SessionTurn(session_id=study_session.id, position=0, speaker=Speaker.BUDDY, text="Hi"))
+
+    with pytest.raises(IntegrityError):
+        db.commit()
+    db.rollback()
+
+
+def test_turns_stop_when_the_session_has_enough_text(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    change_settings(client, {"max_student_characters": 30})
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+
+    first = say(client, student, session["id"], "Plants make food.")
+    second = say(client, student, session["id"], "And oxygen comes out of the leaves.")
+
+    assert first.status_code == 200
+    assert second.status_code == 409
+    assert "Finish" in second.json()["detail"]
+
+
+def test_busy_ai_asks_the_student_to_wait(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+
+    def rate_limited() -> None:
+        raise ChatModelBusyError("The AI service is busy")
+
+    fake_chat_model.while_thinking = rate_limited
+
+    response = say(client, student, session["id"], "Plants make food.")
+
+    assert response.status_code == 503
+    assert "busy" in response.json()["detail"]
+    assert response.headers["Retry-After"] == "60"
+
+
+def test_opening_a_session_whose_time_ran_out_grades_it(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+    say(client, student, session["id"], "Plants make food.")
+    study_session = db.query(StudySession).one()
+    run_out_of_time(db, study_session)
+    fake_chat_model.queue_reply(KEY_IDEAS_REPLY)
+    fake_chat_model.queue_reply(CHECKER_REPLY)
+
+    response = client.get(f"/sessions/{session['id']}", headers=student)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
+
+
+def test_opening_a_timed_out_session_still_works_when_grading_fails(
+    client: TestClient, db: Session, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("Why?")
+    say(client, student, session["id"], "Plants make food.")
+    study_session = db.query(StudySession).one()
+    run_out_of_time(db, study_session)
+
+    response = client.get(f"/sessions/{session['id']}", headers=student)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "active"

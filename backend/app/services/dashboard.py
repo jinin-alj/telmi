@@ -1,9 +1,11 @@
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.checker import CheckerFeedback, IdeaStatus
+from app.config import Settings
 from app.models import Enrollment, SessionStatus, StudySession, Unit, User
 from app.schemas.classrooms import ClassroomPublic
 from app.schemas.dashboard import (
@@ -41,6 +43,25 @@ def load_completed_sessions(
     if student_id is not None:
         query = query.where(StudySession.student_id == student_id)
     return list(db.scalars(query.order_by(StudySession.completed_at)))
+
+
+def count_unfinished_sessions(
+    db: Session, unit_ids: list[uuid.UUID], student_ids: set[uuid.UUID], settings: Settings
+) -> dict[uuid.UUID, int]:
+    """Per unit, sessions by these students that ran out of time without being finished."""
+    counts: dict[uuid.UUID, int] = {}
+    if len(unit_ids) == 0:
+        return counts
+    time_ran_out_before = datetime.now(UTC) - timedelta(minutes=settings.session_minutes)
+    query = select(StudySession).where(
+        StudySession.unit_id.in_(unit_ids),
+        StudySession.status == SessionStatus.ACTIVE,
+        StudySession.started_at < time_ran_out_before,
+    )
+    for study_session in db.scalars(query):
+        if study_session.student_id in student_ids:
+            counts[study_session.unit_id] = counts.get(study_session.unit_id, 0) + 1
+    return counts
 
 
 def group_by_student_and_unit(sessions: list[StudySession]) -> dict[SessionKey, list[StudySession]]:
@@ -125,7 +146,9 @@ def tally_feedback(
             idea_summary.examples.append(example)
 
 
-def build_unit_summary(unit: Unit, latest_sessions: list[StudySession]) -> UnitSummary:
+def build_unit_summary(
+    unit: Unit, latest_sessions: list[StudySession], unfinished_sessions: int
+) -> UnitSummary:
     """Class-wide view of one unit, from each student's latest session."""
     coverages = []
     for study_session in latest_sessions:
@@ -145,6 +168,7 @@ def build_unit_summary(unit: Unit, latest_sessions: list[StudySession]) -> UnitS
         unit_id=unit.id,
         title=unit.title,
         students_attempted=len(latest_sessions),
+        unfinished_sessions=unfinished_sessions,
         average_coverage_percent=average_percent(coverages),
         ideas=ideas,
         other_misconceptions=other_misconceptions,
@@ -194,7 +218,7 @@ def build_student_summary(
 
 
 def build_classroom_dashboard(
-    db: Session, teacher: User, classroom_id: uuid.UUID
+    db: Session, teacher: User, classroom_id: uuid.UUID, settings: Settings
 ) -> ClassroomDashboard:
     """The teacher's view of a class they own."""
     classroom = get_classroom_for_member(db, teacher, classroom_id)
@@ -223,6 +247,7 @@ def build_classroom_dashboard(
         if study_session.student_id in student_ids:
             enrolled_sessions.append(study_session)
     grouped = group_by_student_and_unit(enrolled_sessions)
+    unfinished = count_unfinished_sessions(db, unit_ids, student_ids, settings)
 
     unit_summaries = []
     for unit in units:
@@ -231,7 +256,7 @@ def build_classroom_dashboard(
             sessions = grouped.get((student.id, unit.id), [])
             if len(sessions) > 0:
                 latest_sessions.append(sessions[-1])
-        unit_summaries.append(build_unit_summary(unit, latest_sessions))
+        unit_summaries.append(build_unit_summary(unit, latest_sessions, unfinished.get(unit.id, 0)))
 
     student_summaries = []
     for student in students:

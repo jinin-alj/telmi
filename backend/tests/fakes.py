@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Any
 
 from app.ai.chat_model import ChatMessage, ChatModel, ChatModelError
@@ -9,6 +10,8 @@ class FakeChatModel(ChatModel):
     def __init__(self) -> None:
         self.queued_replies: list[str] = []
         self.requests: list[dict[str, Any]] = []
+        # Runs while the "model is thinking", so tests can change the database meanwhile
+        self.while_thinking: Callable[[], None] | None = None
 
     def queue_reply(self, reply_text: str) -> None:
         """Add the next reply the fake will return."""
@@ -30,6 +33,8 @@ class FakeChatModel(ChatModel):
                 "images": images,
             }
         )
+        if self.while_thinking is not None:
+            self.while_thinking()
         if len(self.queued_replies) == 0:
             raise ChatModelError("No fake reply queued")
         return self.queued_replies.pop(0)

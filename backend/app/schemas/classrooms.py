@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.text import TrimmedText
 
-# Keeps material plus a full conversation inside the model's context window (about 3,000 tokens)
+# About 3,000 tokens; with a full conversation it still fits the free AI tier's per-minute limit
 MATERIAL_MAX_CHARACTERS = 12000
 
 

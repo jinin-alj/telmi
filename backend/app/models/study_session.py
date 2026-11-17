@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, Text
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,12 +51,18 @@ class StudySession(Base):
     feedback: Mapped[dict[str, Any] | None] = mapped_column(FeedbackJson, nullable=True)
     application_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     application_result: Mapped[dict[str, Any] | None] = mapped_column(FeedbackJson, nullable=True)
+    # Scratchpad drawings read so far, to cap what one session can spend on the AI
+    drawing_reads: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class SessionTurn(Base):
     """One line of the conversation, in order."""
 
     __tablename__ = "session_turns"
+    # Two requests can never save a line in the same place, even if they race
+    __table_args__ = (
+        UniqueConstraint("session_id", "position", name="uq_session_turns_session_id_position"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(

@@ -146,7 +146,11 @@ The PWA files are `mobile/public/manifest.json`, the icons, and the manifest lin
    - one **next step**
 6. The student answers the application question once, and the checker grades it as correct, partly correct or incorrect.
 
-Sessions are capped at **15 minutes and 8 student turns** (`SESSION_MINUTES`, `MAX_STUDENT_TURNS`). The cap keeps sessions short, so the app doesn't become more screen time.
+Sessions are capped at **15 minutes, 8 student turns and 6,000 characters of explanation** (`SESSION_MINUTES`, `MAX_STUDENT_TURNS`, `MAX_STUDENT_CHARACTERS`). The caps keep sessions short, so the app doesn't become more screen time. The character cap also keeps the longest material plus a full conversation inside the free AI tier's 8,000 tokens per minute.
+
+**Safe to retry.** Finishing twice, or answering the exam question twice, returns the saved result instead of an error, so a dropped connection never leaves a student stuck. A turn sent twice (a double tap) is saved once; the second gets 409. A session left open past its time (the app was closed) is graded the next time it's opened, and the teacher dashboard counts these as `unfinished_sessions` per unit.
+
+**Busy AI.** When the free AI tier's rate limit is hit, the API answers 503 with `Retry-After: 60` and "Pip is busy right now. Wait a minute, then try again."
 
 | Method | Path | Who | What it does |
 | --- | --- | --- | --- |
@@ -169,9 +173,9 @@ Sessions are capped at **15 minutes and 8 student turns** (`SESSION_MINUTES`, `M
 
 Teachers can upload files instead of pasting (`app/services/material_files.py`). The backend only **reads the text and sends it back**; it never stores the file. The text lands in the material box, where the teacher checks and trims it, and the normal "add unit" request saves it like pasted text. So the 12,000-character limit, grading and the database are unchanged.
 
-- **Types:** PDF, Word (`.docx`), PowerPoint (`.pptx`, including speaker notes), `.txt` and Markdown (`.md`, kept as written), in UTF-8 or the older Windows encoding. Old `.doc`/`.ppt` files must be saved as the new format first. Android labels Markdown files inconsistently, so check there that `.md` files can be picked.
+- **Types:** PDF, Word (`.docx`), PowerPoint (`.pptx`, including tables, grouped shapes and speaker notes), `.txt` and Markdown (`.md`, kept as written), in UTF-8 or the older Windows encoding. Old `.doc`/`.ppt` files must be saved as the new format first. Android labels Markdown files inconsistently, so check there that `.md` files can be picked.
 - **Several files:** they're read one at a time and added after the existing text, in the order picked. A file that fails doesn't stop the others; each failure is listed with its reason.
-- **Limits:** files up to 20 MB. Word and PowerPoint files that would unpack to over 200 MB are refused, as protection against zip bombs. At most 60,000 characters come back per file, so a teacher can pick what to keep from a long file; if it's cut, the app says so.
+- **Limits:** files up to 20 MB. Word and PowerPoint files that would unpack to over 50 MB are refused, as protection against zip bombs and to fit the 512 MB server. Files are read one at a time on the server, for the same reason. At most 60,000 characters come back per file, so a teacher can pick what to keep from a long file; if it's cut, the app says so.
 - **Errors:** wrong type → 415, too big → 413, damaged, password-protected or no text → 422 with a message the app shows as is.
 - **Not read:** text inside images (scanned PDFs, photos of slides), Word headers and footers, and text boxes. Scans need OCR, which isn't built yet; teachers are asked to paste instead.
 
@@ -223,7 +227,9 @@ Strokes, not screenshots: every device (web, iOS, Android, Expo Go) gives the mo
 
 **Limits and errors**
 - At most 400 strokes and 20,000 points per drawing, mirrored in `mobile/src/features/session/drawing.ts`; the app says when the page is full. Readings are cut to one turn (2,000 characters).
-- Allowed while the student can still send something: during the session, and afterwards until the exam-style question is answered (then 409).
+- Allowed while the student can still send something: during the session's time, and afterwards until the exam-style question is answered (then 409).
+- At most 20 reads per session (`MAX_DRAWING_READS`), counted before reading so failed reads count too (then 409). Each read costs AI tokens.
+- The canvas must be at least 50 × 50; tinier sizes would scale the pen to millions of pixels.
 - Model failure → 503 ("try again, or type instead"); blank or invalid drawing → 422.
 - While a finger is on the drawing, the page stops scrolling (`ScrollLockContext` in `components/screen.tsx`), so strokes aren't lost to scrolling on phones.
 
@@ -318,7 +324,8 @@ To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://
 - Voice has been tested only by its code paths and unit tests; nobody has yet spoken into it end to end. Phones need an Expo development build.
 - **The checker sometimes flags a correct statement as a misconception.** The attribution guard makes sure the quote is the student's, but it can't tell whether the statement is actually wrong. Simple word comparisons would also throw away real mistakes like "more energy" versus "less energy". A stronger model is the fix.
 - Sessions finished before the attribution guard existed still contain any misattributed quotes; only new sessions are filtered.
-- **No login rate limiting yet.** Add it at the gateway (or with Redis) before launch; see the `TODO` in `app/routers/auth.py`.
+- **Login limits are in memory and per server process.** 10 tries per username and 60 per address every 5 minutes, and 60 sign-ups per address per hour (`app/main.py`); then 429. They reset when the server restarts and wouldn't be shared between several servers. The address comes from the proxy's `X-Forwarded-For`, which a caller can fake, so the per-username limit is what protects passwords.
+- **Request size limits:** 64 KB for normal requests, 1 MB for drawings and 21 MB for file uploads (`app/body_limit.py`); then 413. Bodies sent in chunks, without a declared size, get 411; browsers and the app always declare it.
 - **No password reset**, because accounts have no email. A teacher-led reset is a possible follow-up.
 - **Tokens can't be revoked early.** A stolen refresh token works until it expires. A server-side denylist would fix this if needed.
 - Anyone can sign up as a teacher. Teachers only see classes that students choose to join.

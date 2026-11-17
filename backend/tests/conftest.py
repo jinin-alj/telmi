@@ -29,7 +29,8 @@ def build_test_engine() -> Engine:
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
-    return create_engine(TEST_DATABASE_URL)
+    # Tables are rebuilt for every test, which breaks Postgres's saved query plans; save none
+    return create_engine(TEST_DATABASE_URL, connect_args={"prepare_threshold": None})
 
 
 test_engine = build_test_engine()

@@ -4,7 +4,7 @@ from typing import Any
 import httpx
 import pytest
 
-from app.ai.chat_model import ChatModelError
+from app.ai.chat_model import ChatModelBusyError, ChatModelError
 from app.ai.hosted_model import HostedChatModel
 
 SCHEMA: dict[str, Any] = {"type": "object", "properties": {"verdict": {"type": "string"}}}
@@ -102,7 +102,7 @@ def test_rate_limit_becomes_a_model_error() -> None:
 
     model, _sent = model_with(busy)
 
-    with pytest.raises(ChatModelError, match="busy"):
+    with pytest.raises(ChatModelBusyError, match="busy"):
         model.complete(MESSAGES, temperature=0.7)
 
 

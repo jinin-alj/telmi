@@ -271,3 +271,48 @@ def test_reading_a_file_saves_nothing(
 
     units = client.get(f"/classrooms/{classroom_id}/units", headers=teacher).json()
     assert len(units) == 1
+
+
+def build_pptx_with_table_and_group() -> bytes:
+    """A slide whose text sits in a table and in a group of shapes, as science slides often do."""
+    presentation = pptx.Presentation()
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    table = slide.shapes.add_table(1, 2, 0, 0, 3000000, 500000).table
+    table.cell(0, 0).text = "Input"
+    table.cell(0, 1).text = "Carbon dioxide"
+    group = slide.shapes.add_group_shape()
+    box = group.shapes.add_textbox(0, 1000000, 3000000, 500000)
+    box.text_frame.text = "Output: oxygen"
+    output = io.BytesIO()
+    presentation.save(output)
+    return output.getvalue()
+
+
+def test_reads_slide_tables_and_grouped_text(
+    client: TestClient, teacher_and_class: tuple[dict[str, str], str]
+) -> None:
+    teacher, classroom_id = teacher_and_class
+
+    response = upload(
+        client, teacher, classroom_id, "slides.pptx", build_pptx_with_table_and_group()
+    )
+
+    assert response.status_code == 200
+    assert response.json()["text"] == "Input | Carbon dioxide\n\nOutput: oxygen"
+
+
+def test_locked_office_file_says_it_is_locked(
+    client: TestClient, teacher_and_class: tuple[dict[str, str], str]
+) -> None:
+    teacher, classroom_id = teacher_and_class
+    # Password-protected Word files are an older container, not a zip, starting with these bytes
+    locked_file = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 512
+
+    response = upload(client, teacher, classroom_id, "notes.docx", locked_file)
+
+    assert response.status_code == 422
+    assert "password" in response.json()["detail"]
+
+
+def test_unzip_limit_fits_a_small_server() -> None:
+    assert material_files.MAX_UNZIPPED_BYTES <= 50 * 1024 * 1024

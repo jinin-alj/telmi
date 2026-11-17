@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     # Short, capped sessions keep the app from becoming more screen time
     session_minutes: int = Field(default=15, gt=0)
     max_student_turns: int = Field(default=8, gt=0)
+    # Keeps the longest material plus a full conversation inside the free AI tier's per-minute limit
+    max_student_characters: int = Field(default=6000, gt=0)
+    # Each drawing read costs AI tokens, so one session can't be used as a free scanner
+    max_drawing_reads: int = Field(default=20, gt=0)
 
     @field_validator("database_url")
     @classmethod

@@ -4,7 +4,12 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.schemas.auth import RegisterRequest
-from app.security.passwords import DUMMY_PASSWORD_HASH, hash_password, verify_password
+from app.security.passwords import (
+    DUMMY_PASSWORD_HASH,
+    hash_password,
+    needs_rehash,
+    verify_password,
+)
 
 
 class UsernameTakenError(Exception):
@@ -50,4 +55,9 @@ def authenticate_user(db: Session, username: str, password: str) -> User | None:
 
     if not verify_password(password, user.password_hash):
         return None
+
+    # Accounts made before the lighter settings move over the first time they sign in
+    if needs_rehash(user.password_hash):
+        user.password_hash = hash_password(password)
+        db.commit()
     return user
