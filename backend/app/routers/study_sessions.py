@@ -16,6 +16,7 @@ from app.dependencies import (
     VisionModel,
 )
 from app.models import StudySession, User
+from app.models.common import as_utc
 from app.schemas.study_sessions import (
     DrawingRequest,
     DrawingText,
@@ -56,7 +57,7 @@ def build_session_detail(
         unit_id=study_session.unit_id,
         unit_title=study_sessions.get_unit(db, study_session).title,
         status=study_session.status,
-        started_at=study_sessions.as_utc(study_session.started_at),
+        started_at=as_utc(study_session.started_at),
         ends_at=study_sessions.session_ends_at(study_session, settings),
         completed_at=study_session.completed_at,
         student_turns_left=max(0, settings.max_student_turns - turns_used),

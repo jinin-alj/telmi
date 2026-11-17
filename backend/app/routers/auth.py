@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from app.config import Settings
 from app.dependencies import AppSettings, CurrentUser, DbSession, unauthorized
@@ -11,14 +11,13 @@ from app.schemas.auth import (
     UserPublic,
 )
 from app.security.rate_limit import RateLimiter
-from app.security.tokens import (
-    REFRESH_TOKEN_TYPE,
-    InvalidTokenError,
-    create_access_token,
-    create_refresh_token,
-    read_user_id,
-)
+from app.security.tokens import InvalidTokenError, create_access_token
 from app.services.accounts import UsernameTakenError, authenticate_user, register_user
+from app.services.refresh_tokens import (
+    issue_refresh_token,
+    revoke_refresh_token,
+    rotate_refresh_token,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -43,13 +42,20 @@ def check_rate_limit(limiter: RateLimiter, key: str) -> None:
         )
 
 
-def build_auth_response(user: User, settings: Settings) -> AuthResponse:
-    """Issue a fresh access and refresh token for the user."""
+def build_auth_response(user: User, refresh_token: str, settings: Settings) -> AuthResponse:
+    """A fresh access token plus the given refresh token, with the user's profile."""
     return AuthResponse(
         access_token=create_access_token(user.id, settings),
-        refresh_token=create_refresh_token(user.id, settings),
+        refresh_token=refresh_token,
         user=UserPublic.model_validate(user),
     )
+
+
+def sign_in(db: DbSession, user: User, settings: Settings) -> AuthResponse:
+    """Start a new sign-in for this device, with its own refresh token chain."""
+    refresh_token = issue_refresh_token(db, user.id, settings)
+    db.commit()
+    return build_auth_response(user, refresh_token, settings)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -64,7 +70,7 @@ def register(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="That username is already taken"
         ) from error
-    return build_auth_response(user, settings)
+    return sign_in(db, user, settings)
 
 
 @router.post("/login")
@@ -79,21 +85,24 @@ def login(
     if user is None:
         # Same message for unknown user and wrong password so usernames can't be probed
         raise unauthorized("Wrong username or password")
-    return build_auth_response(user, settings)
+    return sign_in(db, user, settings)
 
 
 @router.post("/refresh")
 def refresh(request: RefreshRequest, db: DbSession, settings: AppSettings) -> AuthResponse:
-    """Trade a valid refresh token for a new token pair."""
+    """Trade a refresh token for a new pair; each refresh token works only once."""
     try:
-        user_id = read_user_id(request.refresh_token, REFRESH_TOKEN_TYPE, settings)
+        user, new_refresh_token = rotate_refresh_token(db, request.refresh_token, settings)
     except InvalidTokenError as error:
         raise unauthorized("Session expired, please log in again") from error
+    return build_auth_response(user, new_refresh_token, settings)
 
-    user = db.get(User, user_id)
-    if user is None:
-        raise unauthorized("Account no longer exists")
-    return build_auth_response(user, settings)
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(request: RefreshRequest, db: DbSession, settings: AppSettings) -> Response:
+    """Sign this device out on the server, so its saved token stops working."""
+    revoke_refresh_token(db, request.refresh_token, settings)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/me")

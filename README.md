@@ -125,13 +125,17 @@ The PWA files are `mobile/public/manifest.json`, the icons, and the manifest lin
 - Accounts use a **username and a nickname only**: no email or real name, to keep data on minors minimal.
 - Roles are `student` and `teacher`.
 - Passwords are hashed with Argon2id. Failed logins give the same error and take the same time whether or not the username exists, so usernames can't be probed.
-- Sign-in returns a short-lived **access token** (30 min), sent as `Authorization: Bearer <token>`, and a **refresh token** (30 days) used only at `/auth/refresh`. Both are signed JWTs, so the API keeps no session state and can scale horizontally.
+- Sign-in returns a short-lived **access token** (30 min), sent as `Authorization: Bearer <token>`, and a **refresh token** (30 days) used only at `/auth/refresh`. Both are signed JWTs. Access tokens are checked by signature alone, so most requests need no database lookup.
+- **Refresh tokens work once.** Each one is stored (`refresh_tokens` table, `app/services/refresh_tokens.py`), and every refresh swaps it for a new one in the same "family". If an old one comes back more than 30 seconds after it was swapped, someone holds a copy, so the whole family is revoked and every device in that sign-in must sign in again. Within 30 seconds a repeat is allowed, because two browser tabs share one saved token and may refresh together.
+- **Sign out ends the session on the server** (`/auth/logout`), so the saved token stops working everywhere. An access token already handed out still works until it expires (at most 30 minutes).
+- Refresh tokens issued before this change carry no id and are refused, so everyone signs in once after the update. Expired stored tokens are deleted when the same user next signs in or refreshes.
 
 | Method | Path | What it does |
 | --- | --- | --- |
 | `POST` | `/auth/register` | Create an account (`username`, `display_name`, `password`, `role`) and sign in |
 | `POST` | `/auth/login` | Sign in with `username` and `password` |
-| `POST` | `/auth/refresh` | Trade a refresh token for a new token pair |
+| `POST` | `/auth/refresh` | Trade a refresh token for a new token pair; each refresh token works once |
+| `POST` | `/auth/logout` | Revoke this sign-in's refresh tokens (204, also for unknown tokens) |
 | `GET` | `/auth/me` | The signed-in user |
 | `GET` | `/health` | Uptime check |
 
@@ -302,7 +306,7 @@ It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's 
 
 **Where voice works:** Chrome and Safari on desktop, and Chrome on Android. It doesn't work in Firefox or Brave, or in Chrome on iPhone; those users get the typing box. **In Expo Go, students type and Pip still speaks.** Expo Go doesn't include the speech recognition native code, so the app detects that and switches to typing. To talk on a phone, use a development build (`npx expo run:ios|android`, or `npx eas-cli@latest build --profile development`).
 
-**Token storage.** The access token is kept **in memory only**. The refresh token goes in the device keychain on iOS and Android (`expo-secure-store`). On web it goes in `sessionStorage`, which survives a reload but is cleared when the tab closes. That's safer than `localStorage`, but any script running on the page could still read it. Before a public web launch, move it to an `HttpOnly` cookie set by the backend.
+**Token storage.** The access token is kept **in memory only**. The refresh token goes in the device keychain on iOS and Android (`expo-secure-store`). On web it goes in `localStorage`, so the installed web app stays signed in between launches. Any script running on the page could read it, which is why refresh tokens work only once and sign-out revokes them. Before a public web launch, consider moving it to an `HttpOnly` cookie set by the backend.
 
 To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://localhost:8000`).
 
@@ -330,7 +334,7 @@ To point the app at another backend, set `EXPO_PUBLIC_API_URL` (default `http://
 - **Login limits are in memory and per server process.** 10 tries per username and 60 per address every 5 minutes, and 60 sign-ups per address per hour (`app/main.py`); then 429. They reset when the server restarts and wouldn't be shared between several servers. The address comes from the proxy's `X-Forwarded-For`, which a caller can fake, so the per-username limit is what protects passwords.
 - **Request size limits:** 64 KB for normal requests, 1 MB for drawings and 21 MB for file uploads (`app/body_limit.py`); then 413. Bodies sent in chunks, without a declared size, get 411; browsers and the app always declare it.
 - **No password reset**, because accounts have no email. A teacher-led reset is a possible follow-up.
-- **Tokens can't be revoked early.** A stolen refresh token works until it expires. A server-side denylist would fix this if needed.
+- **Access tokens can't be revoked early.** After sign-out or a detected theft, an access token already handed out keeps working for up to 30 minutes. Refresh tokens stop at once.
 - Anyone can sign up as a teacher. Teachers only see classes that students choose to join.
 - **The scratchpad hasn't been tried on a phone or tablet yet**, only in a desktop browser and in tests. Check touch drawing and that the page doesn't scroll while drawing. Screen-reader users are better served by typing, which stays available.
 - **The scratchpad's default model is a Groq Preview model** (checked November 2026). Groq says Preview models are for evaluation and can be discontinued at short notice, and it had no Production vision model at the time. Fine for demos; if it's withdrawn, students see "try again, or type instead" until `AI_VISION_MODEL` is switched (see "Switching the vision model"). On a paid Groq plan it costs about $0.001 per drawing read.

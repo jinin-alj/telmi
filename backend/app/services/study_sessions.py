@@ -17,16 +17,10 @@ from app.ai.checker import (
 from app.ai.drawing import read_drawing
 from app.config import Settings
 from app.models import SessionStatus, SessionTurn, Speaker, StudySession, Unit, User
+from app.models.common import as_utc
 from app.schemas.study_sessions import TURN_MAX_CHARACTERS, DrawingRequest
 from app.services.classrooms import get_unit_for_student
 from app.services.errors import ConflictError, NotFoundError
-
-
-def as_utc(moment: datetime) -> datetime:
-    """SQLite drops time zones, so treat naive timestamps as UTC."""
-    if moment.tzinfo is None:
-        return moment.replace(tzinfo=UTC)
-    return moment
 
 
 def session_ends_at(study_session: StudySession, settings: Settings) -> datetime:
