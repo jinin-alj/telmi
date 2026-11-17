@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -22,6 +22,8 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [startingUnitId, setStartingUnitId] = useState<string | null>(null);
+  // A ref rather than state, so a second tap in the same moment already sees it
+  const startingSession = useRef(false);
 
   const loadProgress = useCallback(() => {
     getMyProgress()
@@ -38,6 +40,11 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
   useFocusEffect(loadProgress);
 
   async function handleStart(unitId: string) {
+    // One session at a time; a second tap would open two screens
+    if (startingSession.current) {
+      return;
+    }
+    startingSession.current = true;
     setStartingUnitId(unitId);
     try {
       const session = await startSession(unitId);
@@ -45,6 +52,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
     } catch (error) {
       setErrorMessage(error instanceof ApiError ? error.message : 'Could not start the session.');
     } finally {
+      startingSession.current = false;
       setStartingUnitId(null);
     }
   }
@@ -89,6 +97,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
                   key={unit.unit_id}
                   unit={unit}
                   starting={startingUnitId === unit.unit_id}
+                  disabled={startingUnitId !== null}
                   onStart={() => handleStart(unit.unit_id)}
                 />
               ))}

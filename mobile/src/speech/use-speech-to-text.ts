@@ -3,7 +3,7 @@ import type {
   ExpoSpeechRecognitionErrorCode,
   ExpoSpeechRecognitionNativeEventMap,
 } from 'expo-speech-recognition';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { SpeechLanguage } from '@/speech/languages';
 import { speechModule } from '@/speech/speech-module';
@@ -77,6 +77,20 @@ export function useSpeechToText() {
   useEventListener(eventSource, 'error', (event) => {
     setErrorMessage(describeSpeechError(event.error));
   });
+
+  // Stop the microphone if the answer box closes mid-sentence, e.g. when time runs out
+  useEffect(() => {
+    return () => {
+      if (speechModule === null) {
+        return;
+      }
+      try {
+        speechModule.abort();
+      } catch (error) {
+        console.warn('Could not stop speech recognition', error);
+      }
+    };
+  }, []);
 
   async function startListening(language: SpeechLanguage) {
     setErrorMessage(null);

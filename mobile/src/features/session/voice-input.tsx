@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -52,6 +52,8 @@ export function VoiceInput({
   const [editedText, setEditedText] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  // A ref rather than state, so a second tap in the same moment already sees it
+  const startingMicrophone = useRef(false);
 
   // Once the student edits the transcript, their version wins over what was heard
   const text = editedText ?? speech.transcript;
@@ -74,13 +76,22 @@ export function VoiceInput({
     setEditedText((current) => appendReading(current ?? speech.transcript, reading.text));
   }
 
-  function handleMicrophonePress() {
+  async function handleMicrophonePress() {
     if (speech.isListening) {
       speech.stopListening();
-    } else {
-      setEditedText(null);
-      speech.clearTranscript();
-      speech.startListening(language);
+      return;
+    }
+    // A second tap while the permission prompt is up would make the browser throw
+    if (startingMicrophone.current) {
+      return;
+    }
+    startingMicrophone.current = true;
+    setEditedText(null);
+    speech.clearTranscript();
+    try {
+      await speech.startListening(language);
+    } finally {
+      startingMicrophone.current = false;
     }
   }
 
@@ -139,7 +150,10 @@ export function VoiceInput({
         </Text>
       ) : null}
 
-      {mode === 'draw' ? <DrawingPad onRead={handleReadDrawing} /> : null}
+      {/* Hidden rather than removed, so switching to typing and back keeps the drawing */}
+      <View style={mode === 'draw' ? null : styles.hidden}>
+        <DrawingPad onRead={handleReadDrawing} />
+      </View>
 
       {showTranscriptBox ? (
         <TextInput
@@ -194,6 +208,9 @@ export function VoiceInput({
 const styles = StyleSheet.create({
   container: {
     marginTop: spacing.medium,
+  },
+  hidden: {
+    display: 'none',
   },
   note: {
     fontSize: 15,
