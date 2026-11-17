@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     # Free tiers count this cap against tokens per minute, so keep it modest
     ai_checker_max_tokens: int = Field(default=2048, gt=0)
 
+    # Crash reports go to Sentry only when this is set; make the project in Sentry's EU region
+    sentry_dsn: str | None = None
+    # Render sets this to the deployed commit, so each crash report says which version broke
+    render_git_commit: str | None = None
+
     # Short, capped sessions keep the app from becoming more screen time
     session_minutes: int = Field(default=15, gt=0)
     max_student_turns: int = Field(default=8, gt=0)

@@ -7,6 +7,8 @@ os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["JWT_SECRET"] = "test-secret-that-is-long-enough-for-hs256-signing"
 # Tests never call a real AI service, whatever a developer's .env says
 os.environ["AI_PROVIDER"] = "ollama"
+# Tests never send crash reports, whatever a developer's .env says
+os.environ["SENTRY_DSN"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
