@@ -19,10 +19,16 @@ class FakeChatModel(ChatModel):
         messages: list[ChatMessage],
         temperature: float,
         response_schema: dict[str, Any] | None = None,
+        images: list[bytes] | None = None,
     ) -> str:
         """Record the request and return the next queued reply."""
         self.requests.append(
-            {"messages": messages, "temperature": temperature, "schema": response_schema}
+            {
+                "messages": messages,
+                "temperature": temperature,
+                "schema": response_schema,
+                "images": images,
+            }
         )
         if len(self.queued_replies) == 0:
             raise ChatModelError("No fake reply queued")

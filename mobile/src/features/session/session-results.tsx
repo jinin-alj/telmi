@@ -100,6 +100,7 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
 
       {session.application_result === null ? (
         <VoiceInput
+          sessionId={session.id}
           language={language}
           prompt="Tap and answer out loud"
           typingPrompt="Type your answer"

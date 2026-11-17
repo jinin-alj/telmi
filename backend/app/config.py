@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     # Sent as a bearer token so only this backend can use the laptop's AI gateway
     ollama_api_key: str | None = None
     ollama_model: str = "llama3.1:8b"
+    # Reads students' scratchpad drawings; must be a model that accepts images
+    ollama_vision_model: str = "qwen2.5vl:7b"
     ollama_timeout_seconds: float = Field(default=120.0, gt=0)
     # Ollama's default context window is too small for material plus a full conversation
     ollama_context_tokens: int = Field(default=8192, gt=0)
@@ -48,6 +50,9 @@ class Settings(BaseSettings):
     # A fast model keeps Pip's replies quick; grading uses a stronger one
     ai_buddy_model: str = "openai/gpt-oss-20b"
     ai_checker_model: str = "openai/gpt-oss-120b"
+    # Reads students' scratchpad drawings into text; must accept images. Swap it freely: the
+    # prompt lives in app/ai/drawing.py, not in the provider (see "Scratchpad" in the README)
+    ai_vision_model: str = "qwen/qwen3.8-27b"
     # Groq's gpt-oss models accept a JSON schema; set false for models that only do plain JSON
     ai_checker_json_schema: bool = True
     # Both gpt-oss models reason before answering; low effort keeps that short and saves the

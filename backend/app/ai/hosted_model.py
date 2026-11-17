@@ -1,3 +1,4 @@
+import base64
 import json
 from typing import Any
 
@@ -24,6 +25,19 @@ def add_schema_instruction(
     else:
         copied.insert(0, {"role": "system", "content": instruction})
     return copied
+
+
+def attach_images(messages: list[ChatMessage], images: list[bytes]) -> list[dict[str, Any]]:
+    """Turn the last message into text plus images, in the OpenAI-compatible format."""
+    attached: list[dict[str, Any]] = [dict(message) for message in messages]
+    parts: list[dict[str, Any]] = [{"type": "text", "text": attached[-1]["content"]}]
+    for image in images:
+        encoded = base64.b64encode(image).decode("ascii")
+        parts.append(
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encoded}"}}
+        )
+    attached[-1]["content"] = parts
+    return attached
 
 
 def read_error_message(response: httpx.Response) -> str:
@@ -64,11 +78,12 @@ class HostedChatModel(ChatModel):
         messages: list[ChatMessage],
         temperature: float,
         response_schema: dict[str, Any] | None = None,
+        images: list[bytes] | None = None,
     ) -> str:
         """Send the chat to the hosted model and return the reply text."""
         payload: dict[str, Any] = {
             "model": self.model_name,
-            "messages": messages,
+            "messages": attach_images(messages, images) if images else messages,
             "temperature": temperature,
             "max_completion_tokens": self.max_completion_tokens,
         }

@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -5,7 +7,7 @@ from app.ai.chat_model import ChatModelError
 from app.ai.hosted_model import HostedChatModel
 from app.ai.ollama_model import OllamaChatModel
 from app.config import Settings, normalise_database_url
-from app.dependencies import build_chat_model
+from app.dependencies import build_chat_model, build_vision_model
 
 
 @pytest.mark.parametrize(
@@ -120,3 +122,48 @@ def test_local_development_still_uses_ollama(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr("app.dependencies.get_settings", lambda: local)
 
     assert isinstance(build_chat_model("any", for_grading=True), OllamaChatModel)
+
+
+def test_ollama_sends_images_on_the_last_message() -> None:
+    sent: list[dict[str, object]] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": "H₂O"}})
+
+    model = OllamaChatModel(
+        base_url="http://localhost:11434",
+        model_name="qwen2.5vl:7b",
+        timeout_seconds=5,
+        context_tokens=8192,
+    )
+    model.http_client = httpx.Client(
+        base_url="http://localhost:11434", transport=httpx.MockTransport(respond)
+    )
+
+    model.complete([{"role": "user", "content": "Copy this"}], temperature=0, images=[b"png"])
+
+    assert sent[0]["messages"] == [{"role": "user", "content": "Copy this", "images": ["cG5n"]}]
+
+
+def test_vision_model_follows_the_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.dependencies.get_settings", lambda: hosted_settings(ai_vision_model="vision-x")
+    )
+    hosted = build_vision_model()
+
+    local = Settings(
+        database_url="sqlite+pysqlite:///:memory:",
+        jwt_secret="x" * 32,
+        ai_provider="ollama",
+        ollama_vision_model="local-vision",
+        _env_file=None,
+    )
+    monkeypatch.setattr("app.dependencies.get_settings", lambda: local)
+    ollama = build_vision_model()
+
+    assert isinstance(hosted, HostedChatModel)
+    assert hosted.model_name == "vision-x"
+    assert hosted.reasoning_effort is None
+    assert isinstance(ollama, OllamaChatModel)
+    assert ollama.model_name == "local-vision"

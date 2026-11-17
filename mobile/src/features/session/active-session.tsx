@@ -79,6 +79,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
 
       {canTalk ? (
         <VoiceInput
+          sessionId={session.id}
           language={language}
           prompt="Tap and explain it from memory"
           typingPrompt="Type your explanation from memory"

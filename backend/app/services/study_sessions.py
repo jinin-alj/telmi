@@ -13,8 +13,10 @@ from app.ai.checker import (
     extract_key_ideas,
     grade_application_answer,
 )
+from app.ai.drawing import read_drawing
 from app.config import Settings
 from app.models import SessionStatus, SessionTurn, Speaker, StudySession, Unit, User
+from app.schemas.study_sessions import TURN_MAX_CHARACTERS, DrawingRequest
 from app.services.classrooms import get_unit_for_student
 from app.services.errors import ConflictError, NotFoundError
 
@@ -175,3 +177,17 @@ def answer_application_question(
     study_session.application_result = result.model_dump(mode="json")
     db.commit()
     return study_session
+
+
+def read_session_drawing(
+    chat_model: ChatModel, study_session: StudySession, drawing: DrawingRequest
+) -> str:
+    """Copy out a scratchpad drawing for the student to check; nothing is saved.
+
+    Allowed while the student can still send something: during the session, or after it
+    until they answer the exam-style question.
+    """
+    answered = study_session.application_answer is not None
+    if study_session.status == SessionStatus.COMPLETED and answered:
+        raise ConflictError("This session has nothing left to answer")
+    return read_drawing(chat_model, drawing)[:TURN_MAX_CHARACTERS]
