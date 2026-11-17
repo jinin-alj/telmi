@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { MisconceptionExample, UnitSummary } from '@/api/types';
 import { ShareBar } from '@/components/share-bar';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing } from '@/theme';
 
 /** "8 students tried it · on average they explained 64% of the key ideas". */
 export function describeUnitReach(unit: UnitSummary): string {
@@ -107,10 +107,9 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    borderRadius: 12,
+    backgroundColor: colors.panel,
+    boxShadow: panelShadow,
+    borderRadius: cornerRadius,
     padding: spacing.medium,
     marginBottom: spacing.medium,
   },
@@ -135,7 +134,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   toggleLabel: {
-    color: colors.primary,
+    color: colors.link,
     fontSize: 16,
     textDecorationLine: 'underline',
   },
@@ -150,13 +149,13 @@ const styles = StyleSheet.create({
   misconceptionCount: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.error,
+    color: colors.text,
     marginTop: spacing.small,
   },
   example: {
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
-    paddingLeft: 10,
+    backgroundColor: colors.primarySoft,
+    borderRadius: cornerRadius,
+    padding: 10,
     marginTop: 6,
   },
   exampleSaid: {

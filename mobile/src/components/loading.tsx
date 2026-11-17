@@ -7,7 +7,7 @@ import { colors } from '@/theme';
 export function Loading({ label }: { label: string }) {
   return (
     <>
-      <ActivityIndicator accessibilityLabel={label} color={colors.primary} />
+      <ActivityIndicator accessibilityLabel={label} color={colors.link} />
       <SlowRequestNotice waiting />
     </>
   );

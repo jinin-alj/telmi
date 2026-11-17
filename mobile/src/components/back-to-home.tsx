@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   label: {
-    color: colors.primary,
+    color: colors.link,
     fontSize: 16,
   },
 });

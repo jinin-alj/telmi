@@ -238,9 +238,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   toolSelected: {
-    borderColor: colors.primary,
+    borderColor: colors.link,
     borderWidth: 3,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: colors.dataSoft,
   },
   toolDisabled: {
     opacity: 0.5,
@@ -259,7 +259,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: colors.background,
+    // White paper, the same as the image the backend reads
+    backgroundColor: colors.panel,
     overflow: 'hidden',
     // In browsers, stop a finger on the canvas from scrolling or selecting the page
     ...(Platform.OS === 'web' ? ({ touchAction: 'none', userSelect: 'none' } as object) : null),

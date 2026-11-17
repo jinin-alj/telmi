@@ -1,0 +1,108 @@
+/* Telmi brand v3 tokens. Generated from docs/brand-guidelines.md via assets/design-tokens.json. Edit the guidelines first. */
+:root {
+  color-scheme: light dark;
+  --color-coral-500: #FF8C69;
+  --color-coral-600: #F2734F;
+  --color-coral-300: #FFB094;
+  --color-denim-500: #3B6699;
+  --color-denim-700: #2C4F78;
+  --color-denim-100: #E3ECF7;
+  --color-rust-500: #B5462A;
+  --color-rust-700: #8F3620;
+  --color-rust-100: #FFE6D8;
+  --color-neutral-canvas: #FFF6EF;
+  --color-neutral-panel: #FFFFFF;
+  --color-neutral-butter: #FFEDBF;
+  --color-neutral-line: #F1DED2;
+  --color-neutral-ink: #3A2540;
+  --color-neutral-muted: #6E5A6B;
+  --color-night-bg: #1E1420;
+  --color-night-panel: #2A1D2E;
+  --color-night-line: #4A3550;
+  --color-night-text: #FFF6EF;
+  --color-night-muted: #C9B6C4;
+  --color-night-denim: #9DBBE3;
+  --color-night-emphasis: #FFB59E;
+  --color-status-error: #B3261E;
+  --color-status-success: #2E6B4A;
+  --font-heading: 'Fredoka', 'Trebuchet MS', sans-serif;
+  --font-body: 'Figtree', 'Segoe UI', sans-serif;
+  --radius-panel: 16px;
+  --radius-panel-slide: 32px;
+  --radius-bubble: 40px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 18px 44px rgba(58,37,64,0.10);
+  --touch-target: 44px;
+  --background: var(--color-neutral-canvas);
+  --surface: var(--color-neutral-panel);
+  --surface-warm: var(--color-rust-100);
+  --text: var(--color-neutral-ink);
+  --text-muted: var(--color-neutral-muted);
+  --divider: var(--color-neutral-line);
+  --primary: var(--color-coral-500);
+  --primary-pressed: var(--color-coral-600);
+  --primary-hover: var(--color-coral-300);
+  --on-primary: var(--color-neutral-ink);
+  --link: var(--color-denim-500);
+  --link-hover: var(--color-denim-700);
+  --data: var(--color-denim-500);
+  --data-track: var(--color-denim-100);
+  --emphasis: var(--color-rust-500);
+  --emphasis-surface: var(--color-rust-100);
+  --error: var(--color-status-error);
+  --success: var(--color-status-success);
+  --warning-surface: var(--color-neutral-butter);
+  --info: var(--color-denim-500);
+  --info-surface: var(--color-denim-100);
+  --focus-ring: var(--color-denim-500);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: var(--color-night-bg);
+    --surface: var(--color-night-panel);
+    --surface-warm: var(--color-night-panel);
+    --text: var(--color-night-text);
+    --text-muted: var(--color-night-muted);
+    --divider: var(--color-night-line);
+    --primary: var(--color-coral-500);
+    --primary-pressed: var(--color-coral-600);
+    --primary-hover: var(--color-coral-300);
+    --on-primary: var(--color-neutral-ink);
+    --link: var(--color-night-denim);
+    --link-hover: var(--color-night-text);
+    --data: var(--color-night-denim);
+    --data-track: var(--color-night-line);
+    --emphasis: var(--color-night-emphasis);
+    --emphasis-surface: var(--color-night-panel);
+    --error: var(--color-coral-300);
+    --success: var(--color-night-denim);
+    --warning-surface: var(--color-night-panel);
+    --info: var(--color-night-denim);
+    --info-surface: var(--color-night-panel);
+    --focus-ring: var(--color-night-denim);
+  }
+}
+:root[data-theme="dark"] {
+  --background: var(--color-night-bg);
+  --surface: var(--color-night-panel);
+  --surface-warm: var(--color-night-panel);
+  --text: var(--color-night-text);
+  --text-muted: var(--color-night-muted);
+  --divider: var(--color-night-line);
+  --primary: var(--color-coral-500);
+  --primary-pressed: var(--color-coral-600);
+  --primary-hover: var(--color-coral-300);
+  --on-primary: var(--color-neutral-ink);
+  --link: var(--color-night-denim);
+  --link-hover: var(--color-night-text);
+  --data: var(--color-night-denim);
+  --data-track: var(--color-night-line);
+  --emphasis: var(--color-night-emphasis);
+  --emphasis-surface: var(--color-night-panel);
+  --error: var(--color-coral-300);
+  --success: var(--color-night-denim);
+  --warning-surface: var(--color-night-panel);
+  --info: var(--color-night-denim);
+  --info-surface: var(--color-night-panel);
+  --focus-ring: var(--color-night-denim);
+}

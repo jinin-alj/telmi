@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReportProblemLink } from '@/components/report-problem-link';
 import { TopBar } from '@/components/top-bar';
 import { useIsWide } from '@/hooks/use-is-wide';
-import { colors, contentWidth, cornerRadius, spacing } from '@/theme';
+import { colors, contentWidth, cornerRadius, panelShadow, spacing } from '@/theme';
 
 /** Lets a child pause page scrolling, so dragging a pen across a drawing doesn't move the page. */
 export const ScrollLockContext = createContext<(locked: boolean) => void>(() => {});
@@ -43,7 +43,7 @@ export function Screen({ children, width = 'narrow', topBar = false }: ScreenPro
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, isWide ? styles.desktopBackground : null]}>
+    <SafeAreaView style={styles.safeArea}>
       {isWide && topBar ? <TopBar /> : null}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -68,9 +68,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  desktopBackground: {
-    backgroundColor: colors.surface,
   },
   flex: {
     flex: 1,
@@ -100,9 +97,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   formCard: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.divider,
+    backgroundColor: colors.panel,
+    boxShadow: panelShadow,
     borderRadius: cornerRadius,
     padding: spacing.large * 1.5,
   },

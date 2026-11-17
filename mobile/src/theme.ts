@@ -1,20 +1,33 @@
-// Every text colour here meets WCAG 2.1 AA contrast (4.5:1 or more) on the background it's used on
+// Telmi brand v3 (docs/brand-guidelines.md); every text colour meets WCAG 2.1 AA where it's used
 export const colors = {
-  background: '#FFFFFF',
-  surface: '#F3F4F6',
-  text: '#111827',
-  mutedText: '#4B5563',
-  border: '#6B7280',
-  primary: '#1D4ED8',
-  primarySoft: '#DBEAFE',
-  onPrimary: '#FFFFFF',
-  error: '#B91C1C',
-  success: '#047857',
-  successSoft: '#D1FAE5',
-  warningSoft: '#FEF3C7',
-  // Only outlines panels on the grey desktop background; no text is drawn in it
-  divider: '#E5E7EB',
+  // Cream page background; the brand never uses a pure white page
+  background: '#FFF6EF',
+  // White cards, inputs and Pip's speech bubble on the cream page
+  panel: '#FFFFFF',
+  text: '#3A2540',
+  mutedText: '#6E5A6B',
+  // Input borders, still 3:1 against white
+  border: '#6E5A6B',
+  // Pip coral is a fill only, always with ink text on it; as text it is too faint
+  primary: '#FF8C69',
+  primaryPressed: '#F2734F',
+  primarySoft: '#FFE6D8',
+  onPrimary: '#3A2540',
+  // Denim marks links, selections and spinners
+  link: '#3B6699',
+  // Denim also marks data: chart bars and "explained" labels, on sky
+  data: '#3B6699',
+  dataSoft: '#E3ECF7',
+  // Rust is the one thing to remember on a screen; never more than one per screen
+  emphasis: '#B5462A',
+  error: '#B3261E',
+  warningSoft: '#FFEDBF',
+  // Thin lines between rows inside a panel
+  divider: '#F1DED2',
 };
+
+// The brand's one soft shadow for panels, which have no outlines
+export const panelShadow = '0px 18px 44px rgba(58, 37, 64, 0.10)';
 
 export const spacing = {
   small: 8,
@@ -34,4 +47,7 @@ export const contentWidth = {
   wide: 1120,
 };
 
-export const cornerRadius = 12;
+export const cornerRadius = 16;
+
+// Buttons and chips are fully rounded pills
+export const pillRadius = 999;

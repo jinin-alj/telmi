@@ -27,12 +27,12 @@ const styles = StyleSheet.create({
   track: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.dataSoft,
     overflow: 'hidden',
   },
   fill: {
     height: 10,
-    backgroundColor: colors.success,
+    backgroundColor: colors.data,
   },
   caption: {
     fontSize: 14,

@@ -18,7 +18,7 @@ import {
   validateMaterial,
   validateUnitTitle,
 } from '@/features/teacher/validation';
-import { colors, spacing } from '@/theme';
+import { colors, cornerRadius, panelShadow, spacing } from '@/theme';
 
 type AddUnitFormProps = {
   classroomId: string;
@@ -145,9 +145,9 @@ const styles = StyleSheet.create({
   container: {
     marginTop: spacing.medium,
     padding: spacing.medium,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: cornerRadius,
+    backgroundColor: colors.panel,
+    boxShadow: panelShadow,
   },
   heading: {
     fontSize: 18,
