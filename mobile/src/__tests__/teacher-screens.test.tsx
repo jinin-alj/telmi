@@ -8,7 +8,11 @@ import type { StudentSummary, UnitSummary } from '@/api/types';
 import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { describeStudentResult, StudentSummaryRow } from '@/features/teacher/student-summary-row';
 import { TeacherHome } from '@/features/teacher/teacher-home';
-import { describeUnitReach, UnitSummaryCard } from '@/features/teacher/unit-summary-card';
+import {
+  describeUnfinished,
+  describeUnitReach,
+  UnitSummaryCard,
+} from '@/features/teacher/unit-summary-card';
 import { validateClassName, validateMaterial } from '@/features/teacher/validation';
 
 jest.mock('@/api/teaching');
@@ -46,6 +50,7 @@ const UNIT: UnitSummary = {
   unit_id: 'unit-1',
   title: 'Cell respiration',
   students_attempted: 2,
+  unfinished_sessions: 0,
   average_coverage_percent: 42,
   ideas: [
     {
@@ -206,6 +211,22 @@ describe('UnitSummaryCard', () => {
     expect(describeUnitReach({ ...UNIT, students_attempted: 0 })).toBe(
       'No students have explained this yet.',
     );
+  });
+
+  it('says how many sessions ran out of time unfinished', () => {
+    expect(describeUnfinished(UNIT)).toBeNull();
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 1 })).toBe(
+      '1 session ran out of time before it was finished, so it has no results yet.',
+    );
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 3 })).toBe(
+      '3 sessions ran out of time before they were finished, so they have no results yet.',
+    );
+  });
+
+  it('shows unfinished sessions on the card', async () => {
+    await render(<UnitSummaryCard unit={{ ...UNIT, unfinished_sessions: 2 }} />);
+
+    expect(screen.getByText(/2 sessions ran out of time/)).toBeTruthy();
   });
 
   it('shows each idea and its common mistakes when expanded', async () => {

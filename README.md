@@ -294,7 +294,7 @@ It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's 
 - **Class screen** (`app/classroom/[classroomId].tsx`):
   - the join code and number of students
   - a reminder that results come from AI and are not grades
-  - **Units:** each card shows how many students explained it and the average share of key ideas. "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000). "Upload a file" adds the text of one or more files to the box for the teacher to check before saving; saving waits until uploads finish.
+  - **Units:** each card shows how many students explained it and the average share of key ideas, plus how many sessions ran out of time unfinished (these are graded the next time the student opens them). "Show key ideas" lists each idea with a bar ("3 of 8 students explained this"), its common mistakes, and up to three anonymous examples. "Add a unit" opens a form for a title and the teacher's material, with a live character count (50–12,000). "Upload a file" adds the text of one or more files to the box for the teacher to check before saving; saving waits until uploads finish.
   - **Students:** listed by name, never ranked. Each shows their latest result per unit ("4 of 6 key ideas") and the ideas still to explain.
 - **Role guards:** `_layout.tsx` nests `Stack.Protected`, so only students reach `session/[sessionId]` and only teachers reach `classroom/[classroomId]`. The API enforces the same rules; the guards just keep people off screens they can't use.
 
