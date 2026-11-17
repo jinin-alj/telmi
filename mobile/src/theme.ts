@@ -12,6 +12,8 @@ export const colors = {
   success: '#047857',
   successSoft: '#D1FAE5',
   warningSoft: '#FEF3C7',
+  // Only outlines panels on the grey desktop background; no text is drawn in it
+  divider: '#E5E7EB',
 };
 
 export const spacing = {
@@ -22,3 +24,14 @@ export const spacing = {
 
 // 44 points is the smallest comfortable touch target on iOS and Android
 export const minimumTouchSize = 44;
+
+// Browser windows at least this wide get the desktop layout; phones and tablets in portrait don't
+export const wideScreenWidth = 900;
+
+// Forms stay narrow so lines are easy to read; dashboards and sessions use the extra room
+export const contentWidth = {
+  narrow: 480,
+  wide: 1120,
+};
+
+export const cornerRadius = 12;

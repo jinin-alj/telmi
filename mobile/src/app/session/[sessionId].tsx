@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/study';
@@ -11,6 +11,7 @@ import { Screen } from '@/components/screen';
 import { ActiveSession } from '@/features/session/active-session';
 import { SessionResults } from '@/features/session/session-results';
 import { SessionSettings } from '@/features/session/session-settings';
+import { useIsWide } from '@/hooks/use-is-wide';
 import { lineToSpeak } from '@/features/session/session-text';
 import { getDefaultSpeechLanguage } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
@@ -23,6 +24,7 @@ export default function SessionScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [language, setLanguage] = useState<SpeechLanguage>(getDefaultSpeechLanguage);
   const [voiceOn, setVoiceOn] = useState(true);
+  const isWide = useIsWide();
 
   useEffect(() => {
     getSession(sessionId)
@@ -57,7 +59,7 @@ export default function SessionScreen() {
   }
 
   return (
-    <Screen>
+    <Screen width="wide" topBar>
       <BackToHome />
 
       {loadError ? (
@@ -77,12 +79,15 @@ export default function SessionScreen() {
           ) : (
             <SessionResults session={session} language={language} onSessionChange={setSession} />
           )}
-          <SessionSettings
-            language={language}
-            onLanguageChange={setLanguage}
-            voiceOn={voiceOn}
-            onVoiceChange={handleVoiceChange}
-          />
+          {/* Under Pip's column on wide screens, instead of stretching across the page */}
+          <View style={isWide ? styles.settingsWide : null}>
+            <SessionSettings
+              language={language}
+              onLanguageChange={setLanguage}
+              voiceOn={voiceOn}
+              onVoiceChange={handleVoiceChange}
+            />
+          </View>
         </>
       ) : null}
     </Screen>
@@ -100,5 +105,9 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 15,
     marginVertical: spacing.medium,
+  },
+  settingsWide: {
+    width: '50%',
+    paddingRight: spacing.large / 2,
   },
 });

@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { UnitProgress } from '@/api/types';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { useIsWide } from '@/hooks/use-is-wide';
 import { colors, spacing } from '@/theme';
 
 /** One line summarising how the student did last time, in ideas rather than a score. */
@@ -25,18 +27,22 @@ type UnitRowProps = {
 
 /** A unit the student can explain, with last time's result and suggested next step. */
 export function UnitRow({ unit, starting, disabled, onStart }: UnitRowProps) {
+  const isWide = useIsWide();
   return (
-    <View style={styles.row}>
+    <Card style={isWide ? styles.tile : styles.row}>
       <Text style={styles.title}>{unit.title}</Text>
       <Text style={styles.summary}>{describeLastAttempt(unit)}</Text>
       {unit.next_step ? <Text style={styles.nextStep}>Next: {unit.next_step}</Text> : null}
-      <Button
-        label={`Explain ${unit.title}`}
-        onPress={onStart}
-        loading={starting}
-        disabled={disabled}
-      />
-    </View>
+      {/* Cards in a row share one height, so the buttons line up along the bottom */}
+      <View style={isWide ? styles.bottom : null}>
+        <Button
+          label={`Explain ${unit.title}`}
+          onPress={onStart}
+          loading={starting}
+          disabled={disabled}
+        />
+      </View>
+    </Card>
   );
 }
 
@@ -45,6 +51,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.medium,
     borderTopWidth: 1,
     borderTopColor: colors.surface,
+  },
+  tile: {
+    flexBasis: 260,
+    flexGrow: 1,
+    gap: spacing.small,
+  },
+  bottom: {
+    marginTop: 'auto',
   },
   title: {
     fontSize: 17,

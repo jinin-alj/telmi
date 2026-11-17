@@ -5,6 +5,8 @@ import { ApiError } from '@/api/client';
 import { finishSession, sendTurn } from '@/api/study';
 import type { StudySession } from '@/api/types';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { Columns } from '@/components/columns';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
 import type { SpeechLanguage } from '@/speech/languages';
@@ -75,8 +77,9 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
     );
   }
 
-  return (
-    <View>
+  // On wide screens Pip's line stays on the left while the student answers on the right
+  const pipSide = (
+    <>
       <Text style={styles.limits}>
         {session.student_turns_left} turns left · {timeLeft} min left
       </Text>
@@ -87,7 +90,11 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
           {latestBuddyLine}
         </Text>
       </View>
+    </>
+  );
 
+  const answerSide = (
+    <Card>
       {canTalk ? (
         <VoiceInput
           sessionId={session.id}
@@ -142,8 +149,10 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
             </Text>
           ))
         : null}
-    </View>
+    </Card>
   );
+
+  return <Columns left={pipSide} right={answerSide} />;
 }
 
 const styles = StyleSheet.create({

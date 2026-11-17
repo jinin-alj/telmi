@@ -7,8 +7,11 @@ import { answerApplicationQuestion, startSession } from '@/api/study';
 import type { ApplicationResult, StudySession } from '@/api/types';
 import { goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { Columns } from '@/components/columns';
 import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
+import { useIsWide } from '@/hooks/use-is-wide';
 import type { SpeechLanguage } from '@/speech/languages';
 import { colors, spacing } from '@/theme';
 
@@ -26,6 +29,7 @@ type SessionResultsProps = {
 
 /** What the student explained, what to fix, the next step and the exam-style question. */
 export function SessionResults({ session, language, onSessionChange }: SessionResultsProps) {
+  const isWide = useIsWide();
   const [restarting, setRestarting] = useState(false);
   const [restartError, setRestartError] = useState<string | null>(null);
   const feedback = session.feedback;
@@ -49,8 +53,9 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
     }
   }
 
-  return (
-    <View>
+  // What went well and what to fix on the left; what to do next on the right
+  const resultSide = (
+    <Card>
       <Text accessibilityRole="header" style={styles.summary}>
         {summariseCoverage(feedback)}
       </Text>
@@ -89,8 +94,16 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
           ))}
         </>
       ) : null}
+    </Card>
+  );
 
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
+  const nextSide = (
+    <Card>
+      {/* At the top of its own card on wide screens, so it needs no space above */}
+      <Text
+        accessibilityRole="header"
+        style={[styles.sectionTitle, isWide ? styles.noSpaceAbove : null]}
+      >
         Your next step
       </Text>
       <Text style={styles.body}>{feedback.next_step}</Text>
@@ -127,8 +140,10 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
         <Button label="Explain it again" onPress={handleTryAgain} loading={restarting} />
         <Button label="Back to my classes" variant="secondary" onPress={goHome} />
       </View>
-    </View>
+    </Card>
   );
+
+  return <Columns left={resultSide} right={nextSide} />;
 }
 
 const styles = StyleSheet.create({
@@ -143,6 +158,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: spacing.large,
     marginBottom: spacing.small,
+  },
+  noSpaceAbove: {
+    marginTop: 0,
   },
   idea: {
     borderRadius: 8,

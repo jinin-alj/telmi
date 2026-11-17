@@ -265,7 +265,8 @@ It shares `AI_BASE_URL` and `AI_API_KEY` with Pip and the checker, so on Groq's 
 | `auth/token-storage.ts` / `.web.ts` | Where the refresh token lives (see below). |
 | `auth/validation.ts` | The same username, password and nickname rules as the backend, so errors show before sending. |
 | `components/` | Accessible text field, button, role picker and page wrapper. |
-| `theme.ts` | Colours that meet WCAG 2.1 AA contrast, and the 44-point minimum touch size. |
+| `hooks/use-is-wide.ts`, `components/card.tsx`, `columns.tsx`, `top-bar.tsx` | **Desktop layout.** Browser windows 900 px or wider get a grey page with white cards, a top bar with the name and Sign out, and two columns per page (classes and the create form, units and students, Pip and the answer area, results and next steps). Phones and the native app keep the single column. Columns keep the phone's reading order, so screen readers read both layouts the same way. |
+| `theme.ts` | Colours that meet WCAG 2.1 AA contrast, the 44-point minimum touch size, and the desktop widths. |
 
 ### Student experience
 

@@ -6,10 +6,13 @@ import { ApiError } from '@/api/client';
 import { listClassrooms } from '@/api/teaching';
 import type { Classroom, User } from '@/api/types';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { Columns } from '@/components/columns';
 import { JoinCode } from '@/components/join-code';
 import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { CreateClassForm } from '@/features/teacher/create-class-form';
+import { useIsWide } from '@/hooks/use-is-wide';
 import { colors, spacing } from '@/theme';
 
 type TeacherHomeProps = {
@@ -19,6 +22,7 @@ type TeacherHomeProps = {
 
 /** The teacher's classes with their join codes, and a form to create another. */
 export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
+  const isWide = useIsWide();
   const [classrooms, setClassrooms] = useState<Classroom[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -39,8 +43,33 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
     router.push({ pathname: '/classroom/[classroomId]', params: { classroomId } });
   }
 
+  const classList = (
+    <>
+      {classrooms !== null && classrooms.length === 0 ? (
+        <Text style={styles.empty}>
+          Create your first class, then share its join code with your students.
+        </Text>
+      ) : null}
+
+      <View style={isWide ? styles.grid : null}>
+        {classrooms?.map((classroom) => (
+          <Card key={classroom.id} style={isWide ? styles.gridItem : styles.classroom}>
+            <Text style={styles.classroomName}>{classroom.name}</Text>
+            <Text style={styles.subject}>{classroom.subject}</Text>
+            <JoinCode code={classroom.join_code} />
+            <Button
+              label={`Open ${classroom.name}`}
+              variant="secondary"
+              onPress={() => openClassroom(classroom.id)}
+            />
+          </Card>
+        ))}
+      </View>
+    </>
+  );
+
   return (
-    <Screen>
+    <Screen width="wide" topBar>
       <Text accessibilityRole="header" style={styles.title}>
         Hi, {user.display_name}
       </Text>
@@ -54,30 +83,23 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
         <Loading label="Loading your classes" />
       ) : null}
 
-      {classrooms !== null && classrooms.length === 0 ? (
-        <Text style={styles.empty}>
-          Create your first class, then share its join code with your students.
-        </Text>
-      ) : null}
+      <Columns
+        left={classList}
+        leftShare={2}
+        right={
+          <Card style={isWide ? null : styles.createClass}>
+            <CreateClassForm onCreated={(classroom) => openClassroom(classroom.id)} />
+          </Card>
+        }
+        rightShare={1}
+      />
 
-      {classrooms?.map((classroom) => (
-        <View key={classroom.id} style={styles.classroom}>
-          <Text style={styles.classroomName}>{classroom.name}</Text>
-          <Text style={styles.subject}>{classroom.subject}</Text>
-          <JoinCode code={classroom.join_code} />
-          <Button
-            label={`Open ${classroom.name}`}
-            variant="secondary"
-            onPress={() => openClassroom(classroom.id)}
-          />
+      {/* On wide screens the top bar has Sign out */}
+      {!isWide ? (
+        <View style={styles.signOut}>
+          <Button label="Sign out" variant="secondary" onPress={onSignOut} />
         </View>
-      ))}
-
-      <CreateClassForm onCreated={(classroom) => openClassroom(classroom.id)} />
-
-      <View style={styles.signOut}>
-        <Button label="Sign out" variant="secondary" onPress={onSignOut} />
-      </View>
+      ) : null}
     </Screen>
   );
 }
@@ -115,5 +137,18 @@ const styles = StyleSheet.create({
   },
   signOut: {
     marginTop: spacing.large,
+  },
+  createClass: {
+    marginTop: spacing.large,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.medium,
+  },
+  gridItem: {
+    flexBasis: 280,
+    flexGrow: 1,
+    gap: spacing.small,
   },
 });

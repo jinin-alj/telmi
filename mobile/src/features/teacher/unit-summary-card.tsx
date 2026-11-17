@@ -94,6 +94,7 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.surface,
     borderRadius: 12,

@@ -6,11 +6,14 @@ import { ApiError } from '@/api/client';
 import { getMyProgress, startSession } from '@/api/study';
 import type { StudentProgress, User } from '@/api/types';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { Columns } from '@/components/columns';
 import { Mascot } from '@/components/mascot';
 import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { JoinClassForm } from '@/features/student/join-class-form';
 import { UnitRow } from '@/features/student/unit-row';
+import { useIsWide } from '@/hooks/use-is-wide';
 import { colors, spacing } from '@/theme';
 
 type StudentHomeProps = {
@@ -20,6 +23,7 @@ type StudentHomeProps = {
 
 /** The student's classes, units and Pip, refreshed every time the screen comes back into view. */
 export function StudentHome({ user, onSignOut }: StudentHomeProps) {
+  const isWide = useIsWide();
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [startingUnitId, setStartingUnitId] = useState<string | null>(null);
@@ -59,7 +63,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
   }
 
   return (
-    <Screen>
+    <Screen width="wide" topBar>
       <Text accessibilityRole="header" style={styles.title}>
         Hi, {user.display_name}
       </Text>
@@ -76,38 +80,54 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
         <>
           <Mascot mascot={progress.mascot} />
 
-          {progress.classrooms.length === 0 ? (
-            <Text style={styles.empty}>
-              You haven&apos;t joined a class yet. Ask your teacher for a join code.
-            </Text>
-          ) : null}
+          <Columns
+            leftShare={2}
+            left={
+              <>
+                {progress.classrooms.length === 0 ? (
+                  <Text style={styles.empty}>
+                    You haven&apos;t joined a class yet. Ask your teacher for a join code.
+                  </Text>
+                ) : null}
 
-          {progress.classrooms.map((entry) => (
-            <View key={entry.classroom.id} style={styles.classroom}>
-              <Text accessibilityRole="header" style={styles.classroomName}>
-                {entry.classroom.name}
-              </Text>
-              <Text style={styles.subject}>{entry.classroom.subject}</Text>
-              {entry.units.length === 0 ? (
-                <Text style={styles.empty}>Your teacher hasn&apos;t added any units yet.</Text>
-              ) : null}
-              {entry.units.map((unit) => (
-                <UnitRow
-                  key={unit.unit_id}
-                  unit={unit}
-                  starting={startingUnitId === unit.unit_id}
-                  disabled={startingUnitId !== null}
-                  onStart={() => handleStart(unit.unit_id)}
-                />
-              ))}
-            </View>
-          ))}
-
-          <JoinClassForm onJoined={loadProgress} />
+                {progress.classrooms.map((entry) => (
+                  <View key={entry.classroom.id} style={styles.classroom}>
+                    <Text accessibilityRole="header" style={styles.classroomName}>
+                      {entry.classroom.name}
+                    </Text>
+                    <Text style={styles.subject}>{entry.classroom.subject}</Text>
+                    {entry.units.length === 0 ? (
+                      <Text style={styles.empty}>
+                        Your teacher hasn&apos;t added any units yet.
+                      </Text>
+                    ) : null}
+                    <View style={isWide ? styles.unitGrid : null}>
+                      {entry.units.map((unit) => (
+                        <UnitRow
+                          key={unit.unit_id}
+                          unit={unit}
+                          starting={startingUnitId === unit.unit_id}
+                          disabled={startingUnitId !== null}
+                          onStart={() => handleStart(unit.unit_id)}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </>
+            }
+            rightShare={1}
+            right={
+              <Card style={isWide ? null : styles.joinClass}>
+                <JoinClassForm onJoined={loadProgress} />
+              </Card>
+            }
+          />
         </>
       ) : null}
 
-      <Button label="Sign out" variant="secondary" onPress={onSignOut} />
+      {/* On wide screens the top bar has Sign out */}
+      {!isWide ? <Button label="Sign out" variant="secondary" onPress={onSignOut} /> : null}
     </Screen>
   );
 }
@@ -141,5 +161,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.mutedText,
     marginBottom: spacing.small,
+  },
+  joinClass: {
+    marginTop: spacing.large,
+  },
+  unitGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.medium,
+    marginTop: spacing.small,
   },
 });
