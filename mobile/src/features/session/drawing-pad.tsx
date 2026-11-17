@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { GestureResponderEvent, LayoutChangeEvent } from 'react-native';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -40,6 +40,11 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
   const size = useRef({ width: 0, height: 0 });
   const strokesRef = useRef<Stroke[]>([]);
   const drawingStroke = useRef(false);
+
+  // If the pad closes while the pen is down, the page must still be able to scroll
+  useEffect(() => {
+    return () => lockScroll(false);
+  }, [lockScroll]);
 
   /** Every change to the strokes goes through here, so the next touch event sees it at once. */
   function updateStrokes(change: (previous: Stroke[]) => Stroke[]) {

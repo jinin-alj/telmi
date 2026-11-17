@@ -107,6 +107,23 @@ it('keeps the text and shows the error when sending fails', async () => {
   expect(clearTranscript).not.toHaveBeenCalled();
 });
 
+it('ignores a second tap while the microphone is still starting', async () => {
+  mockSpeech({});
+  let taps = 0;
+  // The student taps again while the first tap is still waiting for the microphone
+  startListening.mockImplementation(async () => {
+    taps += 1;
+    if (taps === 1) {
+      await fireEvent.press(screen.getByRole('button', { name: 'Tap to talk' }));
+    }
+  });
+  await renderInput(jest.fn());
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Tap to talk' }));
+
+  expect(startListening).toHaveBeenCalledTimes(1);
+});
+
 describe('drawing', () => {
   /** A finger touching the canvas at a point, as React Native reports it. */
   function touch(x: number, y: number) {
@@ -212,6 +229,41 @@ describe('drawing', () => {
     expect(lockScroll).toHaveBeenLastCalledWith(true);
     await fireEvent(canvas, 'responderRelease', touch(10, 10));
     expect(lockScroll).toHaveBeenLastCalledWith(false);
+  });
+
+  it('lets the page scroll again if the drawing closes while the pen is down', async () => {
+    mockSpeech({});
+    const lockScroll = jest.fn();
+    const { unmount } = await render(
+      <ScrollLockContext.Provider value={lockScroll}>
+        <VoiceInput
+          sessionId="session-1"
+          language="es-ES"
+          prompt="Tap and explain it from memory"
+          typingPrompt="Type your explanation from memory"
+          submitLabel="Send to Pip"
+          onSubmit={jest.fn()}
+        />
+      </ScrollLockContext.Provider>,
+    );
+    const canvas = await openDrawing();
+    await fireEvent(canvas, 'responderGrant', touch(10, 10));
+
+    await unmount();
+
+    expect(lockScroll).toHaveBeenLastCalledWith(false);
+  });
+
+  it('keeps the drawing when the student switches to typing and back', async () => {
+    mockSpeech({});
+    await renderInput(jest.fn());
+    const canvas = await openDrawing();
+    await drawLine(canvas);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Type instead' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Draw instead' }));
+
+    expect(screen.getByRole('button', { name: 'Read my drawing' })).toBeEnabled();
   });
 
   it('offers drawing even where voice is not available', async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -25,6 +25,8 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   const [showConversation, setShowConversation] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  // A ref rather than state, so a tap on Finish in the same moment already sees it
+  const sendingTurn = useRef(false);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), CLOCK_TICK_MILLISECONDS);
@@ -38,11 +40,20 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   const canTalk = session.student_turns_left > 0 && timeLeft > 0;
 
   async function handleSend(text: string) {
-    const updated = await sendTurn(session.id, text);
-    onSessionChange(updated);
+    sendingTurn.current = true;
+    try {
+      const updated = await sendTurn(session.id, text);
+      onSessionChange(updated);
+    } finally {
+      sendingTurn.current = false;
+    }
   }
 
   async function handleFinish() {
+    // Finishing while a turn is on its way would grade the session without that turn
+    if (sendingTurn.current) {
+      return;
+    }
     setFinishing(true);
     setFinishError(null);
     try {
@@ -88,7 +99,10 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
         />
       ) : (
         <Text style={styles.limitReached}>
-          That&apos;s the end of this session. Finish to see what you explained well.
+          {timeLeft > 0
+            ? "That's the end of this session."
+            : "Time's up. Anything you hadn't sent wasn't saved."}{' '}
+          Finish to see what you explained well.
         </Text>
       )}
 

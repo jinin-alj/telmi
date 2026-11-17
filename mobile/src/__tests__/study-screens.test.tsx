@@ -120,6 +120,40 @@ describe('ActiveSession', () => {
   });
 });
 
+describe('ActiveSession safety', () => {
+  const explained = {
+    ...ACTIVE_SESSION,
+    turns: [...ACTIVE_SESSION.turns, { position: 1, speaker: 'student' as const, text: 'Hi' }],
+  };
+
+  it('ignores Finish while a turn is still sending', async () => {
+    // The student taps Finish while Pip is still answering
+    mockedApi.sendTurn.mockImplementation(async () => {
+      await fireEvent.press(screen.getByRole('button', { name: "I'm done, check my explanation" }));
+      return explained;
+    });
+    await render(
+      <ActiveSession session={explained} language="en-US" onSessionChange={jest.fn()} />,
+    );
+
+    await fireEvent.changeText(
+      screen.getByLabelText('Type your explanation from memory'),
+      'Plants make food.',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Send to Pip' }));
+
+    expect(mockedApi.finishSession).not.toHaveBeenCalled();
+  });
+
+  it("says when time ran out that anything unsent wasn't saved", async () => {
+    const timedOut = { ...explained, ends_at: new Date(Date.now() - 60000).toISOString() };
+    await render(<ActiveSession session={timedOut} language="en-US" onSessionChange={jest.fn()} />);
+
+    expect(screen.getByText(/Time's up/)).toBeTruthy();
+    expect(screen.getByText(/wasn't saved/)).toBeTruthy();
+  });
+});
+
 describe('StudentHome', () => {
   const student = {
     id: 'user-1',
@@ -150,6 +184,35 @@ describe('StudentHome', () => {
         params: { sessionId: 'session-1' },
       }),
     );
+  });
+
+  it('starts only one session when two units are tapped quickly', async () => {
+    const secondUnit = {
+      ...PROGRESS.classrooms[0].units[0],
+      unit_id: 'unit-2',
+      title: 'Respiration',
+    };
+    const twoUnits = {
+      ...PROGRESS,
+      classrooms: [
+        { ...PROGRESS.classrooms[0], units: [...PROGRESS.classrooms[0].units, secondUnit] },
+      ],
+    };
+    mockedApi.getMyProgress.mockResolvedValue(twoUnits);
+    let starts = 0;
+    // The student taps a second unit while the first is still starting
+    mockedApi.startSession.mockImplementation(async () => {
+      starts += 1;
+      if (starts === 1) {
+        await fireEvent.press(screen.getByRole('button', { name: 'Explain Respiration' }));
+      }
+      return ACTIVE_SESSION;
+    });
+    await render(<StudentHome user={student} onSignOut={jest.fn()} />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Explain Photosynthesis' }));
+
+    expect(mockedApi.startSession).toHaveBeenCalledTimes(1);
   });
 
   it('asks for a join code when the student has no classes', async () => {

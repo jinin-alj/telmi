@@ -19,17 +19,23 @@ export function describeLastAttempt(unit: UnitProgress): string {
 type UnitRowProps = {
   unit: UnitProgress;
   starting: boolean;
+  disabled: boolean;
   onStart: () => void;
 };
 
 /** A unit the student can explain, with last time's result and suggested next step. */
-export function UnitRow({ unit, starting, onStart }: UnitRowProps) {
+export function UnitRow({ unit, starting, disabled, onStart }: UnitRowProps) {
   return (
     <View style={styles.row}>
       <Text style={styles.title}>{unit.title}</Text>
       <Text style={styles.summary}>{describeLastAttempt(unit)}</Text>
       {unit.next_step ? <Text style={styles.nextStep}>Next: {unit.next_step}</Text> : null}
-      <Button label={`Explain ${unit.title}`} onPress={onStart} loading={starting} />
+      <Button
+        label={`Explain ${unit.title}`}
+        onPress={onStart}
+        loading={starting}
+        disabled={disabled}
+      />
     </View>
   );
 }
