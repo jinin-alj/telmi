@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { joinClassroom } from '@/api/study';
 import { Button } from '@/components/button';
 import { TextField } from '@/components/text-field';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 /** Join a class with the six-character code the teacher shared. */
 export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
+  const texts = useTexts();
   const [joinCode, setJoinCode] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
@@ -16,7 +18,7 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
   async function handleJoin() {
     const cleanedCode = joinCode.replace(/\s/g, '').toUpperCase();
     if (cleanedCode.length < 6) {
-      setErrorMessage('Join codes have 6 characters.');
+      setErrorMessage(texts.joinClass.tooShort);
       return;
     }
     setErrorMessage(null);
@@ -26,7 +28,7 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
       setJoinCode('');
       onJoined();
     } catch (error) {
-      setErrorMessage(error instanceof ApiError ? error.message : 'Could not join that class.');
+      setErrorMessage(errorText(error, texts, texts.joinClass.failed));
     } finally {
       setJoining(false);
     }
@@ -35,11 +37,11 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
   return (
     <View>
       <Text accessibilityRole="header" style={styles.heading}>
-        Join a class
+        {texts.joinClass.heading}
       </Text>
       <TextField
-        label="Join code"
-        hint="Ask your teacher for the 6-character code."
+        label={texts.joinClass.label}
+        hint={texts.joinClass.hint}
         error={errorMessage}
         value={joinCode}
         onChangeText={setJoinCode}
@@ -48,7 +50,12 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
         maxLength={8}
         onSubmitEditing={handleJoin}
       />
-      <Button label="Join class" variant="secondary" onPress={handleJoin} loading={joining} />
+      <Button
+        label={texts.joinClass.submit}
+        variant="secondary"
+        onPress={handleJoin}
+        loading={joining}
+      />
     </View>
   );
 }

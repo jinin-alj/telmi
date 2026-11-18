@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { readDrawing } from '@/api/study';
 import type { Drawing, InputMode } from '@/api/types';
 import { Button } from '@/components/button';
 import { ErrorMessage } from '@/components/error-message';
 import { appendReading } from '@/features/session/drawing';
 import { DrawingPad } from '@/features/session/drawing-pad';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import type { SpeechLanguage } from '@/speech/languages';
 import { useSpeechToText } from '@/speech/use-speech-to-text';
 import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } from '@/theme';
@@ -15,18 +16,6 @@ import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } fr
 // Matches TURN_MAX_CHARACTERS in backend/app/schemas/study_sessions.py
 const MAX_CHARACTERS = 2000;
 const MICROPHONE_SIZE = 96;
-
-// Expo Go and browsers like Firefox can't recognise speech; tell students what they can do instead
-const NO_VOICE_NOTE =
-  Platform.OS === 'web'
-    ? "Voice isn't available in this browser. Use Chrome or Safari to talk, or type below."
-    : 'Voice needs the full Telmi app. For now, type below.';
-
-const MODE_LINKS: Record<InputMode, string> = {
-  talk: 'Talk instead',
-  type: 'Type instead',
-  draw: 'Draw instead',
-};
 
 type VoiceInputProps = {
   sessionId: string;
@@ -51,6 +40,7 @@ export function VoiceInput({
   onListeningChange,
 }: VoiceInputProps) {
   const speech = useSpeechToText();
+  const texts = useTexts();
   const [mode, setMode] = useState<InputMode>(speech.isAvailable ? 'talk' : 'type');
   const [editedText, setEditedText] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -134,23 +124,27 @@ export function VoiceInput({
       setEditedText(null);
       speech.clearTranscript();
     } catch (error) {
-      setSendError(error instanceof ApiError ? error.message : 'That did not send. Try again.');
+      setSendError(errorText(error, texts, texts.answer.sendFailed));
     } finally {
       setSending(false);
     }
   }
 
   const showTranscriptBox = typing || hasText || speech.isListening;
+  // Expo Go and browsers like Firefox can't recognise speech; say what students can do instead
+  const noVoiceNote = Platform.OS === 'web' ? texts.answer.noVoiceBrowser : texts.answer.noVoiceApp;
 
   return (
     <View style={styles.container}>
-      {!speech.isAvailable ? <Text style={styles.note}>{NO_VOICE_NOTE}</Text> : null}
+      {!speech.isAvailable ? <Text style={styles.note}>{noVoiceNote}</Text> : null}
 
       {mode === 'talk' ? (
         <View style={styles.microphoneArea}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={speech.isListening ? 'Stop talking' : 'Tap to talk'}
+            accessibilityLabel={
+              speech.isListening ? texts.answer.stopTalking : texts.answer.tapToTalk
+            }
             accessibilityState={{ busy: speech.isListening }}
             onPress={handleMicrophonePress}
             disabled={sending}
@@ -159,7 +153,7 @@ export function VoiceInput({
             <View style={styles.microphoneIcon} />
           </Pressable>
           <Text style={styles.microphoneLabel}>
-            {speech.isListening ? 'Listening… tap to stop' : prompt}
+            {speech.isListening ? texts.answer.listening : prompt}
           </Text>
         </View>
       ) : null}
@@ -177,8 +171,8 @@ export function VoiceInput({
             typing
               ? typingPrompt
               : mode === 'draw'
-                ? 'What Pip read from your drawing. You can fix mistakes here.'
-                : 'What Pip heard. You can fix mistakes here.'
+                ? texts.answer.readFromDrawing
+                : texts.answer.heard
           }
           placeholder={typing ? typingPrompt : ''}
           placeholderTextColor={colors.mutedText}
@@ -197,7 +191,7 @@ export function VoiceInput({
         <>
           <Button label={submitLabel} onPress={handleSend} loading={sending} />
           {!typing ? (
-            <Button label="Start over" variant="secondary" onPress={handleStartOver} />
+            <Button label={texts.answer.startOver} variant="secondary" onPress={handleStartOver} />
           ) : null}
         </>
       ) : null}
@@ -206,11 +200,11 @@ export function VoiceInput({
         <Pressable
           key={option}
           accessibilityRole="button"
-          accessibilityLabel={MODE_LINKS[option]}
+          accessibilityLabel={texts.answer.modes[option]}
           onPress={() => switchMode(option)}
           style={styles.switchMode}
         >
-          <Text style={styles.switchModeLabel}>{MODE_LINKS[option]}</Text>
+          <Text style={styles.switchModeLabel}>{texts.answer.modes[option]}</Text>
         </Pressable>
       ))}
     </View>

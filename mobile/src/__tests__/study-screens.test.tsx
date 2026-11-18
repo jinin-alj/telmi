@@ -6,8 +6,12 @@ import type { StudentProgress, StudySession } from '@/api/types';
 import { ActiveSession } from '@/features/session/active-session';
 import { SessionResults } from '@/features/session/session-results';
 import { StudentHome } from '@/features/student/student-home';
+import { es } from '@/i18n/es';
+import { LanguageProvider } from '@/i18n/language-context';
+import { loadLanguage } from '@/i18n/language-storage';
 
 jest.mock('@/api/study');
+jest.mock('@/i18n/language-storage');
 // Lets a test turn the microphone on
 const mockMicrophone = { isListening: false };
 
@@ -253,6 +257,8 @@ describe('StudentHome', () => {
 
     await fireEvent.press(await screen.findByRole('button', { name: 'Explain Photosynthesis' }));
 
+    // Pip greets in the language the app is shown in
+    expect(mockedApi.startSession).toHaveBeenCalledWith('unit-1', 'en');
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/session/[sessionId]',
@@ -296,5 +302,38 @@ describe('StudentHome', () => {
 
     await waitFor(() => expect(screen.getByText(/Ask your teacher for a join code/)).toBeTruthy());
     expect(screen.getByTestId('pip-curious', { includeHiddenElements: true })).toBeTruthy();
+  });
+});
+
+describe('StudentHome in Spanish', () => {
+  const student = {
+    id: 'user-1',
+    username: 'ana_g',
+    display_name: 'Ana',
+    role: 'student' as const,
+  };
+
+  it('shows the home page in Spanish and starts sessions in Spanish', async () => {
+    jest.mocked(loadLanguage).mockResolvedValue('es');
+    mockedApi.getMyProgress.mockResolvedValue(PROGRESS);
+    mockedApi.startSession.mockResolvedValue(ACTIVE_SESSION);
+    await render(
+      <LanguageProvider>
+        <StudentHome user={student} onSignOut={jest.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(
+      await screen.findByRole('header', { name: es.studentHome.greeting('Ana') }),
+    ).toBeTruthy();
+    expect(screen.getByText(es.mascot.name(1))).toBeTruthy();
+    expect(screen.getByText(es.unitRow.notYet)).toBeTruthy();
+    expect(screen.getByRole('header', { name: es.joinClass.heading })).toBeTruthy();
+
+    await fireEvent.press(
+      screen.getByRole('button', { name: es.unitRow.explain('Photosynthesis') }),
+    );
+
+    expect(mockedApi.startSession).toHaveBeenCalledWith('unit-1', 'es');
   });
 });

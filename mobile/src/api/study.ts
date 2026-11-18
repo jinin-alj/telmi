@@ -7,6 +7,7 @@ import type {
   StudentProgress,
   StudySession,
 } from '@/api/types';
+import type { AppLanguage } from '@/i18n/languages';
 
 /** Join a class with the code the teacher shared. */
 export function joinClassroom(joinCode: string): Promise<Classroom> {
@@ -20,9 +21,11 @@ export function getMyProgress(): Promise<StudentProgress> {
   return apiClient.request<StudentProgress>('GET', '/progress/me');
 }
 
-/** Start explaining a unit to Pip. */
-export function startSession(unitId: string): Promise<StudySession> {
-  return apiClient.request<StudySession>('POST', '/sessions', { body: { unit_id: unitId } });
+/** Start explaining a unit to Pip, who greets in the given language. */
+export function startSession(unitId: string, language: AppLanguage): Promise<StudySession> {
+  return apiClient.request<StudySession>('POST', '/sessions', {
+    body: { unit_id: unitId, language },
+  });
 }
 
 /** Load a session with its conversation and feedback. */

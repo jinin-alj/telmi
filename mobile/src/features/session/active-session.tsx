@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { finishSession, sendTurn } from '@/api/study';
 import type { InputMode, StudySession } from '@/api/types';
 import { Button } from '@/components/button';
@@ -14,6 +13,8 @@ import type { PipMouth } from '@/components/pip';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import type { SpeechLanguage } from '@/speech/languages';
 import {
   colors,
@@ -44,6 +45,7 @@ export function ActiveSession({
   pipMouth = null,
 }: ActiveSessionProps) {
   const isWide = useIsWide();
+  const texts = useTexts();
   const [now, setNow] = useState(Date.now);
   const [showConversation, setShowConversation] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -83,7 +85,7 @@ export function ActiveSession({
     try {
       onSessionChange(await finishSession(session.id));
     } catch (error) {
-      setFinishError(error instanceof ApiError ? error.message : 'Could not check your answer.');
+      setFinishError(errorText(error, texts, texts.session.finishFailed));
       setFinishing(false);
     }
   }
@@ -93,9 +95,7 @@ export function ActiveSession({
       <View style={styles.checking} accessibilityLiveRegion="polite">
         <AnimatedPip state="thinking" size={120} />
         <ActivityIndicator size="large" color={colors.link} />
-        <Text style={styles.checkingText}>
-          Checking your explanation against your teacher&apos;s notes…
-        </Text>
+        <Text style={styles.checkingText}>{texts.session.checking}</Text>
       </View>
     );
   }
@@ -112,7 +112,7 @@ export function ActiveSession({
   const pipSide = (
     <>
       <Text style={styles.limits}>
-        {session.student_turns_left} turns left · {timeLeft} min left
+        {texts.session.limits(session.student_turns_left, timeLeft)}
       </Text>
 
       <View style={styles.pipRow}>
@@ -123,7 +123,7 @@ export function ActiveSession({
         />
         <View style={styles.bubble}>
           <View style={styles.bubbleTail} />
-          <Text style={styles.speaker}>Pip</Text>
+          <Text style={styles.speaker}>{texts.session.pip}</Text>
           <Text accessibilityLiveRegion="polite" style={styles.buddyLine}>
             {latestBuddyLine}
           </Text>
@@ -132,24 +132,26 @@ export function ActiveSession({
     </>
   );
 
+  const conversationToggle = showConversation
+    ? texts.session.hideConversation
+    : texts.session.showConversation;
+
   const answerSide = (
     <Card>
       {canTalk ? (
         <VoiceInput
           sessionId={session.id}
           language={language}
-          prompt="Tap and explain it from memory"
-          typingPrompt="Type your explanation from memory"
-          submitLabel="Send to Pip"
+          prompt={texts.session.talkPrompt}
+          typingPrompt={texts.session.typePrompt}
+          submitLabel={texts.session.send}
           onSubmit={handleSend}
           onListeningChange={setListening}
         />
       ) : (
         <Text style={styles.limitReached}>
-          {timeLeft > 0
-            ? "That's the end of this session."
-            : "Time's up. Anything you hadn't sent wasn't saved."}{' '}
-          Finish to see what you explained well.
+          {timeLeft > 0 ? texts.session.endOfSession : texts.session.timeUp}{' '}
+          {texts.session.finishToSee}
         </Text>
       )}
 
@@ -157,30 +159,30 @@ export function ActiveSession({
 
       <View style={styles.finishArea}>
         <Button
-          label="I'm done, check my explanation"
+          label={texts.session.finish}
           variant={canTalk ? 'secondary' : 'primary'}
           onPress={handleFinish}
           disabled={!hasExplained}
         />
-        {!hasExplained ? <Text style={styles.hint}>Explain something to Pip first.</Text> : null}
+        {!hasExplained ? <Text style={styles.hint}>{texts.session.explainFirst}</Text> : null}
       </View>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={showConversation ? 'Hide conversation' : 'Show conversation'}
+        accessibilityLabel={conversationToggle}
         accessibilityState={{ expanded: showConversation }}
         onPress={() => setShowConversation(!showConversation)}
         style={styles.toggle}
       >
-        <Text style={styles.toggleLabel}>
-          {showConversation ? 'Hide conversation' : 'Show conversation'}
-        </Text>
+        <Text style={styles.toggleLabel}>{conversationToggle}</Text>
       </Pressable>
 
       {showConversation
         ? session.turns.map((turn) => (
             <Text key={turn.position} style={styles.turn}>
-              <Text style={styles.turnSpeaker}>{turn.speaker === 'buddy' ? 'Pip' : 'You'}: </Text>
+              <Text style={styles.turnSpeaker}>
+                {turn.speaker === 'buddy' ? texts.session.pip : texts.session.you}:{' '}
+              </Text>
               {turn.text}
             </Text>
           ))

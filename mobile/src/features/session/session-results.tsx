@@ -2,9 +2,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { answerApplicationQuestion, startSession } from '@/api/study';
-import type { ApplicationResult, StudySession } from '@/api/types';
+import type { StudySession } from '@/api/types';
 import { goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -14,14 +13,10 @@ import { Pip } from '@/components/pip';
 import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
+import { errorText } from '@/i18n/error-text';
+import { useLanguage, useTexts } from '@/i18n/language-context';
 import type { SpeechLanguage } from '@/speech/languages';
 import { colors, cornerRadius, spacing, textStyles } from '@/theme';
-
-const VERDICT_LABELS: Record<ApplicationResult['verdict'], string> = {
-  correct: 'Correct',
-  partly_correct: 'Partly correct',
-  incorrect: 'Not quite',
-};
 
 type SessionResultsProps = {
   session: StudySession;
@@ -32,6 +27,8 @@ type SessionResultsProps = {
 /** What the student explained, what to fix, the next step and the exam-style question. */
 export function SessionResults({ session, language, onSessionChange }: SessionResultsProps) {
   const isWide = useIsWide();
+  const texts = useTexts();
+  const { language: appLanguage } = useLanguage();
   const [restarting, setRestarting] = useState(false);
   const [restartError, setRestartError] = useState<string | null>(null);
   const feedback = session.feedback;
@@ -47,10 +44,10 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
     setRestarting(true);
     setRestartError(null);
     try {
-      const newSession = await startSession(session.unit_id);
+      const newSession = await startSession(session.unit_id, appLanguage);
       router.replace({ pathname: '/session/[sessionId]', params: { sessionId: newSession.id } });
     } catch (error) {
-      setRestartError(error instanceof ApiError ? error.message : 'Could not start a new session.');
+      setRestartError(errorText(error, texts, texts.results.restartFailed));
       setRestarting(false);
     }
   }
@@ -61,12 +58,12 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
       <View style={styles.summaryRow}>
         <Pip mood="surprised" size={72} />
         <Text accessibilityRole="header" style={styles.summary}>
-          {summariseCoverage(feedback)}
+          {summariseCoverage(feedback, texts.results)}
         </Text>
       </View>
 
       <Text accessibilityRole="header" style={styles.sectionTitle}>
-        Key ideas
+        {texts.results.keyIdeas}
       </Text>
       {/* Keys by position, since the checker can repeat the same text */}
       {feedback.key_ideas.map((keyIdea, index) => {
@@ -77,7 +74,7 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
             style={[styles.idea, covered ? styles.ideaCovered : styles.ideaMissing]}
           >
             <Text style={[styles.ideaStatus, covered ? styles.coveredText : null]}>
-              {covered ? '✓ Explained' : 'Still to explain'}
+              {covered ? texts.results.explained : texts.results.stillToExplain}
             </Text>
             <Text style={styles.ideaText}>{keyIdea.idea}</Text>
           </View>
@@ -87,13 +84,13 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
       {feedback.misconceptions.length > 0 ? (
         <>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
-            Things to fix
+            {texts.results.thingsToFix}
           </Text>
           {feedback.misconceptions.map((misconception, index) => (
             <View key={index} style={styles.fix}>
-              <Text style={styles.fixLabel}>You said</Text>
+              <Text style={styles.fixLabel}>{texts.results.youSaid}</Text>
               <Text style={styles.fixText}>{misconception.student_said}</Text>
-              <Text style={styles.fixLabel}>Actually</Text>
+              <Text style={styles.fixLabel}>{texts.results.actually}</Text>
               <Text style={styles.fixText}>{misconception.correction}</Text>
             </View>
           ))}
@@ -109,12 +106,12 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
         accessibilityRole="header"
         style={[styles.sectionTitle, isWide ? styles.noSpaceAbove : null]}
       >
-        Your next step
+        {texts.results.nextStep}
       </Text>
       <Text style={styles.body}>{feedback.next_step}</Text>
 
       <Text accessibilityRole="header" style={styles.sectionTitle}>
-        Try this exam question
+        {texts.results.examQuestion}
       </Text>
       <Text style={styles.question}>{feedback.application_question}</Text>
 
@@ -122,24 +119,26 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
         <VoiceInput
           sessionId={session.id}
           language={language}
-          prompt="Tap and answer out loud"
-          typingPrompt="Type your answer"
-          submitLabel="Check my answer"
+          prompt={texts.results.answerPrompt}
+          typingPrompt={texts.results.answerTypePrompt}
+          submitLabel={texts.results.checkAnswer}
           onSubmit={handleAnswer}
         />
       ) : (
         <View style={styles.answer}>
-          <Text style={styles.fixLabel}>Your answer</Text>
+          <Text style={styles.fixLabel}>{texts.results.yourAnswer}</Text>
           <Text style={styles.fixText}>{session.application_answer}</Text>
-          <Text style={styles.verdict}>{VERDICT_LABELS[session.application_result.verdict]}</Text>
+          <Text style={styles.verdict}>
+            {texts.results.verdicts[session.application_result.verdict]}
+          </Text>
           <Text style={styles.body}>{session.application_result.explanation}</Text>
         </View>
       )}
 
       <ErrorMessage message={restartError} style={styles.error} />
       <View style={styles.actions}>
-        <Button label="Explain it again" onPress={handleTryAgain} loading={restarting} />
-        <Button label="Back to my classes" variant="secondary" onPress={goHome} />
+        <Button label={texts.results.again} onPress={handleTryAgain} loading={restarting} />
+        <Button label={texts.results.back} variant="secondary" onPress={goHome} />
       </View>
     </Card>
   );

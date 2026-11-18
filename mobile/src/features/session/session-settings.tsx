@@ -1,6 +1,7 @@
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ChoiceGroup } from '@/components/choice-group';
+import { useTexts } from '@/i18n/language-context';
 import { SPEECH_LANGUAGES } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
@@ -23,18 +24,20 @@ export function SessionSettings({
   voiceOn,
   onVoiceChange,
 }: SessionSettingsProps) {
+  const texts = useTexts();
+
   return (
     <View style={styles.container}>
       <ChoiceGroup
-        label="Language you are speaking"
+        label={texts.settings.speakingLanguage}
         options={SPEECH_LANGUAGES}
         value={language}
         onChange={onLanguageChange}
       />
       <View style={styles.voiceRow}>
-        <Text style={styles.voiceLabel}>Pip speaks out loud</Text>
+        <Text style={styles.voiceLabel}>{texts.settings.voice}</Text>
         <Switch
-          accessibilityLabel="Pip speaks out loud"
+          accessibilityLabel={texts.settings.voice}
           value={voiceOn}
           onValueChange={onVoiceChange}
           {...webSwitchColors}

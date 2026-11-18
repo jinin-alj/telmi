@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { Mascot as MascotProgress } from '@/api/types';
 import { Pip } from '@/components/pip';
+import { useTexts } from '@/i18n/language-context';
 import { colors, cornerRadius, spacing, textStyles } from '@/theme';
 
 const BASE_SIZE = 72;
@@ -16,20 +17,23 @@ export function mascotSize(level: number): number {
 /** Pip's level card; Pip grows only from ideas the student has explained. */
 export function Mascot({ mascot }: { mascot: MascotProgress }) {
   const size = mascotSize(mascot.level);
-  const ideaWord = mascot.ideas_to_next_level === 1 ? 'idea' : 'ideas';
+  const texts = useTexts();
 
   return (
     <View
       accessible
-      accessibilityLabel={`Pip, level ${mascot.level}. ${mascot.understood_ideas} ideas understood. ${mascot.ideas_to_next_level} more to grow.`}
+      accessibilityLabel={texts.mascot.description(
+        mascot.level,
+        mascot.understood_ideas,
+        mascot.ideas_to_next_level,
+      )}
       style={styles.card}
     >
       <Pip mood="proud" size={size} />
       <View style={styles.details}>
-        <Text style={styles.name}>Pip · level {mascot.level}</Text>
+        <Text style={styles.name}>{texts.mascot.name(mascot.level)}</Text>
         <Text style={styles.progress}>
-          {mascot.understood_ideas} ideas understood. Explain {mascot.ideas_to_next_level} more{' '}
-          {ideaWord} to help Pip grow.
+          {texts.mascot.progress(mascot.understood_ideas, mascot.ideas_to_next_level)}
         </Text>
       </View>
     </View>
