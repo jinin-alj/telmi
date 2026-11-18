@@ -3,7 +3,6 @@ import type { GestureResponderEvent, LayoutChangeEvent } from 'react-native';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { ApiError } from '@/api/client';
 import type { Drawing, PenColor, Point, Stroke } from '@/api/types';
 import { Button } from '@/components/button';
 import { PipNote } from '@/components/pip-note';
@@ -18,6 +17,8 @@ import {
   penValue,
   strokePath,
 } from '@/features/session/drawing';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 const CANVAS_HEIGHT = 240;
@@ -32,6 +33,7 @@ type DrawingPadProps = {
 /** A scratchpad for formulas and working, read into text the student checks before sending. */
 export function DrawingPad({ onRead }: DrawingPadProps) {
   const lockScroll = useContext(ScrollLockContext);
+  const texts = useTexts();
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [tool, setTool] = useState<Tool>('black');
   const [reading, setReading] = useState(false);
@@ -104,7 +106,7 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
       await onRead({ ...size.current, strokes: strokesRef.current });
       updateStrokes(() => []);
     } catch (error) {
-      setReadError(error instanceof ApiError ? error.message : "Couldn't read your drawing.");
+      setReadError(errorText(error, texts, texts.drawing.readFailed));
     } finally {
       setReading(false);
     }
@@ -119,7 +121,7 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
           <Pressable
             key={pen.color}
             accessibilityRole="button"
-            accessibilityLabel={pen.label}
+            accessibilityLabel={texts.drawing.pens[pen.color]}
             accessibilityState={{ selected: tool === pen.color }}
             onPress={() => setTool(pen.color)}
             style={[styles.tool, tool === pen.color ? styles.toolSelected : null]}
@@ -127,19 +129,27 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
             <View style={[styles.swatch, swatchColors[pen.color]]} />
           </Pressable>
         ))}
-        <ToolButton label="Eraser" selected={tool === 'eraser'} onPress={() => setTool('eraser')} />
         <ToolButton
-          label="Undo"
+          label={texts.drawing.eraser}
+          selected={tool === 'eraser'}
+          onPress={() => setTool('eraser')}
+        />
+        <ToolButton
+          label={texts.drawing.undo}
           disabled={isEmpty}
           onPress={() => updateStrokes((previous) => previous.slice(0, -1))}
         />
-        <ToolButton label="Clear" disabled={isEmpty} onPress={() => updateStrokes(() => [])} />
+        <ToolButton
+          label={texts.drawing.clear}
+          disabled={isEmpty}
+          onPress={() => updateStrokes(() => [])}
+        />
       </View>
 
       <View
         accessible
-        accessibilityLabel="Drawing area"
-        accessibilityHint="Write formulas or working with your finger, a pen or the mouse."
+        accessibilityLabel={texts.drawing.area}
+        accessibilityHint={texts.drawing.areaHint}
         onLayout={handleLayout}
         style={styles.canvas}
         // React Native's touch system: this view claims every touch that starts on it
@@ -170,7 +180,7 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
 
       {!hasRoomForMore(strokes) ? (
         <Text accessibilityLiveRegion="polite" style={styles.note}>
-          The page is full. Read it, or clear some space.
+          {texts.drawing.full}
         </Text>
       ) : null}
       {readError ? (
@@ -180,7 +190,12 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
           </Text>
         </PipNote>
       ) : null}
-      <Button label="Read my drawing" onPress={handleRead} loading={reading} disabled={isEmpty} />
+      <Button
+        label={texts.drawing.read}
+        onPress={handleRead}
+        loading={reading}
+        disabled={isEmpty}
+      />
     </View>
   );
 }

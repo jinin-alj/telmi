@@ -3,6 +3,9 @@ import { fireEvent, render, screen, within } from '@testing-library/react-native
 import { getSession } from '@/api/study';
 import type { StudySession } from '@/api/types';
 import SessionScreen from '@/app/session/[sessionId]';
+import { es } from '@/i18n/es';
+import { LanguageProvider } from '@/i18n/language-context';
+import { loadLanguage } from '@/i18n/language-storage';
 import { speak } from '@/speech/text-to-speech';
 
 jest.mock('expo-router', () => ({
@@ -11,6 +14,7 @@ jest.mock('expo-router', () => ({
   usePathname: () => '/session/session-1',
 }));
 jest.mock('@/api/study');
+jest.mock('@/i18n/language-storage');
 jest.mock('@/speech/text-to-speech', () => ({ speak: jest.fn(), stopSpeaking: jest.fn() }));
 jest.mock('@/speech/use-speech-to-text', () => ({
   useSpeechToText: () => ({
@@ -67,4 +71,19 @@ it("doesn't repeat Pip's line when voice is turned off and on again", async () =
   await fireEvent(voiceSwitch, 'valueChange', true);
 
   expect(speak).toHaveBeenCalledTimes(1);
+});
+
+it('shows the session in Spanish and listens in Spanish', async () => {
+  jest.mocked(loadLanguage).mockResolvedValue('es');
+  await render(
+    <LanguageProvider>
+      <SessionScreen />
+    </LanguageProvider>,
+  );
+
+  const finish = await screen.findByRole('button', { name: es.session.finish });
+  expect(finish).toBeTruthy();
+  const speakingLanguage = within(screen.getByLabelText(es.settings.speakingLanguage));
+  expect(speakingLanguage.getByRole('radio', { name: 'Español' })).toBeChecked();
+  expect(speak).toHaveBeenCalledWith('Hi! Can you explain it to me?', 'es-ES', expect.anything());
 });

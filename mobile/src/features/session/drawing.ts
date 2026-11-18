@@ -3,11 +3,11 @@
 import type { PenColor, Point, Stroke } from '@/api/types';
 
 // Mirror PEN_COLORS in backend/app/ai/drawing.py. All have at least 4.5:1 contrast on white.
-export const PEN_COLORS: { color: PenColor; value: string; label: string }[] = [
-  { color: 'black', value: '#111111', label: 'Black pen' },
-  { color: 'blue', value: '#1565C0', label: 'Blue pen' },
-  { color: 'red', value: '#C62828', label: 'Red pen' },
-  { color: 'green', value: '#2E7D32', label: 'Green pen' },
+export const PEN_COLORS: { color: PenColor; value: string }[] = [
+  { color: 'black', value: '#111111' },
+  { color: 'blue', value: '#1565C0' },
+  { color: 'red', value: '#C62828' },
+  { color: 'green', value: '#2E7D32' },
 ];
 
 // Matches PEN_WIDTH in backend/app/ai/drawing.py

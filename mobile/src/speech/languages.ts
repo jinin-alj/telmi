@@ -1,3 +1,5 @@
+import type { AppLanguage } from '@/i18n/languages';
+
 export type SpeechLanguage = 'en-US' | 'es-ES';
 
 export const SPEECH_LANGUAGES: { value: SpeechLanguage; label: string }[] = [
@@ -5,11 +7,9 @@ export const SPEECH_LANGUAGES: { value: SpeechLanguage; label: string }[] = [
   { value: 'es-ES', label: 'Español' },
 ];
 
-/** Spanish if the device is set to Spanish, otherwise English. */
-export function getDefaultSpeechLanguage(
-  deviceLocale: string = Intl.DateTimeFormat().resolvedOptions().locale,
-): SpeechLanguage {
-  if (deviceLocale.toLowerCase().startsWith('es')) {
+/** The voice and microphone language that goes with the language the app is shown in. */
+export function speechLanguageFor(appLanguage: AppLanguage): SpeechLanguage {
+  if (appLanguage === 'es') {
     return 'es-ES';
   }
   return 'en-US';

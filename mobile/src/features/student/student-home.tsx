@@ -2,7 +2,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { getMyProgress, startSession } from '@/api/study';
 import type { StudentProgress, User } from '@/api/types';
 import { Button } from '@/components/button';
@@ -16,6 +15,8 @@ import { Screen } from '@/components/screen';
 import { JoinClassForm } from '@/features/student/join-class-form';
 import { UnitRow } from '@/features/student/unit-row';
 import { useIsWide } from '@/hooks/use-is-wide';
+import { errorText } from '@/i18n/error-text';
+import { useLanguage, useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 type StudentHomeProps = {
@@ -26,6 +27,8 @@ type StudentHomeProps = {
 /** The student's classes, units and Pip, refreshed every time the screen comes back into view. */
 export function StudentHome({ user, onSignOut }: StudentHomeProps) {
   const isWide = useIsWide();
+  const texts = useTexts();
+  const { language } = useLanguage();
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [startingUnitId, setStartingUnitId] = useState<string | null>(null);
@@ -39,9 +42,9 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
         setErrorMessage(null);
       })
       .catch((error: unknown) => {
-        setErrorMessage(error instanceof ApiError ? error.message : 'Could not load your classes.');
+        setErrorMessage(errorText(error, texts, texts.studentHome.loadFailed));
       });
-  }, []);
+  }, [texts]);
 
   // Reload when returning from a session so Pip and last results are up to date
   useFocusEffect(loadProgress);
@@ -54,10 +57,10 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
     startingSession.current = true;
     setStartingUnitId(unitId);
     try {
-      const session = await startSession(unitId);
+      const session = await startSession(unitId, language);
       router.push({ pathname: '/session/[sessionId]', params: { sessionId: session.id } });
     } catch (error) {
-      setErrorMessage(error instanceof ApiError ? error.message : 'Could not start the session.');
+      setErrorMessage(errorText(error, texts, texts.studentHome.startFailed));
     } finally {
       startingSession.current = false;
       setStartingUnitId(null);
@@ -67,12 +70,14 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
   return (
     <Screen width="wide" topBar>
       <Text accessibilityRole="header" style={styles.title}>
-        Hi, {user.display_name}
+        {texts.studentHome.greeting(user.display_name)}
       </Text>
 
       <ErrorMessage message={errorMessage} style={styles.error} />
 
-      {progress === null && errorMessage === null ? <Loading label="Loading your classes" /> : null}
+      {progress === null && errorMessage === null ? (
+        <Loading label={texts.studentHome.loading} />
+      ) : null}
 
       {progress !== null ? (
         <>
@@ -84,9 +89,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
               <>
                 {progress.classrooms.length === 0 ? (
                   <PipNote mood="curious">
-                    <Text style={styles.empty}>
-                      You haven&apos;t joined a class yet. Ask your teacher for a join code.
-                    </Text>
+                    <Text style={styles.empty}>{texts.studentHome.noClasses}</Text>
                   </PipNote>
                 ) : null}
 
@@ -98,9 +101,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
                     <Text style={styles.subject}>{entry.classroom.subject}</Text>
                     {entry.units.length === 0 ? (
                       <PipNote mood="curious">
-                        <Text style={styles.empty}>
-                          Your teacher hasn&apos;t added any units yet.
-                        </Text>
+                        <Text style={styles.empty}>{texts.studentHome.noUnits}</Text>
                       </PipNote>
                     ) : null}
                     <View style={isWide ? styles.unitGrid : null}>
@@ -129,7 +130,9 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
       ) : null}
 
       {/* On wide screens the top bar has Sign out */}
-      {!isWide ? <Button label="Sign out" variant="secondary" onPress={onSignOut} /> : null}
+      {!isWide ? (
+        <Button label={texts.nav.signOut} variant="secondary" onPress={onSignOut} />
+      ) : null}
     </Screen>
   );
 }

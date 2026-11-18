@@ -5,6 +5,8 @@ import type {
 } from 'expo-speech-recognition';
 import { useEffect, useState } from 'react';
 
+import type { Texts } from '@/i18n/en';
+import { useTexts } from '@/i18n/language-context';
 import type { SpeechLanguage } from '@/speech/languages';
 import { speechModule } from '@/speech/speech-module';
 import type { SpeechModule } from '@/speech/speech-module';
@@ -19,23 +21,26 @@ const silentEmitter = new EventEmitter<{
 }>();
 
 /** A friendly sentence for each recognition error the student might hit. */
-export function describeSpeechError(errorCode: ExpoSpeechRecognitionErrorCode): string | null {
+export function describeSpeechError(
+  errorCode: ExpoSpeechRecognitionErrorCode,
+  texts: Texts['speechErrors'],
+): string | null {
   if (errorCode === 'aborted') {
     return null;
   }
   if (errorCode === 'no-speech') {
-    return "I didn't hear anything. Tap the microphone and try again.";
+    return texts.noSpeech;
   }
   if (errorCode === 'not-allowed') {
-    return 'Microphone access is off. Allow it in your settings, or type instead.';
+    return texts.notAllowed;
   }
   if (errorCode === 'network') {
-    return 'Speech recognition needs an internet connection here. You can type instead.';
+    return texts.network;
   }
   if (errorCode === 'language-not-supported') {
-    return "This device can't recognise that language. Try the other language or type instead.";
+    return texts.languageNotSupported;
   }
-  return "Voice isn't working right now. You can type instead.";
+  return texts.other;
 }
 
 /** Whether this build, device or browser can recognise speech at all. */
@@ -60,7 +65,9 @@ const NOTHING_HEARD: Heard = { finished: '', inProgress: '' };
 export function useSpeechToText() {
   const [isListening, setIsListening] = useState(false);
   const [heard, setHeard] = useState<Heard>(NOTHING_HEARD);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const texts = useTexts();
+  // The code is kept rather than the sentence, so it shows in whatever language is current
+  const [errorCode, setErrorCode] = useState<ExpoSpeechRecognitionErrorCode | null>(null);
   const [isAvailable] = useState(isSpeechRecognitionAvailable);
   const eventSource = speechModule ?? silentEmitter;
 
@@ -85,7 +92,7 @@ export function useSpeechToText() {
     }
   });
   useEventListener(eventSource, 'error', (event) => {
-    setErrorMessage(describeSpeechError(event.error));
+    setErrorCode(event.error);
   });
 
   // Stop the microphone if the answer box closes mid-sentence, e.g. when time runs out
@@ -103,23 +110,23 @@ export function useSpeechToText() {
   }, []);
 
   async function startListening(language: SpeechLanguage) {
-    setErrorMessage(null);
+    setErrorCode(null);
     if (speechModule === null) {
-      setErrorMessage(describeSpeechError('service-not-allowed'));
+      setErrorCode('service-not-allowed');
       return;
     }
     stopSpeaking();
     try {
       const permission = await speechModule.requestPermissionsAsync();
       if (!permission.granted) {
-        setErrorMessage(describeSpeechError('not-allowed'));
+        setErrorCode('not-allowed');
         return;
       }
       // Continuous so a pause to think doesn't cut the student off
       speechModule.start({ lang: language, interimResults: true, continuous: true });
     } catch (error) {
       console.warn('Could not start speech recognition', error);
-      setErrorMessage(describeSpeechError('service-not-allowed'));
+      setErrorCode('service-not-allowed');
     }
   }
 
@@ -137,14 +144,14 @@ export function useSpeechToText() {
 
   function clearTranscript() {
     setHeard(NOTHING_HEARD);
-    setErrorMessage(null);
+    setErrorCode(null);
   }
 
   return {
     isAvailable,
     isListening,
     transcript: joinTranscript(heard.finished, heard.inProgress),
-    errorMessage,
+    errorMessage: errorCode === null ? null : describeSpeechError(errorCode, texts.speechErrors),
     startListening,
     stopListening,
     clearTranscript,

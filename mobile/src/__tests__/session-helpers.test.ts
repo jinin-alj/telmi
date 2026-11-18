@@ -3,7 +3,9 @@ import { mascotSize } from '@/components/mascot';
 import { minutesLeft } from '@/features/session/session-time';
 import { lineToSpeak, summariseCoverage } from '@/features/session/session-text';
 import { describeLastAttempt } from '@/features/student/unit-row';
-import { getDefaultSpeechLanguage } from '@/speech/languages';
+import { en } from '@/i18n/en';
+import { es } from '@/i18n/es';
+import { speechLanguageFor } from '@/speech/languages';
 import { appendPhrase, joinTranscript } from '@/speech/transcript';
 import { describeSpeechError } from '@/speech/use-speech-to-text';
 
@@ -61,24 +63,24 @@ describe('transcript', () => {
   });
 });
 
-describe('getDefaultSpeechLanguage', () => {
-  it('picks Spanish on Spanish devices', () => {
-    expect(getDefaultSpeechLanguage('es-ES')).toBe('es-ES');
-    expect(getDefaultSpeechLanguage('es-CO')).toBe('es-ES');
-  });
-
-  it('falls back to English', () => {
-    expect(getDefaultSpeechLanguage('fr-FR')).toBe('en-US');
+describe('speechLanguageFor', () => {
+  it('listens in the language the app is shown in', () => {
+    expect(speechLanguageFor('es')).toBe('es-ES');
+    expect(speechLanguageFor('en')).toBe('en-US');
   });
 });
 
 describe('describeSpeechError', () => {
   it('stays quiet when the student stops listening on purpose', () => {
-    expect(describeSpeechError('aborted')).toBeNull();
+    expect(describeSpeechError('aborted', en.speechErrors)).toBeNull();
   });
 
   it('points to typing when the microphone is blocked', () => {
-    expect(describeSpeechError('not-allowed')).toContain('type instead');
+    expect(describeSpeechError('not-allowed', en.speechErrors)).toContain('type instead');
+  });
+
+  it('speaks Spanish when the app is in Spanish', () => {
+    expect(describeSpeechError('no-speech', es.speechErrors)).toBe(es.speechErrors.noSpeech);
   });
 });
 
@@ -96,7 +98,8 @@ describe('minutesLeft', () => {
 
 describe('session text', () => {
   it('counts explained ideas', () => {
-    expect(summariseCoverage(FEEDBACK)).toBe('You explained 2 of 3 key ideas.');
+    expect(summariseCoverage(FEEDBACK, en.results)).toBe('You explained 2 of 3 key ideas.');
+    expect(summariseCoverage(FEEDBACK, es.results)).toBe('Has explicado 2 de 3 ideas clave.');
   });
 
   it("speaks Pip's latest line during a session", () => {
@@ -107,12 +110,12 @@ describe('session text', () => {
         { position: 2, speaker: 'buddy', text: 'How?' },
       ],
     });
-    expect(lineToSpeak(session)).toBe('How?');
+    expect(lineToSpeak(session, en.results)).toBe('How?');
   });
 
   it('speaks the summary and next step once checked', () => {
     const session = buildSession({ status: 'completed', feedback: FEEDBACK });
-    expect(lineToSpeak(session)).toBe(
+    expect(lineToSpeak(session, en.results)).toBe(
       'You explained 2 of 3 key ideas. Your next step: Explain where the oxygen goes.',
     );
   });
@@ -132,12 +135,13 @@ describe('describeLastAttempt', () => {
   };
 
   it('says when a unit has not been tried', () => {
-    expect(describeLastAttempt(unit)).toBe('Not explained yet');
+    expect(describeLastAttempt(unit, en.unitRow)).toBe('Not explained yet');
   });
 
   it('describes last time in ideas, not a score', () => {
     const tried = { ...unit, sessions_completed: 2, total_ideas: 6, still_missing: ['a', 'b'] };
-    expect(describeLastAttempt(tried)).toBe('Last time: 4 of 6 key ideas');
+    expect(describeLastAttempt(tried, en.unitRow)).toBe('Last time: 4 of 6 key ideas');
+    expect(describeLastAttempt(tried, es.unitRow)).toBe('La última vez: 4 de 6 ideas clave');
   });
 });
 

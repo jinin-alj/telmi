@@ -2,7 +2,6 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { getSession } from '@/api/study';
 import type { StudySession } from '@/api/types';
 import { BackToHome } from '@/components/back-to-home';
@@ -15,7 +14,9 @@ import { SessionSettings } from '@/features/session/session-settings';
 import { usePipVoice } from '@/features/session/use-pip-voice';
 import { useIsWide } from '@/hooks/use-is-wide';
 import { lineToSpeak } from '@/features/session/session-text';
-import { getDefaultSpeechLanguage } from '@/speech/languages';
+import { errorText } from '@/i18n/error-text';
+import { useLanguage, useTexts } from '@/i18n/language-context';
+import { speechLanguageFor } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
 import { colors, spacing, textStyles } from '@/theme';
 
@@ -23,7 +24,16 @@ export default function SessionScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const [session, setSession] = useState<StudySession | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [language, setLanguage] = useState<SpeechLanguage>(getDefaultSpeechLanguage);
+  const texts = useTexts();
+  const { language: appLanguage } = useLanguage();
+  // Starts in the app's language; a student can still explain in the other one
+  const [language, setLanguage] = useState<SpeechLanguage>(() => speechLanguageFor(appLanguage));
+  // When the app's language changes, Pip's voice and the microphone follow it
+  const [followedAppLanguage, setFollowedAppLanguage] = useState(appLanguage);
+  if (appLanguage !== followedAppLanguage) {
+    setFollowedAppLanguage(appLanguage);
+    setLanguage(speechLanguageFor(appLanguage));
+  }
   const [voiceOn, setVoiceOn] = useState(true);
   const isWide = useIsWide();
   const pipVoice = usePipVoice();
@@ -32,12 +42,12 @@ export default function SessionScreen() {
     getSession(sessionId)
       .then(setSession)
       .catch((error: unknown) => {
-        setLoadError(error instanceof ApiError ? error.message : 'Could not open this session.');
+        setLoadError(errorText(error, texts, texts.session.openFailed));
       });
-  }, [sessionId]);
+  }, [sessionId, texts]);
 
   // Speak each new buddy line, and the summary once the session is checked
-  const spokenLine = session === null ? '' : lineToSpeak(session);
+  const spokenLine = session === null ? '' : lineToSpeak(session, texts.results);
   // Remembered so changing the language or voice setting never repeats a line already heard
   const lastLine = useRef('');
   useEffect(() => {
@@ -64,7 +74,7 @@ export default function SessionScreen() {
       <BackToHome />
 
       <ErrorMessage message={loadError} style={styles.error} />
-      {session === null && loadError === null ? <Loading label="Opening your session" /> : null}
+      {session === null && loadError === null ? <Loading label={texts.session.opening} /> : null}
 
       {session !== null ? (
         <>

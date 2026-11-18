@@ -1,20 +1,24 @@
 import type { CheckerFeedback, StudySession } from '@/api/types';
+import type { Texts } from '@/i18n/en';
+
+type ResultTexts = Texts['results'];
 
 /** "You explained 4 of 6 key ideas", counted from the gap map. */
-export function summariseCoverage(feedback: CheckerFeedback): string {
+export function summariseCoverage(feedback: CheckerFeedback, texts: ResultTexts): string {
   let coveredCount = 0;
   for (const keyIdea of feedback.key_ideas) {
     if (keyIdea.status === 'covered') {
       coveredCount += 1;
     }
   }
-  return `You explained ${coveredCount} of ${feedback.key_ideas.length} key ideas.`;
+  return texts.coverage(coveredCount, feedback.key_ideas.length);
 }
 
 /** What Pip should say out loud for the current state of the session. */
-export function lineToSpeak(session: StudySession): string {
+export function lineToSpeak(session: StudySession, texts: ResultTexts): string {
   if (session.status === 'completed' && session.feedback !== null) {
-    return `${summariseCoverage(session.feedback)} Your next step: ${session.feedback.next_step}`;
+    const summary = summariseCoverage(session.feedback, texts);
+    return `${summary} ${texts.nextStepSpoken(session.feedback.next_step)}`;
   }
   let latestBuddyLine = '';
   for (const turn of session.turns) {
