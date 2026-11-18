@@ -22,6 +22,7 @@ from app.schemas.study_sessions import (
     DrawingRequest,
     DrawingText,
     SessionDetail,
+    SessionLanguageRequest,
     StartSessionRequest,
     StudentTurnRequest,
     TurnPublic,
@@ -127,6 +128,20 @@ def read_session(
         except (ChatModelError, ConflictError) as error:
             db.rollback()
             logger.warning("Could not grade a timed-out session yet: %s", error)
+    return build_session_detail(db, study_session, settings)
+
+
+@router.put("/{session_id}/language")
+def change_session_language(
+    session_id: uuid.UUID,
+    request: SessionLanguageRequest,
+    db: DbSession,
+    settings: AppSettings,
+    student: StudentUser,
+) -> SessionDetail:
+    """Greet again in the language the student switched to, if they haven't answered yet."""
+    study_session = load_own_session(db, student, session_id)
+    study_sessions.change_greeting_language(db, study_session, request.language)
     return build_session_detail(db, study_session, settings)
 
 

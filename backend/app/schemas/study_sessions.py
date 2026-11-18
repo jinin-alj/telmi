@@ -21,6 +21,12 @@ class StartSessionRequest(BaseModel):
     language: SessionLanguage = "en"
 
 
+class SessionLanguageRequest(BaseModel):
+    """The language the student switched the app to."""
+
+    language: SessionLanguage
+
+
 InputMode = Literal["talk", "type", "draw"]
 
 
