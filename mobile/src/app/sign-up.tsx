@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import type { UserRole } from '@/api/types';
@@ -16,6 +16,7 @@ import { RolePicker } from '@/components/role-picker';
 import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
+import { Wordmark } from '@/components/wordmark';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type FieldErrors = {
@@ -64,6 +65,9 @@ export default function SignUpScreen() {
 
   return (
     <Screen>
+      <View style={styles.logo}>
+        <Wordmark size="large" mood="wave" />
+      </View>
       <Text accessibilityRole="header" style={styles.title}>
         Create your account
       </Text>
@@ -118,6 +122,9 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
+  logo: {
+    marginBottom: spacing.medium,
+  },
   title: {
     ...textStyles.title,
     color: colors.text,

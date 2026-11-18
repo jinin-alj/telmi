@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { ApiError } from '@/api/client';
 import type { Drawing, PenColor, Point, Stroke } from '@/api/types';
 import { Button } from '@/components/button';
+import { PipNote } from '@/components/pip-note';
 import { ScrollLockContext } from '@/components/screen';
 import {
   PEN_COLORS,
@@ -173,9 +174,11 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
         </Text>
       ) : null}
       {readError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {readError}
-        </Text>
+        <PipNote mood="confused">
+          <Text accessibilityRole="alert" style={styles.error}>
+            {readError}
+          </Text>
+        </PipNote>
       ) : null}
       <Button label="Read my drawing" onPress={handleRead} loading={reading} disabled={isEmpty} />
     </View>

@@ -10,6 +10,7 @@ import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
 import { JoinCode } from '@/components/join-code';
 import { Loading } from '@/components/loading';
+import { PipNote } from '@/components/pip-note';
 import { Screen } from '@/components/screen';
 import { CreateClassForm } from '@/features/teacher/create-class-form';
 import { useIsWide } from '@/hooks/use-is-wide';
@@ -46,9 +47,11 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
   const classList = (
     <>
       {classrooms !== null && classrooms.length === 0 ? (
-        <Text style={styles.empty}>
-          Create your first class, then share its join code with your students.
-        </Text>
+        <PipNote mood="curious">
+          <Text style={styles.empty}>
+            Create your first class, then share its join code with your students.
+          </Text>
+        </PipNote>
       ) : null}
 
       <View style={isWide ? styles.grid : null}>

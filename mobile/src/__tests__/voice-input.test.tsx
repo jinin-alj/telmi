@@ -224,6 +224,7 @@ describe('drawing', () => {
     expect(
       await screen.findByText("Pip can't read your drawing right now. Try again, or type instead."),
     ).toBeTruthy();
+    expect(screen.getByTestId('pip-confused', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Read my drawing' })).toBeEnabled();
   });
 

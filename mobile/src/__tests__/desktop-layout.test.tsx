@@ -59,6 +59,8 @@ describe('Screen', () => {
     );
 
     expect(screen.getByText('Ms López')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Telmi home' })).toBeTruthy();
+    expect(screen.getByText('telmi', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
   });
 

@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/auth/auth-context';
 import { goHome } from '@/components/back-to-home';
+import { Wordmark } from '@/components/wordmark';
 import { colors, contentWidth, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 /** The desktop header: the app name, who is signed in, and a way to sign out. */
@@ -17,7 +18,7 @@ export function TopBar() {
           onPress={goHome}
           style={styles.touchTarget}
         >
-          <Text style={styles.name}>Telmi</Text>
+          <Wordmark size="small" />
         </Pressable>
         <View style={styles.account}>
           {user !== null ? <Text style={styles.user}>{user.display_name}</Text> : null}
@@ -53,10 +54,6 @@ const styles = StyleSheet.create({
   touchTarget: {
     minHeight: minimumTouchSize,
     justifyContent: 'center',
-  },
-  name: {
-    ...textStyles.section,
-    color: colors.text,
   },
   account: {
     flexDirection: 'row',

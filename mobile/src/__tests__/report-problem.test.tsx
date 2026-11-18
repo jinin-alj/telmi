@@ -42,6 +42,7 @@ it('sends the report with the page and app version, then thanks the person', asy
   await fireEvent.press(screen.getByRole('button', { name: 'Send report' }));
 
   await waitFor(() => expect(screen.getByText(/Thanks/)).toBeTruthy());
+  expect(screen.getByTestId('pip-proud', { includeHiddenElements: true })).toBeTruthy();
   expect(mockedSend).toHaveBeenCalledWith({
     message: 'The microphone stopped after one sentence.',
     page: '/session/abc',
