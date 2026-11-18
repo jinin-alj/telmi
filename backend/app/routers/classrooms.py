@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, UploadFile, status
 
+from app.api_errors import api_error_for
 from app.dependencies import CurrentUser, DbSession, StudentUser, TeacherUser
 from app.models import Classroom
 from app.schemas.classrooms import (
@@ -34,7 +35,7 @@ def create_classroom(
     try:
         classroom = classrooms.create_classroom(db, teacher, request)
     except ConflictError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise api_error_for(status.HTTP_409_CONFLICT, error) from error
     return ClassroomPublic.model_validate(classroom)
 
 
@@ -52,7 +53,7 @@ def join_classroom(
     try:
         classroom = classrooms.join_classroom(db, student, request.join_code)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
     return ClassroomPublic.model_validate(classroom)
 
 
@@ -64,7 +65,7 @@ def add_unit(
     try:
         unit = classrooms.add_unit(db, teacher, classroom_id, request)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
     return UnitPublic.model_validate(unit)
 
 
@@ -76,24 +77,18 @@ def read_material_file(
     try:
         classrooms.get_classroom_for_member(db, teacher, classroom_id)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
 
     # One byte past the limit is enough to know it's too big, without holding all of it in memory
     content = file.file.read(material_files.MAX_FILE_BYTES + 1)
     try:
         return material_files.read_material_file(file.filename or "", content)
     except material_files.FileTooLargeError as error:
-        raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(error)
-        ) from error
+        raise api_error_for(status.HTTP_413_CONTENT_TOO_LARGE, error) from error
     except material_files.UnsupportedFileError as error:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(error)
-        ) from error
+        raise api_error_for(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, error) from error
     except material_files.UnreadableFileError as error:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)
-        ) from error
+        raise api_error_for(status.HTTP_422_UNPROCESSABLE_CONTENT, error) from error
 
 
 @router.get("/{classroom_id}/units")
@@ -104,7 +99,7 @@ def list_units(
     try:
         unit_list = classrooms.list_units(db, current_user, classroom_id)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
 
     public_list = []
     for unit in unit_list:

@@ -41,14 +41,14 @@ def create_classroom(db: Session, teacher: User, request: ClassroomCreate) -> Cl
             continue
         db.refresh(classroom)
         return classroom
-    raise ConflictError("Could not generate a unique join code")
+    raise ConflictError("join_code_failed", "Could not generate a unique join code")
 
 
 def join_classroom(db: Session, student: User, join_code: str) -> Classroom:
     """Add the student to the class with this code; joining twice is harmless."""
     classroom = db.scalar(select(Classroom).where(Classroom.join_code == join_code))
     if classroom is None:
-        raise NotFoundError("No class has that code")
+        raise NotFoundError("unknown_join_code", "No class has that code")
 
     if not is_enrolled(db, student.id, classroom.id):
         db.add(Enrollment(classroom_id=classroom.id, student_id=student.id))
@@ -87,13 +87,13 @@ def get_classroom_for_member(db: Session, user: User, classroom_id: uuid.UUID) -
     """Fetch a class the user owns or has joined; anyone else gets 'not found'."""
     classroom = db.get(Classroom, classroom_id)
     if classroom is None:
-        raise NotFoundError("Class not found")
+        raise NotFoundError("class_not_found", "Class not found")
 
     if user.role == UserRole.TEACHER and classroom.teacher_id == user.id:
         return classroom
     if user.role == UserRole.STUDENT and is_enrolled(db, user.id, classroom.id):
         return classroom
-    raise NotFoundError("Class not found")
+    raise NotFoundError("class_not_found", "Class not found")
 
 
 def add_unit(db: Session, teacher: User, classroom_id: uuid.UUID, request: UnitCreate) -> Unit:
@@ -117,5 +117,5 @@ def get_unit_for_student(db: Session, student: User, unit_id: uuid.UUID) -> Unit
     """Fetch a unit from a class the student has joined."""
     unit = db.get(Unit, unit_id)
     if unit is None or not is_enrolled(db, student.id, unit.classroom_id):
-        raise NotFoundError("Unit not found")
+        raise NotFoundError("unit_not_found", "Unit not found")
     return unit

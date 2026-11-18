@@ -1,17 +1,19 @@
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.ai.chat_model import ChatModel
 from app.ai.hosted_model import HostedChatModel
 from app.ai.ollama_model import OllamaChatModel
+from app.api_errors import ApiError
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.models import User, UserRole
 from app.security.tokens import ACCESS_TOKEN_TYPE, InvalidTokenError, read_user_id
+from app.services.errors import ErrorCode
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -19,12 +21,10 @@ DbSession = Annotated[Session, Depends(get_db)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
 
 
-def unauthorized(detail: str) -> HTTPException:
+def unauthorized(code: ErrorCode, message: str) -> ApiError:
     """Build the 401 error the app treats as 'please log in again'."""
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=detail,
-        headers={"WWW-Authenticate": "Bearer"},
+    return ApiError(
+        status.HTTP_401_UNAUTHORIZED, code, message, headers={"WWW-Authenticate": "Bearer"}
     )
 
 
@@ -35,16 +35,16 @@ def get_current_user(
 ) -> User:
     """Resolve the signed-in user from the Authorization header."""
     if credentials is None:
-        raise unauthorized("Not signed in")
+        raise unauthorized("not_signed_in", "Not signed in")
 
     try:
         user_id = read_user_id(credentials.credentials, ACCESS_TOKEN_TYPE, settings)
     except InvalidTokenError as error:
-        raise unauthorized("Session expired or invalid") from error
+        raise unauthorized("session_expired", "Session expired or invalid") from error
 
     user = db.get(User, user_id)
     if user is None:
-        raise unauthorized("Account no longer exists")
+        raise unauthorized("account_gone", "Account no longer exists")
     return user
 
 
@@ -54,14 +54,14 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 def require_teacher(current_user: CurrentUser) -> User:
     """Allow only teacher accounts."""
     if current_user.role != UserRole.TEACHER:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Teachers only")
+        raise ApiError(status.HTTP_403_FORBIDDEN, "teachers_only", "Teachers only")
     return current_user
 
 
 def require_student(current_user: CurrentUser) -> User:
     """Allow only student accounts."""
     if current_user.role != UserRole.STUDENT:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Students only")
+        raise ApiError(status.HTTP_403_FORBIDDEN, "students_only", "Students only")
     return current_user
 
 

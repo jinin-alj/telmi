@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.api_errors import ApiError, send_api_error, send_validation_error
 from app.body_limit import limit_body_size
 from app.config import get_settings
 from app.error_reporting import start_error_reporting
@@ -21,6 +23,10 @@ REPORT_WINDOW_SECONDS = 60 * 60
 def create_app() -> FastAPI:
     """Build the FastAPI application with all routes attached."""
     app = FastAPI(title="Telmi API", version="0.1.0")
+
+    # Every error carries a code, so the app can show it in the person's language
+    app.add_exception_handler(ApiError, send_api_error)
+    app.add_exception_handler(RequestValidationError, send_validation_error)
 
     app.add_middleware(BaseHTTPMiddleware, dispatch=limit_body_size)
     app.add_middleware(

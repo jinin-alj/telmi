@@ -1,7 +1,7 @@
 from fastapi import Request, Response, status
-from fastapi.responses import JSONResponse
 from starlette.middleware.base import RequestResponseEndpoint
 
+from app.api_errors import error_json
 from app.services.material_files import MAX_FILE_BYTES
 
 # Every JSON request this API takes fits easily; a bigger body is a mistake or an attack
@@ -25,16 +25,14 @@ async def limit_body_size(request: Request, call_next: RequestResponseEndpoint) 
     """Refuse a body over the route's limit before it is read into memory or onto disk."""
     # A body sent in chunks has no size to check up front, and the app never sends one that way
     if "transfer-encoding" in request.headers:
-        return JSONResponse(
-            {"detail": "Send the request with its size."},
-            status_code=status.HTTP_411_LENGTH_REQUIRED,
+        return error_json(
+            status.HTTP_411_LENGTH_REQUIRED, "length_required", "Send the request with its size."
         )
 
     # The server never reads past the declared size, so checking it is enough
     declared_length = request.headers.get("content-length", "0")
     if declared_length.isdigit() and int(declared_length) > body_limit_for(request.url.path):
-        return JSONResponse(
-            {"detail": "That request is too big."},
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+        return error_json(
+            status.HTTP_413_CONTENT_TOO_LARGE, "request_too_large", "That request is too big."
         )
     return await call_next(request)

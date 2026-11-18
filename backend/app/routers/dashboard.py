@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
+from app.api_errors import api_error_for
 from app.dependencies import AppSettings, DbSession, StudentUser, TeacherUser
 from app.schemas.dashboard import ClassroomDashboard, StudentProgress
 from app.services import dashboard
@@ -18,7 +19,7 @@ def read_classroom_dashboard(
     try:
         return dashboard.build_classroom_dashboard(db, teacher, classroom_id, settings)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
 
 
 @router.get("/progress/me")

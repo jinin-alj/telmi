@@ -73,7 +73,7 @@ def get_session_for_student(db: Session, student: User, session_id: uuid.UUID) -
     """Fetch one of the student's own sessions; anyone else's is 'not found'."""
     study_session = db.get(StudySession, session_id)
     if study_session is None or study_session.student_id != student.id:
-        raise NotFoundError("Session not found")
+        raise NotFoundError("session_not_found", "Session not found")
     return study_session
 
 
@@ -81,7 +81,7 @@ def get_unit(db: Session, study_session: StudySession) -> Unit:
     """The unit a session is about."""
     unit = db.get(Unit, study_session.unit_id)
     if unit is None:
-        raise NotFoundError("Unit not found")
+        raise NotFoundError("unit_not_found", "Unit not found")
     return unit
 
 
@@ -89,7 +89,7 @@ def lock_session(db: Session, session_id: uuid.UUID) -> StudySession:
     """Re-read a session and hold its row until commit, so two requests can't both change it."""
     locked = db.get(StudySession, session_id, with_for_update=True, populate_existing=True)
     if locked is None:
-        raise NotFoundError("Session not found")
+        raise NotFoundError("session_not_found", "Session not found")
     return locked
 
 
@@ -112,14 +112,17 @@ def check_can_add_turn(
 ) -> None:
     """Refuse a turn when the session is over, out of time, or full."""
     if study_session.status != SessionStatus.ACTIVE:
-        raise ConflictError("This session is already finished")
+        raise ConflictError("session_finished", "This session is already finished")
     if is_out_of_time(study_session, settings):
-        raise ConflictError("Time is up. Finish the session to see your feedback")
+        raise ConflictError("time_up", "Time is up. Finish the session to see your feedback")
     if count_student_turns(turns) >= settings.max_student_turns:
-        raise ConflictError("That's the last turn. Finish the session to see your feedback")
+        raise ConflictError(
+            "last_turn", "That's the last turn. Finish the session to see your feedback"
+        )
     if count_student_characters(turns) + len(text) > settings.max_student_characters:
         raise ConflictError(
-            "That's all Pip can take in one go. Finish the session to see your feedback"
+            "session_full",
+            "That's all Pip can take in one go. Finish the session to see your feedback",
         )
 
 
@@ -151,10 +154,10 @@ def add_student_turn(
     locked = lock_session(db, study_session.id)
     if locked.status != SessionStatus.ACTIVE:
         db.rollback()
-        raise ConflictError("This session is already finished")
+        raise ConflictError("session_finished", "This session is already finished")
     if len(list_turns(db, study_session.id)) != len(turns):
         db.rollback()
-        raise ConflictError("Your last answer was already sent")
+        raise ConflictError("answer_already_sent", "Your last answer was already sent")
 
     db.add(student_turn)
     db.add(
@@ -169,7 +172,7 @@ def add_student_turn(
         db.commit()
     except IntegrityError as error:
         db.rollback()
-        raise ConflictError("Your last answer was already sent") from error
+        raise ConflictError("answer_already_sent", "Your last answer was already sent") from error
     return locked
 
 
@@ -182,7 +185,7 @@ def ensure_key_ideas(db: Session, chat_model: ChatModel, unit: Unit) -> list[str
     extracted = extract_key_ideas(chat_model, unit)
     locked_unit = db.get(Unit, unit.id, with_for_update=True, populate_existing=True)
     if locked_unit is None:
-        raise NotFoundError("Unit not found")
+        raise NotFoundError("unit_not_found", "Unit not found")
     if locked_unit.key_ideas is None:
         locked_unit.key_ideas = extracted
     key_ideas = list(locked_unit.key_ideas or [])
@@ -198,7 +201,7 @@ def finish_session(db: Session, chat_model: ChatModel, study_session: StudySessi
 
     turns = list_turns(db, study_session.id)
     if count_student_turns(turns) == 0:
-        raise ConflictError("Explain something first, then finish")
+        raise ConflictError("nothing_explained", "Explain something first, then finish")
 
     unit = get_unit(db, study_session)
     release_connection(db)
@@ -230,7 +233,7 @@ def answer_application_question(
 ) -> StudySession:
     """Grade the student's one answer to the session's application question."""
     if study_session.status != SessionStatus.COMPLETED or study_session.feedback is None:
-        raise ConflictError("Finish the session before answering the question")
+        raise ConflictError("finish_first", "Finish the session before answering the question")
     # Only the first answer is graded; a retry gets that grade back
     if study_session.application_answer is not None:
         return study_session
@@ -258,15 +261,18 @@ def read_session_drawing(
     """Copy out a drawing while the student can still send something; the drawing isn't saved."""
     answered = study_session.application_answer is not None
     if study_session.status == SessionStatus.COMPLETED and answered:
-        raise ConflictError("This session has nothing left to answer")
+        raise ConflictError("nothing_to_answer", "This session has nothing left to answer")
     if study_session.status == SessionStatus.ACTIVE and is_out_of_time(study_session, settings):
-        raise ConflictError("Time is up. Finish the session to see your feedback")
+        raise ConflictError("time_up", "Time is up. Finish the session to see your feedback")
 
     # Counted before reading, so failed reads count too and can't be retried without end
     locked = lock_session(db, study_session.id)
     if locked.drawing_reads >= settings.max_drawing_reads:
         db.rollback()
-        raise ConflictError("Pip has read all the drawings it can for this session. Type instead")
+        raise ConflictError(
+            "drawings_used_up",
+            "Pip has read all the drawings it can for this session. Type instead",
+        )
     locked.drawing_reads += 1
     db.commit()
 
