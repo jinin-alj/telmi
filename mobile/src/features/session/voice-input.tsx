@@ -36,6 +36,8 @@ type VoiceInputProps = {
   submitLabel: string;
   // The mode is how the answer was given when it was sent, even if it was edited by typing
   onSubmit: (text: string, inputMode: InputMode) => Promise<void>;
+  // Lets Pip close its eyes and listen while the microphone records
+  onListeningChange?: (listening: boolean) => void;
 };
 
 /** Speak, type or draw an answer, review and fix the text, then send it. */
@@ -46,6 +48,7 @@ export function VoiceInput({
   typingPrompt,
   submitLabel,
   onSubmit,
+  onListeningChange,
 }: VoiceInputProps) {
   const speech = useSpeechToText();
   const [mode, setMode] = useState<InputMode>(speech.isAvailable ? 'talk' : 'type');
@@ -56,6 +59,12 @@ export function VoiceInput({
   const startingMicrophone = useRef(false);
   // The language the current recording started in
   const recordingLanguage = useRef(language);
+
+  useEffect(() => {
+    if (onListeningChange !== undefined) {
+      onListeningChange(speech.isListening);
+    }
+  }, [speech.isListening, onListeningChange]);
 
   // Recognition can't change language mid-recording, so stop; the next tap uses the new one
   useEffect(() => {

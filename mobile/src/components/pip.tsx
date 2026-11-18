@@ -25,6 +25,9 @@ export const PIP_MOODS = [
 
 export type PipMood = (typeof PIP_MOODS)[number];
 
+// The shapes Pip's mouth makes while talking: resting, a little open, and wide open
+export type PipMouth = 'smile' | 'small' | 'wide';
+
 // Pip keeps these colours on every background, so they don't come from the theme
 const INK = '#3A2540';
 const WHITE = '#FFFFFF';
@@ -61,10 +64,14 @@ const GAZE: Record<PipMood, { x: number; y: number }> = {
 type PipProps = {
   mood: PipMood;
   size: number;
+  // The moving parts, set by AnimatedPip: the mouth while talking, a blink, and which dot or wave is lit
+  mouth?: PipMouth;
+  blinking?: boolean;
+  pulse?: number | null;
 };
 
 /** Telmi's mascot in one of its eight moods; hidden from screen readers because nearby text says it all. */
-export function Pip({ mood, size }: PipProps) {
+export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipProps) {
   return (
     <View
       testID={`pip-${mood}`}
@@ -128,9 +135,9 @@ export function Pip({ mood, size }: PipProps) {
             opacity={0.42}
             filter="url(#pip-soft)"
           />
-          <Eyes mood={mood} />
-          <Mouth mood={mood} />
-          <Extras mood={mood} />
+          <Eyes mood={mood} blinking={blinking} />
+          {mouth === undefined ? <Mouth mood={mood} /> : <TalkingMouth shape={mouth} />}
+          <Extras mood={mood} pulse={pulse} />
         </G>
       </Svg>
     </View>
@@ -138,7 +145,7 @@ export function Pip({ mood, size }: PipProps) {
 }
 
 /** Both eyes: closed and happy when listening or proud, otherwise open and looking somewhere. */
-function Eyes({ mood }: { mood: PipMood }) {
+function Eyes({ mood, blinking }: { mood: PipMood; blinking: boolean }) {
   if (mood === 'listening' || mood === 'proud') {
     return (
       <Path
@@ -151,6 +158,14 @@ function Eyes({ mood }: { mood: PipMood }) {
     );
   }
   const gaze = GAZE[mood];
+  if (blinking) {
+    return (
+      <G testID="pip-blink" transform={`translate(${gaze.x} ${gaze.y})`}>
+        <Ellipse cx={90} cy={112} rx={15} ry={2.5} fill={INK} />
+        <Ellipse cx={150} cy={112} rx={15} ry={2.5} fill={INK} />
+      </G>
+    );
+  }
   const wide = mood === 'surprised';
   return (
     <G transform={`translate(${gaze.x} ${gaze.y})`}>
@@ -196,8 +211,41 @@ function Mouth({ mood }: { mood: PipMood }) {
   return <Line d="M110 141q10 10 20 0" color={INK} width={5} />;
 }
 
+/** The mouth while Pip talks: resting smile, a little open, or wide open. */
+function TalkingMouth({ shape }: { shape: PipMouth }) {
+  if (shape === 'small') {
+    return (
+      <G testID="pip-mouth-small">
+        <Ellipse cx={120} cy={143} rx={8} ry={6.5} fill={INK} />
+        <Ellipse cx={120} cy={146.5} rx={4.5} ry={2.4} fill="#FF7A8C" />
+      </G>
+    );
+  }
+  if (shape === 'wide') {
+    return (
+      <G testID="pip-mouth-wide">
+        <Path d="M107 137q13 3 26 0q-2 18 -13 18q-11 0 -13 -18z" fill={INK} />
+        <Path d="M113 148q7 -6 14 0q-3 6 -7 6q-4 0 -7 -6z" fill="#FF7A8C" />
+      </G>
+    );
+  }
+  return (
+    <G testID="pip-mouth-smile">
+      <Line d="M110 141q10 10 20 0" color={INK} width={5} />
+    </G>
+  );
+}
+
+/** How bright a thinking dot or sound wave is: the lit one is full, the rest are faint. */
+function glow(index: number, pulse: number | null): number {
+  if (pulse === null || pulse === index) {
+    return 1;
+  }
+  return 0.3;
+}
+
 /** The little things around Pip: a question mark, sound waves, thinking dots or sparkles. */
-function Extras({ mood }: { mood: PipMood }) {
+function Extras({ mood, pulse }: { mood: PipMood; pulse: number | null }) {
   if (mood === 'curious' || mood === 'confused') {
     return (
       <G>
@@ -208,18 +256,25 @@ function Extras({ mood }: { mood: PipMood }) {
     );
   }
   if (mood === 'listening') {
+    // Two waves, so they take turns
+    const litWave = pulse === null ? null : pulse % 2;
     return (
-      <G opacity={0.8}>
-        <Line d="M218 98q9 18 0 36M229 88q14 28 0 56" color={DENIM} width={5} />
+      <G testID={pulse === null ? undefined : `pip-pulse-${pulse}`} opacity={0.8}>
+        <G opacity={glow(0, litWave)}>
+          <Line d="M218 98q9 18 0 36" color={DENIM} width={5} />
+        </G>
+        <G opacity={glow(1, litWave)}>
+          <Line d="M229 88q14 28 0 56" color={DENIM} width={5} />
+        </G>
       </G>
     );
   }
   if (mood === 'thinking') {
     return (
-      <G>
-        <Circle cx={196} cy={40} r={5} fill={DENIM} />
-        <Circle cx={212} cy={30} r={6.5} fill={DENIM} />
-        <Circle cx={230} cy={18} r={8} fill={DENIM} />
+      <G testID={pulse === null ? undefined : `pip-pulse-${pulse}`}>
+        <Circle cx={196} cy={40} r={5} fill={DENIM} opacity={glow(0, pulse)} />
+        <Circle cx={212} cy={30} r={6.5} fill={DENIM} opacity={glow(1, pulse)} />
+        <Circle cx={230} cy={18} r={8} fill={DENIM} opacity={glow(2, pulse)} />
       </G>
     );
   }

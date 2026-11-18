@@ -12,11 +12,11 @@ import { Screen } from '@/components/screen';
 import { ActiveSession } from '@/features/session/active-session';
 import { SessionResults } from '@/features/session/session-results';
 import { SessionSettings } from '@/features/session/session-settings';
+import { usePipVoice } from '@/features/session/use-pip-voice';
 import { useIsWide } from '@/hooks/use-is-wide';
 import { lineToSpeak } from '@/features/session/session-text';
 import { getDefaultSpeechLanguage } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
-import { speak, stopSpeaking } from '@/speech/text-to-speech';
 import { colors, spacing, textStyles } from '@/theme';
 
 export default function SessionScreen() {
@@ -26,6 +26,7 @@ export default function SessionScreen() {
   const [language, setLanguage] = useState<SpeechLanguage>(getDefaultSpeechLanguage);
   const [voiceOn, setVoiceOn] = useState(true);
   const isWide = useIsWide();
+  const pipVoice = usePipVoice();
 
   useEffect(() => {
     getSession(sessionId)
@@ -45,17 +46,16 @@ export default function SessionScreen() {
     }
     lastLine.current = spokenLine;
     if (voiceOn) {
-      speak(spokenLine, language);
+      pipVoice.speakLine(spokenLine, language);
+    } else {
+      pipVoice.mumble(spokenLine);
     }
-  }, [spokenLine, voiceOn, language]);
-
-  // Never keep talking after the student leaves the screen
-  useEffect(() => stopSpeaking, []);
+  }, [spokenLine, voiceOn, language, pipVoice]);
 
   function handleVoiceChange(nextVoiceOn: boolean) {
     setVoiceOn(nextVoiceOn);
     if (!nextVoiceOn) {
-      stopSpeaking();
+      pipVoice.stop();
     }
   }
 
@@ -72,7 +72,12 @@ export default function SessionScreen() {
             {session.unit_title}
           </Text>
           {session.status === 'active' ? (
-            <ActiveSession session={session} language={language} onSessionChange={setSession} />
+            <ActiveSession
+              session={session}
+              language={language}
+              onSessionChange={setSession}
+              pipMouth={pipVoice.mouth}
+            />
           ) : (
             <SessionResults session={session} language={language} onSessionChange={setSession} />
           )}

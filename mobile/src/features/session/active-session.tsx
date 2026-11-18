@@ -8,7 +8,9 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
 import { ErrorMessage } from '@/components/error-message';
-import { Pip } from '@/components/pip';
+import { AnimatedPip } from '@/components/animated-pip';
+import type { PipState } from '@/components/animated-pip';
+import type { PipMouth } from '@/components/pip';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
@@ -30,15 +32,23 @@ type ActiveSessionProps = {
   session: StudySession;
   language: SpeechLanguage;
   onSessionChange: (session: StudySession) => void;
+  // Pip's mouth while it reads its line aloud, or null while it is quiet
+  pipMouth?: PipMouth | null;
 };
 
 /** The conversation: Pip's latest line, the microphone, and the button to finish. */
-export function ActiveSession({ session, language, onSessionChange }: ActiveSessionProps) {
+export function ActiveSession({
+  session,
+  language,
+  onSessionChange,
+  pipMouth = null,
+}: ActiveSessionProps) {
   const isWide = useIsWide();
   const [now, setNow] = useState(Date.now);
   const [showConversation, setShowConversation] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
   // A ref rather than state, so a tap on Finish in the same moment already sees it
   const sendingTurn = useRef(false);
 
@@ -81,13 +91,21 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   if (finishing) {
     return (
       <View style={styles.checking} accessibilityLiveRegion="polite">
-        <Pip mood="thinking" size={120} />
+        <AnimatedPip state="thinking" size={120} />
         <ActivityIndicator size="large" color={colors.link} />
         <Text style={styles.checkingText}>
           Checking your explanation against your teacher&apos;s notes…
         </Text>
       </View>
     );
+  }
+
+  // Listening wins, so Pip never seems to talk over the student
+  let pipState: PipState = 'idle';
+  if (listening) {
+    pipState = 'listening';
+  } else if (pipMouth !== null) {
+    pipState = 'speaking';
   }
 
   // On wide screens Pip's line stays on the left while the student answers on the right
@@ -98,7 +116,11 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
       </Text>
 
       <View style={styles.pipRow}>
-        <Pip mood="happy" size={isWide ? 120 : 72} />
+        <AnimatedPip
+          state={pipState}
+          mouth={pipMouth === null ? undefined : pipMouth}
+          size={isWide ? 120 : 72}
+        />
         <View style={styles.bubble}>
           <View style={styles.bubbleTail} />
           <Text style={styles.speaker}>Pip</Text>
@@ -120,6 +142,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
           typingPrompt="Type your explanation from memory"
           submitLabel="Send to Pip"
           onSubmit={handleSend}
+          onListeningChange={setListening}
         />
       ) : (
         <Text style={styles.limitReached}>
