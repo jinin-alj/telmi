@@ -59,7 +59,32 @@ def test_start_greets_instantly_without_calling_the_model(
     assert isinstance(turns, list)
     assert turns[0]["speaker"] == "buddy"
     assert "Photosynthesis" in turns[0]["text"]
+    # Older apps send no language, so Pip greets in English
+    assert turns[0]["text"].startswith("Hi!")
     assert fake_chat_model.requests == []
+
+
+def test_start_greets_in_spanish_when_asked(client: TestClient) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+
+    response = client.post(
+        "/sessions", json={"unit_id": unit_id, "language": "es"}, headers=student
+    )
+
+    assert response.status_code == 201
+    greeting = response.json()["turns"][0]["text"]
+    assert greeting.startswith("¡Hola!")
+    assert "Photosynthesis" in greeting
+
+
+def test_start_refuses_a_language_pip_does_not_speak(client: TestClient) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+
+    response = client.post(
+        "/sessions", json={"unit_id": unit_id, "language": "fr"}, headers=student
+    )
+
+    assert response.status_code == 422
 
 
 def test_student_outside_class_cannot_start(client: TestClient) -> None:

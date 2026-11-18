@@ -3,6 +3,7 @@ import pytest
 from app.ai.buddy import (
     BUDDY_INSTRUCTIONS,
     generate_buddy_reply,
+    opening_line,
     remove_agreement,
     remove_echo,
     split_sentences,
@@ -119,3 +120,10 @@ def test_buddy_reply_drops_an_echo_of_the_last_thing_the_student_said() -> None:
     reply = generate_buddy_reply(fake_model, unit, turns)
 
     assert reply == "Where do those sit?"
+
+
+def test_opening_line_speaks_the_session_language() -> None:
+    unit = Unit(title="Photosynthesis", material="Plants make glucose using light.")
+
+    assert opening_line(unit, "en").startswith("Hi! I missed the class on Photosynthesis.")
+    assert opening_line(unit, "es").startswith("¡Hola! Me perdí la clase de Photosynthesis.")
