@@ -53,6 +53,7 @@ it("reads Pip's line once, not again when the language changes", async () => {
   await fireEvent.press(screen.getByRole('radio', { name: 'English' }));
 
   expect(speak).toHaveBeenCalledTimes(1);
+  expect(speak).toHaveBeenCalledWith('Hi! Can you explain it to me?', 'en-US', expect.anything());
 });
 
 it("doesn't repeat Pip's line when voice is turned off and on again", async () => {

@@ -8,10 +8,13 @@ import { SessionResults } from '@/features/session/session-results';
 import { StudentHome } from '@/features/student/student-home';
 
 jest.mock('@/api/study');
+// Lets a test turn the microphone on
+const mockMicrophone = { isListening: false };
+
 jest.mock('@/speech/use-speech-to-text', () => ({
   useSpeechToText: () => ({
     isAvailable: false,
-    isListening: false,
+    isListening: mockMicrophone.isListening,
     transcript: '',
     errorMessage: null,
     startListening: jest.fn(),
@@ -71,6 +74,7 @@ const PROGRESS: StudentProgress = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockMicrophone.isListening = false;
 });
 
 describe('ActiveSession', () => {
@@ -83,6 +87,28 @@ describe('ActiveSession', () => {
     expect(screen.getByTestId('pip-happy', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByText('8 turns left · 15 min left')).toBeTruthy();
     expect(screen.getByRole('button', { name: "I'm done, check my explanation" })).toBeDisabled();
+  });
+
+  it('shows Pip listening while the microphone records', async () => {
+    mockMicrophone.isListening = true;
+    await render(
+      <ActiveSession session={ACTIVE_SESSION} language="en-US" onSessionChange={jest.fn()} />,
+    );
+
+    expect(screen.getByTestId('pip-listening', { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it("opens Pip's mouth while it talks", async () => {
+    await render(
+      <ActiveSession
+        session={ACTIVE_SESSION}
+        language="en-US"
+        pipMouth="wide"
+        onSessionChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('pip-mouth-wide', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('sends a typed turn and passes the updated session up', async () => {
