@@ -9,7 +9,7 @@ import { appendReading } from '@/features/session/drawing';
 import { DrawingPad } from '@/features/session/drawing-pad';
 import type { SpeechLanguage } from '@/speech/languages';
 import { useSpeechToText } from '@/speech/use-speech-to-text';
-import { colors, cornerRadius, minimumTouchSize, spacing } from '@/theme';
+import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 // Matches TURN_MAX_CHARACTERS in backend/app/schemas/study_sessions.py
 const MAX_CHARACTERS = 2000;
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     display: 'none',
   },
   note: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.mutedText,
     marginBottom: spacing.small,
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.onPrimary,
   },
   microphoneLabel: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginTop: spacing.small,
     textAlign: 'center',
@@ -264,13 +264,14 @@ const styles = StyleSheet.create({
     borderRadius: cornerRadius,
     backgroundColor: colors.panel,
     padding: 12,
-    fontSize: 17,
+    fontFamily: fonts.body,
+    fontSize: textStyles.body.fontSize,
     color: colors.text,
     textAlignVertical: 'top',
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginTop: spacing.small,
   },
   switchMode: {
@@ -280,8 +281,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.small,
   },
   switchModeLabel: {
+    ...textStyles.body,
     color: colors.link,
-    fontSize: 16,
     textDecorationLine: 'underline',
   },
 });

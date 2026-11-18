@@ -3,7 +3,7 @@ import { StyleSheet, Switch, Text, View } from 'react-native';
 import { ChoiceGroup } from '@/components/choice-group';
 import { SPEECH_LANGUAGES } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type SessionSettingsProps = {
   language: SpeechLanguage;
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   voiceLabel: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
   },
 });

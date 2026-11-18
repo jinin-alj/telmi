@@ -18,7 +18,7 @@ import {
   validateMaterial,
   validateUnitTitle,
 } from '@/features/teacher/validation';
-import { colors, cornerRadius, panelShadow, spacing } from '@/theme';
+import { colors, cornerRadius, panelShadow, spacing, textStyles } from '@/theme';
 
 type AddUnitFormProps = {
   classroomId: string;
@@ -150,19 +150,18 @@ const styles = StyleSheet.create({
     boxShadow: panelShadow,
   },
   heading: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
     marginBottom: spacing.small,
   },
   uploadHint: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 4,
     marginBottom: spacing.medium,
   },
   notice: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     marginBottom: spacing.medium,
   },
@@ -172,8 +171,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginBottom: spacing.small,
   },
 });

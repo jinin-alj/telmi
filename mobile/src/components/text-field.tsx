@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import type { TextInputProps } from 'react-native';
 
-import { colors, cornerRadius, minimumTouchSize, spacing } from '@/theme';
+import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type TextFieldProps = TextInputProps & {
   label: string;
@@ -39,8 +39,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.medium,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...textStyles.bodyStrong,
     color: colors.text,
     marginBottom: 4,
   },
@@ -50,7 +49,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: cornerRadius,
     paddingHorizontal: 12,
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontSize: textStyles.body.fontSize,
     color: colors.text,
     backgroundColor: colors.panel,
   },
@@ -59,13 +59,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   hint: {
+    ...textStyles.caption,
     marginTop: 4,
-    fontSize: 14,
     color: colors.mutedText,
   },
   error: {
+    ...textStyles.caption,
     marginTop: 4,
-    fontSize: 14,
     color: colors.error,
   },
 });

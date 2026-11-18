@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { MisconceptionExample, UnitSummary } from '@/api/types';
 import { ShareBar } from '@/components/share-bar';
-import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing } from '@/theme';
+import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing, textStyles } from '@/theme';
 
 /** "8 students tried it · on average they explained 64% of the key ideas". */
 export function describeUnitReach(unit: UnitSummary): string {
@@ -114,17 +114,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.medium,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
   },
   reach: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     marginTop: 4,
   },
   unfinished: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 4,
   },
@@ -134,21 +133,20 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   toggleLabel: {
+    ...textStyles.body,
     color: colors.link,
-    fontSize: 16,
     textDecorationLine: 'underline',
   },
   idea: {
     marginTop: spacing.medium,
   },
   ideaText: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginBottom: 6,
   },
   misconceptionCount: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...textStyles.bodyStrong,
     color: colors.text,
     marginTop: spacing.small,
   },
@@ -159,12 +157,12 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   exampleSaid: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     fontStyle: 'italic',
   },
   exampleCorrection: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 2,
   },

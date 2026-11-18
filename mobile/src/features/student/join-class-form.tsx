@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client';
 import { joinClassroom } from '@/api/study';
 import { Button } from '@/components/button';
 import { TextField } from '@/components/text-field';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 /** Join a class with the six-character code the teacher shared. */
 export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
@@ -55,8 +55,7 @@ export function JoinClassForm({ onJoined }: { onJoined: () => void }) {
 
 const styles = StyleSheet.create({
   heading: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
     marginBottom: spacing.small,
   },

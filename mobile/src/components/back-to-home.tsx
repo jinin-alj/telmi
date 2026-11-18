@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, minimumTouchSize } from '@/theme';
+import { colors, minimumTouchSize, textStyles } from '@/theme';
 
 /** Go back to the home screen already open, so Back never lands on a second copy of it. */
 export function goHome() {
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   label: {
+    ...textStyles.body,
     color: colors.link,
-    fontSize: 16,
   },
 });

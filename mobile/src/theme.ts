@@ -26,6 +26,26 @@ export const colors = {
   divider: '#F1DED2',
 };
 
+// Each name is one font file at one weight (see fonts.ts), so styles never set fontWeight
+export const fonts = {
+  heading: 'Fredoka_600SemiBold',
+  pip: 'Fredoka_500Medium',
+  body: 'Figtree_400Regular',
+  bodyStrong: 'Figtree_600SemiBold',
+};
+
+// The brand's app type scale; nothing is smaller than 14
+export const textStyles = {
+  title: { fontFamily: fonts.heading, fontSize: 28, lineHeight: 34 },
+  section: { fontFamily: fonts.heading, fontSize: 22, lineHeight: 28 },
+  // Anything Pip says
+  pip: { fontFamily: fonts.pip, fontSize: 20, lineHeight: 28 },
+  body: { fontFamily: fonts.body, fontSize: 17, lineHeight: 24 },
+  bodyStrong: { fontFamily: fonts.bodyStrong, fontSize: 17, lineHeight: 24 },
+  caption: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
+  captionStrong: { fontFamily: fonts.bodyStrong, fontSize: 14, lineHeight: 20 },
+};
+
 // The brand's one soft shadow for panels, which have no outlines
 export const panelShadow = '0px 18px 44px rgba(58, 37, 64, 0.10)';
 

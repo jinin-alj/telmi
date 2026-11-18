@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { StudentSummary, StudentUnitResult, UnitSummary } from '@/api/types';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 /** "4 of 6 key ideas" for one student on one unit, or why there's no result yet. */
 export function describeStudentResult(result: StudentUnitResult, unit: UnitSummary): string {
@@ -62,24 +62,22 @@ const styles = StyleSheet.create({
     borderTopColor: colors.divider,
   },
   name: {
-    fontSize: 17,
-    fontWeight: '700',
+    ...textStyles.bodyStrong,
     color: colors.text,
   },
   username: {
-    fontSize: 14,
-    fontWeight: '400',
+    ...textStyles.caption,
     color: colors.mutedText,
   },
   unit: {
     marginTop: 6,
   },
   unitLine: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
   },
   missing: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 2,
   },

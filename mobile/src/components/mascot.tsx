@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Mascot as MascotProgress } from '@/api/types';
-import { colors, cornerRadius, spacing } from '@/theme';
+import { colors, cornerRadius, spacing, textStyles } from '@/theme';
 
 const BASE_SIZE = 72;
 const GROWTH_PER_LEVEL = 12;
@@ -78,12 +78,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
   },
   progress: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     marginTop: 4,
   },

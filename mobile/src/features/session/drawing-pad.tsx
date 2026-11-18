@@ -17,7 +17,7 @@ import {
   penValue,
   strokePath,
 } from '@/features/session/drawing';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 const CANVAS_HEIGHT = 240;
 
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
   },
   toolLabel: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
   },
   canvas: {
@@ -266,13 +266,13 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? ({ touchAction: 'none', userSelect: 'none' } as object) : null),
   },
   note: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.mutedText,
     marginTop: spacing.small,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginTop: spacing.small,
   },
 });
