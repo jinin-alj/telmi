@@ -1,3 +1,4 @@
+from app.ai.attribution import MIN_SHARE_FROM_STUDENT, content_words, share_found
 from app.ai.chat_model import ChatMessage, ChatModel
 from app.ai.transcript import escape_tags, wrap_student_text
 from app.models import SessionTurn, Speaker, Unit
@@ -15,7 +16,8 @@ whether the student is right or wrong. A separate checker does that.
 "got it", "good", "that's the main idea" or anything like them, in any language. React with \
 curiosity instead, for example "Hmm", "Wait" or "Oh, interesting".
 - Never repeat the student's own words or claims back to them, especially anything that might \
-be a mistake. Ask about it instead.
+be a mistake. Ask about it instead. For example, do not start with "So" followed by what they \
+just said.
 - Reply in one to three short, spoken sentences. No lists, no markdown, no emojis.
 - Ask exactly one curious question: why, how, what would happen if, or can you give an example.
 - Ask about ideas from the material that the student has not mentioned yet, but never state \
@@ -54,15 +56,33 @@ AGREEMENT_OPENERS = (
     "vale",
     "muy bien",
 )
-SENTENCE_ENDINGS = (".", "!", "?")
+# The ellipsis counts too, because models often trail off with one
+SENTENCE_ENDINGS = (".", "!", "?", "…")
+
+# Short reactions like "Oh, the soil." share words with the student by chance
+MIN_ECHO_WORDS = 4
 
 
 def split_first_sentence(text: str) -> tuple[str, str]:
     """Split text after its first sentence-ending mark; the rest may be empty."""
     for position, character in enumerate(text):
         if character in SENTENCE_ENDINGS:
-            return text[: position + 1], text[position + 1 :].strip()
+            end = position + 1
+            # Keep runs like "..." or "?!" with their sentence
+            while end < len(text) and text[end] in SENTENCE_ENDINGS:
+                end += 1
+            return text[:end], text[end:].strip()
     return text, ""
+
+
+def split_sentences(text: str) -> list[str]:
+    """Split text into its sentences, each keeping its ending marks."""
+    sentences = []
+    rest = text.strip()
+    while rest != "":
+        sentence, rest = split_first_sentence(rest)
+        sentences.append(sentence)
+    return sentences
 
 
 def remove_agreement(reply: str) -> str:
@@ -80,6 +100,37 @@ def remove_agreement(reply: str) -> str:
     if starts_with_agreement and not first_sentence.endswith("?") and rest != "":
         return rest
     return reply.strip()
+
+
+def repeats_student(sentence: str, student_words: set[str]) -> bool:
+    """Whether a sentence restates what the student said instead of asking about it."""
+    if sentence.endswith("?"):
+        return False
+    sentence_words = content_words(sentence)
+    if len(sentence_words) < MIN_ECHO_WORDS:
+        return False
+    return share_found(sentence_words, student_words) >= MIN_SHARE_FROM_STUDENT
+
+
+def remove_echo(reply: str, student_text: str) -> str:
+    """Drop sentences that repeat the student back to them, as a safety net for the prompt."""
+    student_words = content_words(student_text)
+    kept = []
+    for sentence in split_sentences(reply):
+        if not repeats_student(sentence, student_words):
+            kept.append(sentence)
+    # Never leave Pip with nothing to say
+    if len(kept) == 0:
+        return reply.strip()
+    return " ".join(kept)
+
+
+def last_student_text(turns: list[SessionTurn]) -> str:
+    """What the student said most recently, or nothing before they have spoken."""
+    for turn in reversed(turns):
+        if turn.speaker == Speaker.STUDENT:
+            return turn.text
+    return ""
 
 
 def opening_line(unit: Unit) -> str:
@@ -105,4 +156,4 @@ def generate_buddy_reply(chat_model: ChatModel, unit: Unit, turns: list[SessionT
     """Ask the model for the buddy's next line."""
     messages = build_buddy_messages(unit, turns)
     reply = chat_model.complete(messages, temperature=BUDDY_TEMPERATURE)
-    return remove_agreement(reply)
+    return remove_echo(remove_agreement(reply), last_student_text(turns))
