@@ -5,6 +5,9 @@ import { ApiError } from '@/api/client';
 import { sendFeedback } from '@/api/feedback';
 import ReportProblemScreen from '@/app/report-problem';
 import { ReportProblemLink } from '@/components/report-problem-link';
+import { es } from '@/i18n/es';
+import { LanguageProvider } from '@/i18n/language-context';
+import { loadLanguage } from '@/i18n/language-storage';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), canDismiss: jest.fn(), dismissTo: jest.fn(), replace: jest.fn() },
@@ -13,6 +16,7 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('expo-constants', () => ({ expoConfig: { version: '1.2.3' } }));
 jest.mock('@/api/feedback', () => ({ sendFeedback: jest.fn() }));
+jest.mock('@/i18n/language-storage');
 
 const mockedSend = jest.mocked(sendFeedback);
 
@@ -68,4 +72,25 @@ it('keeps the text and explains when sending fails', async () => {
 
   expect(await screen.findByText('Too many tries. Wait a minute, then try again.')).toBeTruthy();
   expect(screen.getByLabelText('What went wrong?').props.value).toBe('It froze.');
+});
+
+it('asks and thanks in Spanish', async () => {
+  jest.mocked(loadLanguage).mockResolvedValue('es');
+  mockedSend.mockResolvedValue(undefined);
+  await render(
+    <LanguageProvider>
+      <ReportProblemScreen />
+    </LanguageProvider>,
+  );
+
+  const send = await screen.findByRole('button', { name: es.reportProblem.send });
+  await fireEvent.press(send);
+  expect(screen.getByText(es.reportProblem.missing)).toBeTruthy();
+
+  await fireEvent.changeText(screen.getByLabelText(es.reportProblem.label), 'No carga la clase');
+  await fireEvent.press(send);
+
+  await waitFor(() =>
+    expect(screen.getByRole('header', { name: es.reportProblem.thanks })).toBeTruthy(),
+  );
 });

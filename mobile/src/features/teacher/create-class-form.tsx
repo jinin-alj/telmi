@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { createClassroom } from '@/api/teaching';
 import type { Classroom } from '@/api/types';
 import { Button } from '@/components/button';
 import { ErrorMessage } from '@/components/error-message';
 import { TextField } from '@/components/text-field';
 import { validateClassName, validateSubject } from '@/features/teacher/validation';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 /** Create a class; the new class and its join code appear in the list straight away. */
 export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroom) => void }) {
+  const texts = useTexts();
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
@@ -20,8 +22,8 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
   const [creating, setCreating] = useState(false);
 
   async function handleCreate() {
-    const nextNameError = validateClassName(name);
-    const nextSubjectError = validateSubject(subject);
+    const nextNameError = validateClassName(name, texts);
+    const nextSubjectError = validateSubject(subject, texts);
     setNameError(nextNameError);
     setSubjectError(nextSubjectError);
     setFormError(null);
@@ -36,7 +38,7 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
       setSubject('');
       onCreated(classroom);
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : 'Could not create the class.');
+      setFormError(errorText(error, texts, texts.createClass.failed));
     } finally {
       setCreating(false);
     }
@@ -45,18 +47,23 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
   return (
     <View>
       <Text accessibilityRole="header" style={styles.heading}>
-        Create a class
+        {texts.createClass.heading}
       </Text>
       <TextField
-        label="Class name"
-        hint="For example, Biology 3A."
+        label={texts.createClass.name}
+        hint={texts.createClass.nameHint}
         error={nameError}
         value={name}
         onChangeText={setName}
       />
-      <TextField label="Subject" error={subjectError} value={subject} onChangeText={setSubject} />
+      <TextField
+        label={texts.createClass.subject}
+        error={subjectError}
+        value={subject}
+        onChangeText={setSubject}
+      />
       <ErrorMessage message={formError} style={styles.error} />
-      <Button label="Create class" onPress={handleCreate} loading={creating} />
+      <Button label={texts.createClass.submit} onPress={handleCreate} loading={creating} />
     </View>
   );
 }

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useTexts } from '@/i18n/language-context';
 import { colors, textStyles } from '@/theme';
 
 type ShareBarProps = {
@@ -11,7 +12,8 @@ type ShareBarProps = {
 /** A bar showing count out of total, with the numbers in words so it never relies on colour. */
 export function ShareBar({ count, total, label }: ShareBarProps) {
   const percent = total === 0 ? 0 : Math.round((100 * count) / total);
-  const description = `${count} of ${total} ${label}`;
+  const texts = useTexts();
+  const description = texts.shareBar.countOf(count, total, label);
 
   return (
     <View accessible accessibilityLabel={description}>

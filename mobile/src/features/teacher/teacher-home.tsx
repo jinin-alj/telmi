@@ -2,7 +2,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { listClassrooms } from '@/api/teaching';
 import type { Classroom, User } from '@/api/types';
 import { Button } from '@/components/button';
@@ -15,6 +14,8 @@ import { PipNote } from '@/components/pip-note';
 import { Screen } from '@/components/screen';
 import { CreateClassForm } from '@/features/teacher/create-class-form';
 import { useIsWide } from '@/hooks/use-is-wide';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 type TeacherHomeProps = {
@@ -25,6 +26,7 @@ type TeacherHomeProps = {
 /** The teacher's classes with their join codes, and a form to create another. */
 export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
   const isWide = useIsWide();
+  const texts = useTexts();
   const [classrooms, setClassrooms] = useState<Classroom[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -35,9 +37,9 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
         setErrorMessage(null);
       })
       .catch((error: unknown) => {
-        setErrorMessage(error instanceof ApiError ? error.message : 'Could not load your classes.');
+        setErrorMessage(errorText(error, texts, texts.teacherHome.loadFailed));
       });
-  }, []);
+  }, [texts]);
 
   useFocusEffect(loadClassrooms);
 
@@ -49,9 +51,7 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
     <>
       {classrooms !== null && classrooms.length === 0 ? (
         <PipNote mood="curious">
-          <Text style={styles.empty}>
-            Create your first class, then share its join code with your students.
-          </Text>
+          <Text style={styles.empty}>{texts.teacherHome.empty}</Text>
         </PipNote>
       ) : null}
 
@@ -62,7 +62,7 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
             <Text style={styles.subject}>{classroom.subject}</Text>
             <JoinCode code={classroom.join_code} />
             <Button
-              label={`Open ${classroom.name}`}
+              label={texts.teacherHome.open(classroom.name)}
               variant="secondary"
               onPress={() => openClassroom(classroom.id)}
             />
@@ -75,12 +75,12 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
   return (
     <Screen width="wide" topBar>
       <Text accessibilityRole="header" style={styles.title}>
-        Hi, {user.display_name}
+        {texts.teacherHome.greeting(user.display_name)}
       </Text>
 
       <ErrorMessage message={errorMessage} style={styles.error} />
       {classrooms === null && errorMessage === null ? (
-        <Loading label="Loading your classes" />
+        <Loading label={texts.teacherHome.loading} />
       ) : null}
 
       <Columns
@@ -97,7 +97,7 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
       {/* On wide screens the top bar has Sign out */}
       {!isWide ? (
         <View style={styles.signOut}>
-          <Button label="Sign out" variant="secondary" onPress={onSignOut} />
+          <Button label={texts.nav.signOut} variant="secondary" onPress={onSignOut} />
         </View>
       ) : null}
     </Screen>

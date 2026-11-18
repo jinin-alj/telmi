@@ -3,6 +3,7 @@ import {
   describeUploadErrors,
   describeUploads,
 } from '@/features/teacher/material-upload';
+import { en } from '@/i18n/en';
 
 describe('appendMaterial', () => {
   it('uses the file text alone when the box is empty', () => {
@@ -17,23 +18,28 @@ describe('appendMaterial', () => {
 describe('describeUploads', () => {
   it('names the files that were added and asks the teacher to check them', () => {
     expect(
-      describeUploads([
-        { fileName: 'notes.pdf', read: true, truncated: false },
-        { fileName: 'slides.pptx', read: true, truncated: false },
-      ]),
+      describeUploads(
+        [
+          { fileName: 'notes.pdf', read: true, truncated: false },
+          { fileName: 'slides.pptx', read: true, truncated: false },
+        ],
+        en.addUnit,
+      ),
     ).toBe(
       "Added the text from notes.pdf, slides.pptx. Check it and delete anything students shouldn't be checked on.",
     );
   });
 
   it('says when a long file was only partly added', () => {
-    expect(describeUploads([{ fileName: 'book.pdf', read: true, truncated: true }])).toContain(
-      'book.pdf is very long, so only its first part was added.',
-    );
+    expect(
+      describeUploads([{ fileName: 'book.pdf', read: true, truncated: true }], en.addUnit),
+    ).toContain('book.pdf is very long, so only its first part was added.');
   });
 
   it('says nothing when no file could be read', () => {
-    expect(describeUploads([{ fileName: 'scan.pdf', read: false, error: 'No text' }])).toBeNull();
+    expect(
+      describeUploads([{ fileName: 'scan.pdf', read: false, error: 'No text' }], en.addUnit),
+    ).toBeNull();
   });
 });
 

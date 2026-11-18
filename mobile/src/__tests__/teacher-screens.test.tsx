@@ -14,8 +14,13 @@ import {
   UnitSummaryCard,
 } from '@/features/teacher/unit-summary-card';
 import { validateClassName, validateMaterial } from '@/features/teacher/validation';
+import { en } from '@/i18n/en';
+import { es } from '@/i18n/es';
+import { LanguageProvider } from '@/i18n/language-context';
+import { loadLanguage } from '@/i18n/language-storage';
 
 jest.mock('@/api/teaching');
+jest.mock('@/i18n/language-storage');
 jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 jest.mock('expo-router', () => {
   // Run focus effects straight away, since there is no navigator in these tests
@@ -80,13 +85,13 @@ beforeEach(() => {
 
 describe('teacher validation', () => {
   it('needs a class name', () => {
-    expect(validateClassName('  ')).not.toBeNull();
-    expect(validateClassName('Biology 4B')).toBeNull();
+    expect(validateClassName('  ', en)).not.toBeNull();
+    expect(validateClassName('Biology 4B', en)).toBeNull();
   });
 
   it('needs enough material for the checker', () => {
-    expect(validateMaterial('Cells release energy.')).not.toBeNull();
-    expect(validateMaterial(GOOD_MATERIAL)).toBeNull();
+    expect(validateMaterial('Cells release energy.', en)).not.toBeNull();
+    expect(validateMaterial(GOOD_MATERIAL, en)).toBeNull();
   });
 });
 
@@ -214,20 +219,20 @@ describe('AddUnitForm', () => {
 
 describe('UnitSummaryCard', () => {
   it('summarises reach without a ranking', () => {
-    expect(describeUnitReach(UNIT)).toBe(
+    expect(describeUnitReach(UNIT, en.unitSummary)).toBe(
       '2 students have explained this. On average they explained 42% of the key ideas.',
     );
-    expect(describeUnitReach({ ...UNIT, students_attempted: 0 })).toBe(
+    expect(describeUnitReach({ ...UNIT, students_attempted: 0 }, en.unitSummary)).toBe(
       'No students have explained this yet.',
     );
   });
 
   it('says how many sessions ran out of time unfinished', () => {
-    expect(describeUnfinished(UNIT)).toBeNull();
-    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 1 })).toBe(
+    expect(describeUnfinished(UNIT, en.unitSummary)).toBeNull();
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 1 }, en.unitSummary)).toBe(
       '1 session ran out of time before it was finished, so it has no results yet.',
     );
-    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 3 })).toBe(
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 3 }, en.unitSummary)).toBe(
       '3 sessions ran out of time before they were finished, so they have no results yet.',
     );
   });
@@ -297,10 +302,10 @@ describe('StudentSummaryRow', () => {
   };
 
   it('describes results in ideas', () => {
-    expect(describeStudentResult(student.units[0], UNIT)).toBe('1 of 2 key ideas');
-    expect(describeStudentResult({ ...student.units[0], sessions_completed: 0 }, UNIT)).toBe(
-      'Not explained yet',
-    );
+    expect(describeStudentResult(student.units[0], UNIT, en.studentRow)).toBe('1 of 2 key ideas');
+    expect(
+      describeStudentResult({ ...student.units[0], sessions_completed: 0 }, UNIT, en.studentRow),
+    ).toBe('Not explained yet');
   });
 
   it('lists the ideas still to explain', async () => {
@@ -321,5 +326,48 @@ describe('StudentSummaryRow', () => {
 
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+});
+
+describe('teacher pages in Spanish', () => {
+  beforeEach(() => {
+    jest.mocked(loadLanguage).mockResolvedValue('es');
+  });
+
+  it('shows the classes and the create form in Spanish', async () => {
+    mockedApi.listClassrooms.mockResolvedValue([CLASSROOM]);
+    await render(
+      <LanguageProvider>
+        <TeacherHome user={teacher} onSignOut={jest.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(
+      await screen.findByRole('button', { name: es.teacherHome.open('Biology 4B') }),
+    ).toBeTruthy();
+    expect(screen.getByRole('header', { name: es.createClass.heading })).toBeTruthy();
+    expect(screen.getByLabelText(es.joinCode.description('3JTB74'))).toBeTruthy();
+  });
+
+  it('checks a new unit in Spanish', async () => {
+    await render(
+      <LanguageProvider>
+        <AddUnitForm classroomId="class-1" onAdded={jest.fn()} onCancel={jest.fn()} />
+      </LanguageProvider>,
+    );
+
+    await fireEvent.press(await screen.findByRole('button', { name: es.addUnit.save }));
+
+    expect(screen.getByText(es.teacherValidation.titleMissing)).toBeTruthy();
+    expect(screen.getByText(es.teacherValidation.materialTooShort(50))).toBeTruthy();
+  });
+
+  it('describes class results in Spanish', () => {
+    expect(describeUnitReach(UNIT, es.unitSummary)).toBe(
+      '2 estudiantes lo han explicado. De media explicaron el 42 % de las ideas clave.',
+    );
+    expect(describeUnfinished({ ...UNIT, unfinished_sessions: 1 }, es.unitSummary)).toBe(
+      '1 sesión se quedó sin tiempo antes de terminar, así que aún no tiene resultados.',
+    );
   });
 });

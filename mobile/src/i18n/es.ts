@@ -167,6 +167,106 @@ export const es: Texts = {
       'Este dispositivo no reconoce ese idioma. Prueba con el otro idioma o escribe tu respuesta.',
     other: 'La voz no funciona ahora mismo. Puedes escribir tu respuesta.',
   },
+  teacherHome: {
+    greeting: (name: string) => `Hola, ${name}`,
+    loading: 'Cargando tus clases',
+    loadFailed: 'No se han podido cargar tus clases.',
+    empty: 'Crea tu primera clase y comparte su código con tu alumnado.',
+    open: (name: string) => `Abrir ${name}`,
+  },
+  createClass: {
+    heading: 'Crea una clase',
+    name: 'Nombre de la clase',
+    nameHint: 'Por ejemplo, Biología 3.º A.',
+    subject: 'Asignatura',
+    submit: 'Crear clase',
+    failed: 'No se ha podido crear la clase.',
+  },
+  teacherValidation: {
+    classNameMissing: 'Añade un nombre para la clase.',
+    subjectMissing: 'Añade una asignatura.',
+    titleMissing: 'Añade un título.',
+    materialTooShort: (min: number) =>
+      `Añade al menos ${min} caracteres para que el corrector tenga con qué trabajar.`,
+    materialTooLong: (max: number) =>
+      `Usa como máximo ${max} caracteres. Divide los temas largos en varias unidades.`,
+  },
+  joinCode: {
+    label: 'Código de la clase',
+    // Spaced out so screen readers read each character
+    description: (code: string) => `Código de la clase ${code.split('').join(' ')}`,
+  },
+  classroom: {
+    loading: 'Cargando la clase',
+    loadFailed: 'No se ha podido cargar esta clase.',
+    studentCount: (count: number) => `${count} ${count === 1 ? 'estudiante' : 'estudiantes'}`,
+    aiNotice:
+      'Una IA revisa los resultados y puede equivocarse. Úsalos para saber dónde mirar, no como notas.',
+    units: 'Unidades',
+    noUnits: 'Añade una unidad para que tu alumnado tenga algo que explicar.',
+    addUnit: 'Añadir una unidad',
+    students: 'Alumnado',
+    noStudents: (code: string) =>
+      `Aún no hay estudiantes. Comparte el código ${code} con tu clase.`,
+  },
+  unitSummary: {
+    noAttempts: 'Nadie lo ha explicado todavía.',
+    reach: (count: number) =>
+      `${count} ${count === 1 ? 'estudiante lo ha' : 'estudiantes lo han'} explicado.`,
+    average: (percent: number) => `De media explicaron el ${percent} % de las ideas clave.`,
+    unfinished: (count: number) =>
+      count === 1
+        ? '1 sesión se quedó sin tiempo antes de terminar, así que aún no tiene resultados.'
+        : `${count} sesiones se quedaron sin tiempo antes de terminar, así que aún no tienen resultados.`,
+    showIdeas: 'Mostrar las ideas clave',
+    hideIdeas: 'Ocultar las ideas clave',
+    showIdeasFor: (title: string) => `Mostrar las ideas clave de ${title}`,
+    hideIdeasFor: (title: string) => `Ocultar las ideas clave de ${title}`,
+    explainedThis: 'estudiantes lo explicaron',
+    mistakes: (count: number) =>
+      `${count} ${count === 1 ? 'error frecuente' : 'errores frecuentes'}`,
+    otherMistakes: 'Otros errores',
+    correctIdea: (correction: string) => `Idea correcta: ${correction}`,
+  },
+  shareBar: {
+    countOf: (count: number, total: number, label: string) => `${count} de ${total} ${label}`,
+  },
+  studentRow: {
+    notYet: 'Aún sin explicar',
+    percentOfIdeas: (percent: number) => `${percent} % de las ideas clave`,
+    ideasOf: (explained: number, total: number) => `${explained} de ${total} ideas clave`,
+    stillToExplain: 'Falta explicar:',
+  },
+  addUnit: {
+    heading: 'Añade una unidad',
+    title: 'Título de la unidad',
+    upload: 'Subir un archivo',
+    uploadHint:
+      'Archivos PDF, Word, PowerPoint, de texto o Markdown. Puedes elegir varios y revisar el texto antes de guardar.',
+    material: 'Tu material',
+    materialHint: (count: number, max: number) =>
+      `Pega o sube tus apuntes, diapositivas o páginas del libro. El alumnado nunca lo ve; lo usan Pip y el corrector. ${count} de ${max} caracteres.`,
+    save: 'Guardar unidad',
+    cancel: 'Cancelar',
+    openFilesFailed: 'No se han podido abrir tus archivos. Inténtalo de nuevo o pega el texto.',
+    readFailed: 'No se ha podido leer este archivo.',
+    saveFailed: 'No se ha podido añadir la unidad.',
+    added: (names: string) =>
+      `Se ha añadido el texto de ${names}. Revísalo y borra lo que no deba entrar en la revisión.`,
+    truncated: (name: string) =>
+      `${name} es muy largo, así que solo se ha añadido la primera parte.`,
+  },
+  reportProblem: {
+    title: 'Informar de un problema',
+    label: '¿Qué ha fallado?',
+    hint: 'Cuenta qué estabas haciendo y qué pasó. No incluyas datos personales de nadie.',
+    missing: 'Cuenta primero qué ha fallado.',
+    send: 'Enviar',
+    sendFailed: 'No se ha enviado. Inténtalo de nuevo.',
+    thanks: 'Gracias por contárnoslo',
+    thanksBody: 'El equipo de Telmi lee todos los informes y los usa para arreglar cosas.',
+    back: 'Volver a mis clases',
+  },
   errors: {
     username_taken: 'Ese nombre de usuario ya existe.',
     wrong_login: 'El nombre de usuario o la contraseña no son correctos.',
