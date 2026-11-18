@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ApiError } from '@/api/client';
 import { addUnit, readMaterialFile } from '@/api/teaching';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { TextField } from '@/components/text-field';
 import {
   MATERIAL_FILE_TYPES,
@@ -130,11 +131,7 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
         maxLength={Math.max(MATERIAL_MAX_LENGTH + 500, material.length)}
         style={styles.material}
       />
-      {formError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {formError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={formError} style={styles.error} />
       <Button label="Save unit" onPress={handleSave} loading={saving} disabled={uploading} />
       <Button label="Cancel" variant="secondary" onPress={onCancel} />
     </View>
@@ -171,8 +168,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.small,
   },
 });

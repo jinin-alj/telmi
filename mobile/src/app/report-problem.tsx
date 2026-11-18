@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import { sendFeedback } from '@/api/feedback';
 import { BackToHome, goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { Pip } from '@/components/pip';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
@@ -76,11 +77,7 @@ export default function ReportProblemScreen() {
         maxLength={MAX_CHARACTERS}
         style={styles.message}
       />
-      {formError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {formError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={formError} style={styles.error} />
       <Button label="Send report" onPress={handleSend} loading={sending} />
     </Screen>
   );
@@ -103,8 +100,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.small,
   },
 });

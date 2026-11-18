@@ -9,6 +9,7 @@ import { goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { ErrorMessage } from '@/components/error-message';
 import { Pip } from '@/components/pip';
 import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
@@ -135,11 +136,7 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
         </View>
       )}
 
-      {restartError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {restartError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={restartError} style={styles.error} />
       <View style={styles.actions}>
         <Button label="Explain it again" onPress={handleTryAgain} loading={restarting} />
         <Button label="Back to my classes" variant="secondary" onPress={goHome} />
@@ -227,8 +224,6 @@ const styles = StyleSheet.create({
     marginVertical: spacing.small,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginTop: spacing.medium,
   },
   actions: {

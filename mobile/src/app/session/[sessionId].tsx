@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { getSession } from '@/api/study';
 import type { StudySession } from '@/api/types';
 import { BackToHome } from '@/components/back-to-home';
+import { ErrorMessage } from '@/components/error-message';
 import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { ActiveSession } from '@/features/session/active-session';
@@ -62,11 +63,7 @@ export default function SessionScreen() {
     <Screen width="wide" topBar>
       <BackToHome />
 
-      {loadError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {loadError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={loadError} style={styles.error} />
       {session === null && loadError === null ? <Loading label="Opening your session" /> : null}
 
       {session !== null ? (
@@ -101,8 +98,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginVertical: spacing.medium,
   },
   settingsWide: {

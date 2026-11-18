@@ -8,6 +8,7 @@ import type { ClassroomDashboard } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { ErrorMessage } from '@/components/error-message';
 import { JoinCode } from '@/components/join-code';
 import { BackToHome } from '@/components/back-to-home';
 import { Loading } from '@/components/loading';
@@ -48,11 +49,7 @@ export default function ClassroomScreen() {
     <Screen width="wide" topBar>
       <BackToHome />
 
-      {loadError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {loadError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={loadError} style={styles.error} />
       {dashboard === null && loadError === null ? <Loading label="Loading the class" /> : null}
 
       {dashboard !== null ? (
@@ -168,8 +165,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginVertical: spacing.medium,
   },
   header: {

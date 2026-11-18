@@ -8,6 +8,7 @@ import type { StudentProgress, User } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { ErrorMessage } from '@/components/error-message';
 import { Mascot } from '@/components/mascot';
 import { PipNote } from '@/components/pip-note';
 import { Loading } from '@/components/loading';
@@ -69,11 +70,7 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
         Hi, {user.display_name}
       </Text>
 
-      {errorMessage ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {errorMessage}
-        </Text>
-      ) : null}
+      <ErrorMessage message={errorMessage} style={styles.error} />
 
       {progress === null && errorMessage === null ? <Loading label="Loading your classes" /> : null}
 
@@ -144,8 +141,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.medium,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.medium,
   },
   empty: {

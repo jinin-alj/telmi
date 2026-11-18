@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { createClassroom } from '@/api/teaching';
 import type { Classroom } from '@/api/types';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { TextField } from '@/components/text-field';
 import { validateClassName, validateSubject } from '@/features/teacher/validation';
 import { colors, spacing, textStyles } from '@/theme';
@@ -54,11 +55,7 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
         onChangeText={setName}
       />
       <TextField label="Subject" error={subjectError} value={subject} onChangeText={setSubject} />
-      {formError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {formError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={formError} style={styles.error} />
       <Button label="Create class" onPress={handleCreate} loading={creating} />
     </View>
   );
@@ -71,8 +68,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.small,
   },
 });

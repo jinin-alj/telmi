@@ -12,6 +12,7 @@ import {
   validateUsername,
 } from '@/auth/validation';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { RolePicker } from '@/components/role-picker';
 import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
@@ -105,11 +106,7 @@ export default function SignUpScreen() {
         onSubmitEditing={handleSubmit}
       />
 
-      {formError ? (
-        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" style={styles.formError}>
-          {formError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={formError} style={styles.formError} />
 
       <Button label="Create account" onPress={handleSubmit} loading={submitting} />
       <SlowRequestNotice waiting={submitting} />
@@ -136,8 +133,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.large,
   },
   formError: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.small,
   },
   link: {

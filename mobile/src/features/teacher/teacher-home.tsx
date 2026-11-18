@@ -8,6 +8,7 @@ import type { Classroom, User } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { ErrorMessage } from '@/components/error-message';
 import { JoinCode } from '@/components/join-code';
 import { Loading } from '@/components/loading';
 import { PipNote } from '@/components/pip-note';
@@ -77,11 +78,7 @@ export function TeacherHome({ user, onSignOut }: TeacherHomeProps) {
         Hi, {user.display_name}
       </Text>
 
-      {errorMessage ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {errorMessage}
-        </Text>
-      ) : null}
+      <ErrorMessage message={errorMessage} style={styles.error} />
       {classrooms === null && errorMessage === null ? (
         <Loading label="Loading your classes" />
       ) : null}
@@ -114,8 +111,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.medium,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.medium,
   },
   empty: {
