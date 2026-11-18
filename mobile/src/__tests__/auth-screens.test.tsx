@@ -4,8 +4,12 @@ import { ApiError } from '@/api/client';
 import SignInScreen from '@/app/sign-in';
 import SignUpScreen from '@/app/sign-up';
 import { useAuth } from '@/auth/auth-context';
+import { es } from '@/i18n/es';
+import { LanguageProvider } from '@/i18n/language-context';
+import { loadLanguage } from '@/i18n/language-storage';
 
 jest.mock('@/auth/auth-context');
+jest.mock('@/i18n/language-storage');
 // Screens are rendered alone here, so a plain text link stands in for the router's Link
 jest.mock('expo-router', () => {
   // Jest hoists this factory above the imports, so it must load its own dependencies
@@ -113,5 +117,41 @@ describe('SignInScreen', () => {
 
     await waitFor(() => expect(screen.getByText('Wrong username or password')).toBeTruthy());
     expect(signIn).toHaveBeenCalledWith('ana_g', 'nope-nope');
+  });
+});
+
+describe('in Spanish', () => {
+  beforeEach(() => {
+    jest.mocked(loadLanguage).mockResolvedValue('es');
+  });
+
+  it('shows the sign-in page and its errors in Spanish', async () => {
+    signIn.mockRejectedValue(new ApiError(401, 'Wrong username or password', 'wrong_login'));
+    await render(
+      <LanguageProvider>
+        <SignInScreen />
+      </LanguageProvider>,
+    );
+
+    const submit = await screen.findByRole('button', { name: es.signIn.submit });
+    await fireEvent.changeText(screen.getByLabelText(es.signIn.username), 'ana_g');
+    await fireEvent.changeText(screen.getByLabelText(es.signIn.password), 'nope-nope');
+    await fireEvent.press(submit);
+
+    await waitFor(() => expect(screen.getByText(es.errors.wrong_login)).toBeTruthy());
+  });
+
+  it('checks the sign-up form in Spanish', async () => {
+    await render(
+      <LanguageProvider>
+        <SignUpScreen />
+      </LanguageProvider>,
+    );
+
+    await fireEvent.press(await screen.findByRole('button', { name: es.signUp.submit }));
+
+    expect(screen.getByRole('header', { name: es.signUp.title })).toBeTruthy();
+    expect(screen.getByText(es.validation.nicknameMissing)).toBeTruthy();
+    expect(screen.getByText(es.validation.atLeast(8))).toBeTruthy();
   });
 });

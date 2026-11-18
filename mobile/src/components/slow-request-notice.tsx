@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 // A normal request answers well within this; longer usually means the free server is waking up
@@ -9,6 +10,7 @@ const SLOW_AFTER_MILLISECONDS = 5000;
 /** Tells people why the first request can take a while instead of leaving them guessing. */
 export function SlowRequestNotice({ waiting }: { waiting: boolean }) {
   const [slow, setSlow] = useState(false);
+  const texts = useTexts();
 
   useEffect(() => {
     if (!waiting) {
@@ -26,7 +28,7 @@ export function SlowRequestNotice({ waiting }: { waiting: boolean }) {
   }
   return (
     <Text accessibilityLiveRegion="polite" style={styles.notice}>
-      Waking up the server, this can take up to a minute.
+      {texts.slowRequest}
     </Text>
   );
 }

@@ -1,3 +1,7 @@
+import type { Texts } from '@/i18n/en';
+
+type ValidationTexts = Texts['validation'];
+
 // Mirrors the backend rules in backend/app/schemas/auth.py so errors show before sending
 const USERNAME_PATTERN = /^[a-z0-9_.]+$/;
 const USERNAME_MIN_LENGTH = 3;
@@ -12,39 +16,39 @@ export function normalizeUsername(username: string): string {
 }
 
 /** Return an error message for the username, or null if it's valid. */
-export function validateUsername(username: string): string | null {
+export function validateUsername(username: string, texts: ValidationTexts): string | null {
   const normalized = normalizeUsername(username);
   if (normalized.length < USERNAME_MIN_LENGTH) {
-    return `Use at least ${USERNAME_MIN_LENGTH} characters.`;
+    return texts.atLeast(USERNAME_MIN_LENGTH);
   }
   if (normalized.length > USERNAME_MAX_LENGTH) {
-    return `Use at most ${USERNAME_MAX_LENGTH} characters.`;
+    return texts.atMost(USERNAME_MAX_LENGTH);
   }
   if (!USERNAME_PATTERN.test(normalized)) {
-    return 'Use only letters, numbers, dots and underscores.';
+    return texts.usernameCharacters;
   }
   return null;
 }
 
 /** Return an error message for the password, or null if it's valid. */
-export function validatePassword(password: string): string | null {
+export function validatePassword(password: string, texts: ValidationTexts): string | null {
   if (password.length < PASSWORD_MIN_LENGTH) {
-    return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
+    return texts.atLeast(PASSWORD_MIN_LENGTH);
   }
   if (password.length > PASSWORD_MAX_LENGTH) {
-    return `Use at most ${PASSWORD_MAX_LENGTH} characters.`;
+    return texts.atMost(PASSWORD_MAX_LENGTH);
   }
   return null;
 }
 
 /** Return an error message for the nickname, or null if it's valid. */
-export function validateDisplayName(displayName: string): string | null {
+export function validateDisplayName(displayName: string, texts: ValidationTexts): string | null {
   const trimmed = displayName.trim();
   if (trimmed.length === 0) {
-    return 'Add a nickname. It does not have to be your real name.';
+    return texts.nicknameMissing;
   }
   if (trimmed.length > DISPLAY_NAME_MAX_LENGTH) {
-    return `Use at most ${DISPLAY_NAME_MAX_LENGTH} characters.`;
+    return texts.atMost(DISPLAY_NAME_MAX_LENGTH);
   }
   return null;
 }

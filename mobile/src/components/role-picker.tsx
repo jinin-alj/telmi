@@ -1,10 +1,6 @@
 import type { UserRole } from '@/api/types';
 import { ChoiceGroup } from '@/components/choice-group';
-
-const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
-  { value: 'student', label: "I'm a student" },
-  { value: 'teacher', label: "I'm a teacher" },
-];
+import { useTexts } from '@/i18n/language-context';
 
 type RolePickerProps = {
   value: UserRole;
@@ -13,7 +9,18 @@ type RolePickerProps = {
 
 /** Choice between a student and a teacher account. */
 export function RolePicker({ value, onChange }: RolePickerProps) {
+  const texts = useTexts();
+  const roleOptions: { value: UserRole; label: string }[] = [
+    { value: 'student', label: texts.roles.student },
+    { value: 'teacher', label: texts.roles.teacher },
+  ];
+
   return (
-    <ChoiceGroup label="Account type" options={ROLE_OPTIONS} value={value} onChange={onChange} />
+    <ChoiceGroup
+      label={texts.roles.label}
+      options={roleOptions}
+      value={value}
+      onChange={onChange}
+    />
   );
 }

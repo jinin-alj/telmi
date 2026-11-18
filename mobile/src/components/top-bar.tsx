@@ -3,18 +3,20 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/auth-context';
 import { goHome } from '@/components/back-to-home';
 import { Wordmark } from '@/components/wordmark';
+import { useTexts } from '@/i18n/language-context';
 import { colors, contentWidth, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 /** The desktop header: the app name, who is signed in, and a way to sign out. */
 export function TopBar() {
   const { user, signOut } = useAuth();
+  const texts = useTexts();
 
   return (
     <View style={styles.bar}>
       <View style={styles.inner}>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel="Telmi home"
+          accessibilityLabel={texts.nav.home}
           onPress={goHome}
           style={styles.touchTarget}
         >
@@ -24,11 +26,11 @@ export function TopBar() {
           {user !== null ? <Text style={styles.user}>{user.display_name}</Text> : null}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Sign out"
+            accessibilityLabel={texts.nav.signOut}
             onPress={signOut}
             style={styles.touchTarget}
           >
-            <Text style={styles.signOut}>Sign out</Text>
+            <Text style={styles.signOut}>{texts.nav.signOut}</Text>
           </Pressable>
         </View>
       </View>

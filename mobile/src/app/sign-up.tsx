@@ -2,7 +2,6 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import type { UserRole } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
 import {
@@ -18,6 +17,8 @@ import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
 import { Wordmark } from '@/components/wordmark';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type FieldErrors = {
@@ -30,6 +31,7 @@ const NO_ERRORS: FieldErrors = { username: null, displayName: null, password: nu
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
+  const texts = useTexts();
   const [role, setRole] = useState<UserRole>('student');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -40,9 +42,9 @@ export default function SignUpScreen() {
 
   async function handleSubmit() {
     const errors = {
-      username: validateUsername(username),
-      displayName: validateDisplayName(displayName),
-      password: validatePassword(password),
+      username: validateUsername(username, texts.validation),
+      displayName: validateDisplayName(displayName, texts.validation),
+      password: validatePassword(password, texts.validation),
     };
     setFieldErrors(errors);
     setFormError(null);
@@ -59,7 +61,7 @@ export default function SignUpScreen() {
         role,
       });
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : 'Sign-up failed. Please try again.');
+      setFormError(errorText(error, texts, texts.signUp.failed));
       setSubmitting(false);
     }
   }
@@ -70,14 +72,14 @@ export default function SignUpScreen() {
         <Wordmark size="large" mood="wave" />
       </View>
       <Text accessibilityRole="header" style={styles.title}>
-        Create your account
+        {texts.signUp.title}
       </Text>
-      <Text style={styles.subtitle}>No email or real name needed.</Text>
+      <Text style={styles.subtitle}>{texts.signUp.subtitle}</Text>
 
       <RolePicker value={role} onChange={setRole} />
       <TextField
-        label="Username"
-        hint="Letters, numbers, dots and underscores."
+        label={texts.signUp.username}
+        hint={texts.signUp.usernameHint}
         error={fieldErrors.username}
         value={username}
         onChangeText={setUsername}
@@ -87,16 +89,16 @@ export default function SignUpScreen() {
         textContentType="username"
       />
       <TextField
-        label="Nickname"
-        hint={role === 'student' ? 'This is what your teacher and buddy will call you.' : undefined}
+        label={texts.signUp.nickname}
+        hint={role === 'student' ? texts.signUp.nicknameHint : undefined}
         error={fieldErrors.displayName}
         value={displayName}
         onChangeText={setDisplayName}
         autoComplete="off"
       />
       <TextField
-        label="Password"
-        hint="At least 8 characters."
+        label={texts.signUp.password}
+        hint={texts.signUp.passwordHint}
         error={fieldErrors.password}
         value={password}
         onChangeText={setPassword}
@@ -108,11 +110,11 @@ export default function SignUpScreen() {
 
       <ErrorMessage message={formError} style={styles.formError} />
 
-      <Button label="Create account" onPress={handleSubmit} loading={submitting} />
+      <Button label={texts.signUp.submit} onPress={handleSubmit} loading={submitting} />
       <SlowRequestNotice waiting={submitting} />
 
       <Link href="/sign-in" style={styles.link}>
-        Already have an account? Sign in
+        {texts.signUp.toSignIn}
       </Link>
     </Screen>
   );

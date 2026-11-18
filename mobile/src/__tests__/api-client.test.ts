@@ -1,4 +1,10 @@
-import { ApiClient, ApiError, readErrorMessage, REQUEST_TIMEOUT_MILLISECONDS } from '@/api/client';
+import {
+  ApiClient,
+  ApiError,
+  readErrorCode,
+  readErrorMessage,
+  REQUEST_TIMEOUT_MILLISECONDS,
+} from '@/api/client';
 
 type FakeResponse = { status: number; body: unknown };
 
@@ -132,7 +138,33 @@ describe('ApiClient', () => {
     });
     const client = new ApiClient('https://api.test', failingFetch);
 
-    await expect(client.request('GET', '/me')).rejects.toMatchObject({ status: 0 });
+    await expect(client.request('GET', '/me')).rejects.toMatchObject({
+      status: 0,
+      code: 'offline',
+    });
+  });
+
+  it('keeps the code the server sends, so the app can say it in the right language', async () => {
+    const fakeFetch = createFakeFetch([
+      { status: 401, body: { detail: 'Wrong username or password', code: 'wrong_login' } },
+    ]);
+    const client = new ApiClient('https://api.test', fakeFetch);
+
+    await expect(
+      client.request('POST', '/auth/login', { authenticated: false }),
+    ).rejects.toMatchObject({ status: 401, code: 'wrong_login' });
+  });
+});
+
+describe('readErrorCode', () => {
+  it('accepts only codes the app knows', () => {
+    expect(readErrorCode(503, { detail: 'Busy', code: 'pip_busy' })).toBe('pip_busy');
+    expect(readErrorCode(409, { detail: 'New thing', code: 'from_a_newer_server' })).toBeNull();
+    expect(readErrorCode(409, { detail: 'Old server' })).toBeNull();
+  });
+
+  it('calls any server failure without a code a server error', () => {
+    expect(readErrorCode(500, null)).toBe('server_error');
   });
 });
 
@@ -156,7 +188,7 @@ describe('request timeout', () => {
     const client = new ApiClient('https://api.test', hangingFetch);
 
     const request = client.request('GET', '/things');
-    const expectation = expect(request).rejects.toThrow('took too long');
+    const expectation = expect(request).rejects.toMatchObject({ code: 'timeout' });
     await jest.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MILLISECONDS);
 
     await expectation;

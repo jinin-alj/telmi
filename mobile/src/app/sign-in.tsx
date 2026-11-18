@@ -2,7 +2,6 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
 import { normalizeUsername } from '@/auth/validation';
 import { Button } from '@/components/button';
@@ -11,10 +10,13 @@ import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
 import { Wordmark } from '@/components/wordmark';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
+  const texts = useTexts();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export default function SignInScreen() {
 
   async function handleSubmit() {
     if (username.trim() === '' || password === '') {
-      setFormError('Enter your username and password.');
+      setFormError(texts.signIn.missingFields);
       return;
     }
     setFormError(null);
@@ -30,7 +32,7 @@ export default function SignInScreen() {
     try {
       await signIn(normalizeUsername(username), password);
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : 'Sign-in failed. Please try again.');
+      setFormError(errorText(error, texts, texts.signIn.failed));
       setSubmitting(false);
     }
   }
@@ -40,10 +42,10 @@ export default function SignInScreen() {
       <View accessible accessibilityRole="header" accessibilityLabel="Telmi">
         <Wordmark size="large" mood="wave" />
       </View>
-      <Text style={styles.subtitle}>Explain it from memory. Your buddy is the one learning.</Text>
+      <Text style={styles.subtitle}>{texts.signIn.tagline}</Text>
 
       <TextField
-        label="Username"
+        label={texts.signIn.username}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
@@ -52,7 +54,7 @@ export default function SignInScreen() {
         textContentType="username"
       />
       <TextField
-        label="Password"
+        label={texts.signIn.password}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -63,11 +65,11 @@ export default function SignInScreen() {
 
       <ErrorMessage message={formError} style={styles.formError} />
 
-      <Button label="Sign in" onPress={handleSubmit} loading={submitting} />
+      <Button label={texts.signIn.submit} onPress={handleSubmit} loading={submitting} />
       <SlowRequestNotice waiting={submitting} />
 
       <Link href="/sign-up" style={styles.link}>
-        New here? Create an account
+        {texts.signIn.toSignUp}
       </Link>
     </Screen>
   );

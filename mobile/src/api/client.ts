@@ -1,3 +1,5 @@
+import { isServerErrorCode } from '@/api/error-codes';
+import type { ErrorCode } from '@/api/error-codes';
 import { getApiBaseUrl } from '@/config/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -13,15 +15,31 @@ type RequestOptions = {
   timeoutMilliseconds?: number;
 };
 
-/** An HTTP error with a message that is safe to show the user. */
+/** An HTTP error with an English message, and a code the app shows in the person's language. */
 export class ApiError extends Error {
   status: number;
+  code: ErrorCode | null;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: ErrorCode | null = null) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.code = code;
   }
+}
+
+/** The error's code from the server's body, or null for an older server or an unknown code. */
+export function readErrorCode(status: number, body: unknown): ErrorCode | null {
+  if (typeof body === 'object' && body !== null && 'code' in body) {
+    const code = (body as { code: unknown }).code;
+    if (isServerErrorCode(code)) {
+      return code;
+    }
+  }
+  if (status >= 500) {
+    return 'server_error';
+  }
+  return null;
 }
 
 /** Turn FastAPI's error body into one readable sentence. */
@@ -85,7 +103,11 @@ export class ApiClient {
 
     const responseBody = await this.readJson(response);
     if (!response.ok) {
-      throw new ApiError(response.status, readErrorMessage(response.status, responseBody));
+      throw new ApiError(
+        response.status,
+        readErrorMessage(response.status, responseBody),
+        readErrorCode(response.status, responseBody),
+      );
     }
     return responseBody as ResponseBody;
   }
@@ -123,9 +145,10 @@ export class ApiClient {
         throw new ApiError(
           0,
           'Telmi took too long to answer. Check your connection and try again.',
+          'timeout',
         );
       }
-      throw new ApiError(0, "Can't reach Telmi. Check your connection and try again.");
+      throw new ApiError(0, "Can't reach Telmi. Check your connection and try again.", 'offline');
     } finally {
       clearTimeout(timer);
     }
