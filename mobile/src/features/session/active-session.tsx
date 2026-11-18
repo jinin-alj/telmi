@@ -7,6 +7,7 @@ import type { InputMode, StudySession } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { ErrorMessage } from '@/components/error-message';
 import { Pip } from '@/components/pip';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
@@ -129,11 +130,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
         </Text>
       )}
 
-      {finishError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {finishError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={finishError} style={styles.error} />
 
       <View style={styles.finishArea}>
         <Button
@@ -214,8 +211,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.medium,
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginTop: spacing.small,
   },
   finishArea: {

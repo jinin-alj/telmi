@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "telmi",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFF6EF",
@@ -30,7 +27,7 @@
         {
           "backgroundColor": "#FFF6EF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ],
       "expo-secure-store",

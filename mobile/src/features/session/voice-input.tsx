@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { readDrawing } from '@/api/study';
 import type { Drawing, InputMode } from '@/api/types';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { appendReading } from '@/features/session/drawing';
 import { DrawingPad } from '@/features/session/drawing-pad';
 import type { SpeechLanguage } from '@/speech/languages';
@@ -154,11 +155,7 @@ export function VoiceInput({
         </View>
       ) : null}
 
-      {speech.errorMessage ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {speech.errorMessage}
-        </Text>
-      ) : null}
+      <ErrorMessage message={speech.errorMessage} style={styles.error} />
 
       {/* Hidden rather than removed, so switching to typing and back keeps the drawing */}
       <View style={mode === 'draw' ? null : styles.hidden}>
@@ -185,11 +182,7 @@ export function VoiceInput({
         />
       ) : null}
 
-      {sendError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {sendError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={sendError} style={styles.error} />
 
       {hasText && !speech.isListening ? (
         <>
@@ -270,8 +263,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: {
-    ...textStyles.body,
-    color: colors.error,
     marginTop: spacing.small,
   },
   switchMode: {

@@ -1,7 +1,8 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { fontFiles } from '@/fonts';
+import { appSourceFiles } from '@/testing/source-files';
 import { colors, cornerRadius, fonts, textStyles } from '@/theme';
 
 /** How bright a colour looks to the eye, as WCAG measures it. */
@@ -23,22 +24,6 @@ function contrast(foreground: string, background: string): number {
   const lighter = Math.max(luminance(foreground), luminance(background));
   const darker = Math.min(luminance(foreground), luminance(background));
   return (lighter + 0.05) / (darker + 0.05);
-}
-
-/** Every source file in the app, except the tests themselves. */
-function appSourceFiles(folder: string): string[] {
-  const files: string[] = [];
-  for (const name of readdirSync(folder)) {
-    const path = join(folder, name);
-    if (statSync(path).isDirectory()) {
-      if (name !== '__tests__') {
-        files.push(...appSourceFiles(path));
-      }
-    } else if (name.endsWith('.ts') || name.endsWith('.tsx')) {
-      files.push(path);
-    }
-  }
-  return files;
 }
 
 const brandTokens = JSON.parse(

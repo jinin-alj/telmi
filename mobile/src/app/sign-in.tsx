@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
 import { normalizeUsername } from '@/auth/validation';
 import { Button } from '@/components/button';
+import { ErrorMessage } from '@/components/error-message';
 import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
@@ -60,11 +61,7 @@ export default function SignInScreen() {
         onSubmitEditing={handleSubmit}
       />
 
-      {formError ? (
-        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" style={styles.formError}>
-          {formError}
-        </Text>
-      ) : null}
+      <ErrorMessage message={formError} style={styles.formError} />
 
       <Button label="Sign in" onPress={handleSubmit} loading={submitting} />
       <SlowRequestNotice waiting={submitting} />
@@ -84,8 +81,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.large,
   },
   formError: {
-    ...textStyles.body,
-    color: colors.error,
     marginBottom: spacing.small,
   },
   link: {

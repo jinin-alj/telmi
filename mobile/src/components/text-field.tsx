@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import type { TextInputProps } from 'react-native';
 
+import { WarningIcon } from '@/components/warning-icon';
 import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type TextFieldProps = TextInputProps & {
@@ -26,9 +27,12 @@ export function TextField({ label, hint, error, style, ...inputProps }: TextFiel
       />
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {error ? (
-        <Text accessibilityLiveRegion="polite" style={styles.error}>
-          {error}
-        </Text>
+        <View style={styles.errorRow}>
+          <WarningIcon size={16} />
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        </View>
       ) : null}
     </View>
   );
@@ -63,9 +67,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: colors.mutedText,
   },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginTop: 4,
+  },
   error: {
     ...textStyles.caption,
-    marginTop: 4,
+    flex: 1,
     color: colors.error,
   },
 });
