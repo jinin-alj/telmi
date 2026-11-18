@@ -170,7 +170,7 @@ export function ActiveSession({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={conversationToggle}
-        accessibilityState={{ expanded: showConversation }}
+        aria-expanded={showConversation}
         onPress={() => setShowConversation(!showConversation)}
         style={styles.toggle}
       >

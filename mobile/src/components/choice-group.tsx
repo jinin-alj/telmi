@@ -25,7 +25,7 @@ export function ChoiceGroup<Value extends string>({
             key={option.value}
             accessibilityRole="radio"
             accessibilityLabel={option.label}
-            accessibilityState={{ checked: selected }}
+            aria-checked={selected}
             onPress={() => onChange(option.value)}
             style={[styles.option, selected ? styles.selected : null]}
           >

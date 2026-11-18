@@ -145,7 +145,7 @@ export function VoiceInput({
             accessibilityLabel={
               speech.isListening ? texts.answer.stopTalking : texts.answer.tapToTalk
             }
-            accessibilityState={{ busy: speech.isListening }}
+            aria-busy={speech.isListening}
             onPress={handleMicrophonePress}
             disabled={sending}
             style={[styles.microphone, speech.isListening ? styles.microphoneListening : null]}

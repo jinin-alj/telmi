@@ -28,7 +28,7 @@ export function LanguageSwitch() {
             key={option.value}
             accessibilityRole="radio"
             accessibilityLabel={option.label}
-            accessibilityState={{ checked: selected }}
+            aria-checked={selected}
             onPress={() => setLanguage(option.value)}
             style={styles.option}
           >
