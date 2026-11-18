@@ -122,7 +122,7 @@ export function DrawingPad({ onRead }: DrawingPadProps) {
             key={pen.color}
             accessibilityRole="button"
             accessibilityLabel={texts.drawing.pens[pen.color]}
-            accessibilityState={{ selected: tool === pen.color }}
+            aria-selected={tool === pen.color}
             onPress={() => setTool(pen.color)}
             style={[styles.tool, tool === pen.color ? styles.toolSelected : null]}
           >
@@ -212,7 +212,8 @@ function ToolButton({ label, onPress, selected = false, disabled = false }: Tool
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ selected, disabled }}
+      aria-selected={selected}
+      aria-disabled={disabled}
       disabled={disabled}
       onPress={onPress}
       style={[

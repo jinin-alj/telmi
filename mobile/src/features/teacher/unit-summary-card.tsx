@@ -70,7 +70,7 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
               ? texts.unitSummary.hideIdeasFor(unit.title)
               : texts.unitSummary.showIdeasFor(unit.title)
           }
-          accessibilityState={{ expanded }}
+          aria-expanded={expanded}
           onPress={() => setExpanded(!expanded)}
           style={styles.toggle}
         >
