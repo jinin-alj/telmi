@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { View } from 'react-native';
 import Svg, {
   Circle,
@@ -72,6 +73,12 @@ type PipProps = {
 
 /** Telmi's mascot in one of its eight moods; hidden from screen readers because nearby text says it all. */
 export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipProps) {
+  // Each Pip names its own gradient and blurs: browsers can't use ones that sit on a hidden page
+  const id = useId();
+  const bodyId = `pip-body${id}`;
+  const softId = `pip-soft${id}`;
+  const shadowId = `pip-shadow${id}`;
+
   return (
     <View
       testID={`pip-${mood}`}
@@ -81,15 +88,15 @@ export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipPr
     >
       <Svg width="100%" height="100%" viewBox="-10 -10 260 250">
         <Defs>
-          <RadialGradient id="pip-body" cx="40%" cy="30%" r="75%">
+          <RadialGradient id={bodyId} cx="40%" cy="30%" r="75%">
             <Stop offset="0" stopColor="#FFB094" />
             <Stop offset="0.55" stopColor="#FF8C69" />
             <Stop offset="1" stopColor="#F2734F" />
           </RadialGradient>
-          <Filter id="pip-soft" x="-50%" y="-50%" width="200%" height="200%">
+          <Filter id={softId} x="-50%" y="-50%" width="200%" height="200%">
             <FeGaussianBlur stdDeviation={3.2} />
           </Filter>
-          <Filter id="pip-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <Filter id={shadowId} x="-30%" y="-30%" width="160%" height="160%">
             <FeGaussianBlur stdDeviation={6} />
           </Filter>
         </Defs>
@@ -100,13 +107,13 @@ export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipPr
           ry={9}
           fill={INK}
           opacity={0.1}
-          filter="url(#pip-shadow)"
+          filter={`url(#${shadowId})`}
         />
         <G transform={`rotate(${TILT[mood]} 120 116)`}>
           {mood === 'wave' ? <WavingArm /> : null}
           <Path
             d="M120 30C176 30 212 66 212 116C212 164 174 196 120 196C106 196 93 194 81 190L50 207C45 210 40 205 43 200L54 176C38 160 28 140 28 116C28 66 64 30 120 30Z"
-            fill="url(#pip-body)"
+            fill={`url(#${bodyId})`}
           />
           <Ellipse
             cx={86}
@@ -124,7 +131,7 @@ export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipPr
             ry={9}
             fill="#FF6F91"
             opacity={0.42}
-            filter="url(#pip-soft)"
+            filter={`url(#${softId})`}
           />
           <Ellipse
             cx={176}
@@ -133,7 +140,7 @@ export function Pip({ mood, size, mouth, blinking = false, pulse = null }: PipPr
             ry={9}
             fill="#FF6F91"
             opacity={0.42}
-            filter="url(#pip-soft)"
+            filter={`url(#${softId})`}
           />
           <Eyes mood={mood} blinking={blinking} />
           {mouth === undefined ? <Mouth mood={mood} /> : <TalkingMouth shape={mouth} />}

@@ -32,3 +32,30 @@ it('shows Pip thinking while a page loads', async () => {
   expect(screen.getByTestId('pip-thinking', HIDDEN)).toBeTruthy();
   expect(screen.getByLabelText('Loading your classes')).toBeTruthy();
 });
+
+/** Every value a prop has anywhere in the drawn tree, such as each gradient's name. */
+function propValues(tree: string, prop: string): string[] {
+  const values: string[] = [];
+  for (const match of tree.matchAll(new RegExp(`"${prop}":"([^"]*)"`, 'g'))) {
+    values.push(match[1]);
+  }
+  return values;
+}
+
+it('gives every Pip its own colour and blur names, so a hidden page never blanks the others', async () => {
+  await render(
+    <>
+      <Pip mood="happy" size={80} />
+      <Pip mood="proud" size={80} />
+    </>,
+  );
+  const tree = JSON.stringify(screen.toJSON());
+  const names = propValues(tree, 'name');
+  const used = propValues(tree, 'brushRef').concat(propValues(tree, 'filter'));
+
+  // Two Pips each define a body gradient, a soft blur and a shadow blur
+  expect(new Set(names).size).toBe(6);
+  for (const name of used) {
+    expect(names).toContain(name);
+  }
+});
