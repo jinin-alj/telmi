@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import { sendFeedback } from '@/api/feedback';
 import { BackToHome, goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
+import { Pip } from '@/components/pip';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
 import { colors, spacing, textStyles } from '@/theme';
@@ -47,6 +48,7 @@ export default function ReportProblemScreen() {
   if (sent) {
     return (
       <Screen topBar>
+        <Pip mood="proud" size={96} />
         <Text accessibilityRole="header" style={styles.title}>
           Thanks for telling us
         </Text>

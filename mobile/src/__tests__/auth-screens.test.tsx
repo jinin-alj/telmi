@@ -32,6 +32,13 @@ beforeEach(() => {
 });
 
 describe('SignUpScreen', () => {
+  it('greets with a waving Pip', async () => {
+    await render(<SignUpScreen />);
+
+    expect(screen.getByTestId('pip-wave', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Create your account' })).toBeTruthy();
+  });
+
   it('shows field errors and does not call the server for invalid input', async () => {
     await render(<SignUpScreen />);
 
@@ -79,6 +86,14 @@ describe('SignUpScreen', () => {
 });
 
 describe('SignInScreen', () => {
+  it('greets with a waving Pip and the telmi logo, still read out as Telmi', async () => {
+    await render(<SignInScreen />);
+
+    expect(screen.getByRole('header', { name: 'Telmi' })).toBeTruthy();
+    expect(screen.getByText('telmi', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByTestId('pip-wave', { includeHiddenElements: true })).toBeTruthy();
+  });
+
   it('asks for both fields before calling the server', async () => {
     await render(<SignInScreen />);
 

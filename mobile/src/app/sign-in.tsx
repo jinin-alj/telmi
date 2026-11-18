@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
@@ -9,6 +9,7 @@ import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
+import { Wordmark } from '@/components/wordmark';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 export default function SignInScreen() {
@@ -35,9 +36,9 @@ export default function SignInScreen() {
 
   return (
     <Screen>
-      <Text accessibilityRole="header" style={styles.title}>
-        Telmi
-      </Text>
+      <View accessible accessibilityRole="header" accessibilityLabel="Telmi">
+        <Wordmark size="large" mood="wave" />
+      </View>
       <Text style={styles.subtitle}>Explain it from memory. Your buddy is the one learning.</Text>
 
       <TextField
@@ -76,10 +77,6 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: {
-    ...textStyles.title,
-    color: colors.text,
-  },
   subtitle: {
     ...textStyles.body,
     color: colors.mutedText,

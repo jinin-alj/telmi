@@ -80,6 +80,7 @@ describe('ActiveSession', () => {
     );
 
     expect(screen.getByText('Hi! Can you explain it to me?')).toBeTruthy();
+    expect(screen.getByTestId('pip-happy', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByText('8 turns left · 15 min left')).toBeTruthy();
     expect(screen.getByRole('button', { name: "I'm done, check my explanation" })).toBeDisabled();
   });
@@ -151,6 +152,7 @@ describe('SessionResults', () => {
 
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+    expect(screen.getByTestId('pip-surprised', { includeHiddenElements: true })).toBeTruthy();
   });
 });
 
@@ -213,6 +215,7 @@ describe('StudentHome', () => {
     await render(<StudentHome user={student} onSignOut={jest.fn()} />);
 
     await waitFor(() => expect(screen.getByText('Biology 3A')).toBeTruthy());
+    expect(screen.getByTestId('pip-proud', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByText('Pip · level 1')).toBeTruthy();
     expect(screen.getByText('Not explained yet')).toBeTruthy();
   });
@@ -266,5 +269,6 @@ describe('StudentHome', () => {
     await render(<StudentHome user={student} onSignOut={jest.fn()} />);
 
     await waitFor(() => expect(screen.getByText(/Ask your teacher for a join code/)).toBeTruthy());
+    expect(screen.getByTestId('pip-curious', { includeHiddenElements: true })).toBeTruthy();
   });
 });

@@ -9,6 +9,7 @@ import { goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { Pip } from '@/components/pip';
 import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
@@ -56,9 +57,12 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
   // What went well and what to fix on the left; what to do next on the right
   const resultSide = (
     <Card>
-      <Text accessibilityRole="header" style={styles.summary}>
-        {summariseCoverage(feedback)}
-      </Text>
+      <View style={styles.summaryRow}>
+        <Pip mood="surprised" size={72} />
+        <Text accessibilityRole="header" style={styles.summary}>
+          {summariseCoverage(feedback)}
+        </Text>
+      </View>
 
       <Text accessibilityRole="header" style={styles.sectionTitle}>
         Key ideas
@@ -148,8 +152,14 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
 
 const styles = StyleSheet.create({
   // The one thing to remember on this screen, so it gets the brand's emphasis colour
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.medium,
+  },
   summary: {
     ...textStyles.section,
+    flex: 1,
     color: colors.emphasis,
   },
   sectionTitle: {

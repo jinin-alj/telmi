@@ -9,6 +9,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
 import { Mascot } from '@/components/mascot';
+import { PipNote } from '@/components/pip-note';
 import { Loading } from '@/components/loading';
 import { Screen } from '@/components/screen';
 import { JoinClassForm } from '@/features/student/join-class-form';
@@ -85,9 +86,11 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
             left={
               <>
                 {progress.classrooms.length === 0 ? (
-                  <Text style={styles.empty}>
-                    You haven&apos;t joined a class yet. Ask your teacher for a join code.
-                  </Text>
+                  <PipNote mood="curious">
+                    <Text style={styles.empty}>
+                      You haven&apos;t joined a class yet. Ask your teacher for a join code.
+                    </Text>
+                  </PipNote>
                 ) : null}
 
                 {progress.classrooms.map((entry) => (
@@ -97,9 +100,11 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
                     </Text>
                     <Text style={styles.subject}>{entry.classroom.subject}</Text>
                     {entry.units.length === 0 ? (
-                      <Text style={styles.empty}>
-                        Your teacher hasn&apos;t added any units yet.
-                      </Text>
+                      <PipNote mood="curious">
+                        <Text style={styles.empty}>
+                          Your teacher hasn&apos;t added any units yet.
+                        </Text>
+                      </PipNote>
                     ) : null}
                     <View style={isWide ? styles.unitGrid : null}>
                       {entry.units.map((unit) => (

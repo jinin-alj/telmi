@@ -7,8 +7,10 @@ import type { InputMode, StudySession } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Columns } from '@/components/columns';
+import { Pip } from '@/components/pip';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
+import { useIsWide } from '@/hooks/use-is-wide';
 import type { SpeechLanguage } from '@/speech/languages';
 import {
   colors,
@@ -31,6 +33,7 @@ type ActiveSessionProps = {
 
 /** The conversation: Pip's latest line, the microphone, and the button to finish. */
 export function ActiveSession({ session, language, onSessionChange }: ActiveSessionProps) {
+  const isWide = useIsWide();
   const [now, setNow] = useState(Date.now);
   const [showConversation, setShowConversation] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -77,6 +80,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
   if (finishing) {
     return (
       <View style={styles.checking} accessibilityLiveRegion="polite">
+        <Pip mood="thinking" size={120} />
         <ActivityIndicator size="large" color={colors.link} />
         <Text style={styles.checkingText}>
           Checking your explanation against your teacher&apos;s notes…
@@ -92,11 +96,15 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
         {session.student_turns_left} turns left · {timeLeft} min left
       </Text>
 
-      <View style={styles.bubble}>
-        <Text style={styles.speaker}>Pip</Text>
-        <Text accessibilityLiveRegion="polite" style={styles.buddyLine}>
-          {latestBuddyLine}
-        </Text>
+      <View style={styles.pipRow}>
+        <Pip mood="happy" size={isWide ? 120 : 72} />
+        <View style={styles.bubble}>
+          <View style={styles.bubbleTail} />
+          <Text style={styles.speaker}>Pip</Text>
+          <Text accessibilityLiveRegion="polite" style={styles.buddyLine}>
+            {latestBuddyLine}
+          </Text>
+        </View>
       </View>
     </>
   );
@@ -169,11 +177,27 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     marginBottom: spacing.small,
   },
+  pipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.medium,
+  },
   bubble: {
+    flex: 1,
     backgroundColor: colors.panel,
     boxShadow: panelShadow,
     borderRadius: cornerRadius,
     padding: spacing.medium,
+  },
+  // A small turned square on the bubble's edge, pointing at Pip
+  bubbleTail: {
+    position: 'absolute',
+    left: -7,
+    top: 28,
+    width: 14,
+    height: 14,
+    backgroundColor: colors.panel,
+    transform: [{ rotate: '45deg' }],
   },
   speaker: {
     ...textStyles.captionStrong,

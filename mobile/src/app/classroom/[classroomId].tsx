@@ -11,6 +11,7 @@ import { Columns } from '@/components/columns';
 import { JoinCode } from '@/components/join-code';
 import { BackToHome } from '@/components/back-to-home';
 import { Loading } from '@/components/loading';
+import { PipNote } from '@/components/pip-note';
 import { Screen } from '@/components/screen';
 import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { StudentSummaryRow } from '@/features/teacher/student-summary-row';
@@ -83,9 +84,11 @@ export default function ClassroomScreen() {
                   Units
                 </Text>
                 {dashboard.units.length === 0 && !addingUnit ? (
-                  <Text style={styles.empty}>
-                    Add a unit so your students have something to explain.
-                  </Text>
+                  <PipNote mood="curious">
+                    <Text style={styles.empty}>
+                      Add a unit so your students have something to explain.
+                    </Text>
+                  </PipNote>
                 ) : null}
                 {dashboard.units.map((unit) => (
                   <UnitSummaryCard key={unit.unit_id} unit={unit} />
@@ -108,10 +111,12 @@ export default function ClassroomScreen() {
                   Students
                 </Text>
                 {dashboard.students.length === 0 ? (
-                  <Text style={styles.empty}>
-                    No students yet. Share the join code {dashboard.classroom.join_code} with your
-                    class.
-                  </Text>
+                  <PipNote mood="curious">
+                    <Text style={styles.empty}>
+                      No students yet. Share the join code {dashboard.classroom.join_code} with your
+                      class.
+                    </Text>
+                  </PipNote>
                 ) : null}
                 {dashboard.students.length > 0 ? (
                   <Card style={styles.studentList}>

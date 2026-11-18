@@ -1,4 +1,4 @@
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ChoiceGroup } from '@/components/choice-group';
 import { SPEECH_LANGUAGES } from '@/speech/languages';
@@ -11,6 +11,10 @@ type SessionSettingsProps = {
   voiceOn: boolean;
   onVoiceChange: (voiceOn: boolean) => void;
 };
+
+// Browsers draw a teal knob when the switch is on unless told otherwise
+const webSwitchColors =
+  Platform.OS === 'web' ? ({ activeThumbColor: colors.panel } as object) : null;
 
 /** Which language to listen in, and whether Pip reads replies aloud. */
 export function SessionSettings({
@@ -33,7 +37,10 @@ export function SessionSettings({
           accessibilityLabel="Pip speaks out loud"
           value={voiceOn}
           onValueChange={onVoiceChange}
-          trackColor={{ true: colors.primary, false: colors.border }}
+          {...webSwitchColors}
+          // White on coral is too faint for a switch, so "on" is denim like other selections
+          thumbColor={colors.panel}
+          trackColor={{ true: colors.link, false: colors.border }}
         />
       </View>
     </View>

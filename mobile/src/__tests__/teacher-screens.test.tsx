@@ -91,6 +91,14 @@ describe('teacher validation', () => {
 });
 
 describe('TeacherHome', () => {
+  it('shows a curious Pip before the first class exists', async () => {
+    mockedApi.listClassrooms.mockResolvedValue([]);
+    await render(<TeacherHome user={teacher} onSignOut={jest.fn()} />);
+
+    await waitFor(() => expect(screen.getByText(/Create your first class/)).toBeTruthy());
+    expect(screen.getByTestId('pip-curious', { includeHiddenElements: true })).toBeTruthy();
+  });
+
   it('lists classes with their join codes', async () => {
     mockedApi.listClassrooms.mockResolvedValue([CLASSROOM]);
     await render(<TeacherHome user={teacher} onSignOut={jest.fn()} />);
