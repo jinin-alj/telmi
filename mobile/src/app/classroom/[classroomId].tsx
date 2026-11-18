@@ -16,7 +16,7 @@ import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { StudentSummaryRow } from '@/features/teacher/student-summary-row';
 import { UnitSummaryCard } from '@/features/teacher/unit-summary-card';
 import { useIsWide } from '@/hooks/use-is-wide';
-import { colors, cornerRadius, spacing } from '@/theme';
+import { colors, cornerRadius, spacing, textStyles } from '@/theme';
 
 export default function ClassroomScreen() {
   const { classroomId } = useLocalSearchParams<{ classroomId: string }>();
@@ -135,17 +135,16 @@ export default function ClassroomScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    ...textStyles.title,
     color: colors.text,
   },
   subtitle: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.mutedText,
     marginBottom: spacing.medium,
   },
   notice: {
-    fontSize: 14,
+    ...textStyles.body,
     color: colors.text,
     backgroundColor: colors.warningSoft,
     borderRadius: cornerRadius,
@@ -153,20 +152,19 @@ const styles = StyleSheet.create({
     marginTop: spacing.medium,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
     marginTop: spacing.large,
     marginBottom: spacing.small,
   },
   empty: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.mutedText,
     marginBottom: spacing.small,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginVertical: spacing.medium,
   },
   header: {

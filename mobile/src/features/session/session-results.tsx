@@ -13,7 +13,7 @@ import { summariseCoverage } from '@/features/session/session-text';
 import { VoiceInput } from '@/features/session/voice-input';
 import { useIsWide } from '@/hooks/use-is-wide';
 import type { SpeechLanguage } from '@/speech/languages';
-import { colors, cornerRadius, spacing } from '@/theme';
+import { colors, cornerRadius, spacing, textStyles } from '@/theme';
 
 const VERDICT_LABELS: Record<ApplicationResult['verdict'], string> = {
   correct: 'Correct',
@@ -149,13 +149,11 @@ export function SessionResults({ session, language, onSessionChange }: SessionRe
 const styles = StyleSheet.create({
   // The one thing to remember on this screen, so it gets the brand's emphasis colour
   summary: {
-    fontSize: 22,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.emphasis,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
     marginTop: spacing.large,
     marginBottom: spacing.small,
@@ -175,15 +173,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warningSoft,
   },
   ideaStatus: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...textStyles.captionStrong,
     color: colors.text,
   },
   coveredText: {
     color: colors.data,
   },
   ideaText: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginTop: 2,
   },
@@ -195,35 +192,33 @@ const styles = StyleSheet.create({
     marginBottom: spacing.small,
   },
   fixLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...textStyles.captionStrong,
     color: colors.mutedText,
   },
   fixText: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginBottom: 4,
   },
   body: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
   },
   question: {
-    fontSize: 18,
+    ...textStyles.body,
     color: colors.text,
   },
   answer: {
     marginTop: spacing.medium,
   },
   verdict: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.data,
     marginVertical: spacing.small,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginTop: spacing.medium,
   },
   actions: {

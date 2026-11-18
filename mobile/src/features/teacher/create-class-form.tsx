@@ -7,7 +7,7 @@ import type { Classroom } from '@/api/types';
 import { Button } from '@/components/button';
 import { TextField } from '@/components/text-field';
 import { validateClassName, validateSubject } from '@/features/teacher/validation';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 /** Create a class; the new class and its join code appear in the list straight away. */
 export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroom) => void }) {
@@ -66,14 +66,13 @@ export function CreateClassForm({ onCreated }: { onCreated: (classroom: Classroo
 
 const styles = StyleSheet.create({
   heading: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
     marginBottom: spacing.small,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginBottom: spacing.small,
   },
 });

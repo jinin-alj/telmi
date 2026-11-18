@@ -9,7 +9,7 @@ import { BackToHome, goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 // Matches FEEDBACK_MAX_CHARACTERS in backend/app/schemas/feedback.py
 const MAX_CHARACTERS = 1000;
@@ -86,13 +86,12 @@ export default function ReportProblemScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    ...textStyles.title,
     color: colors.text,
     marginBottom: spacing.medium,
   },
   body: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginBottom: spacing.large,
   },
@@ -102,8 +101,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginBottom: spacing.small,
   },
 });

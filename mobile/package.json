@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/figtree": "^0.4.1",
+    "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo/ui": "~58.0.24",
     "@sentry/react": "^11.13.0",
     "expo": "~58.0.20",

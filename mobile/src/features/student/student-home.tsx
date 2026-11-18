@@ -14,7 +14,7 @@ import { Screen } from '@/components/screen';
 import { JoinClassForm } from '@/features/student/join-class-form';
 import { UnitRow } from '@/features/student/unit-row';
 import { useIsWide } from '@/hooks/use-is-wide';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 type StudentHomeProps = {
   user: User;
@@ -134,18 +134,17 @@ export function StudentHome({ user, onSignOut }: StudentHomeProps) {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    ...textStyles.title,
     color: colors.text,
     marginBottom: spacing.medium,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginBottom: spacing.medium,
   },
   empty: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.mutedText,
     marginVertical: spacing.small,
   },
@@ -153,12 +152,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.large,
   },
   classroomName: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...textStyles.section,
     color: colors.text,
   },
   subject: {
-    fontSize: 15,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginBottom: spacing.small,
   },

@@ -4,7 +4,7 @@ import type { UnitProgress } from '@/api/types';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { useIsWide } from '@/hooks/use-is-wide';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 /** One line summarising how the student did last time, in ideas rather than a score. */
 export function describeLastAttempt(unit: UnitProgress): string {
@@ -61,17 +61,16 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
+    ...textStyles.bodyStrong,
     color: colors.text,
   },
   summary: {
-    fontSize: 15,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 2,
   },
   nextStep: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     marginTop: spacing.small,
   },

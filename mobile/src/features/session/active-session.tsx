@@ -10,7 +10,15 @@ import { Columns } from '@/components/columns';
 import { minutesLeft } from '@/features/session/session-time';
 import { VoiceInput } from '@/features/session/voice-input';
 import type { SpeechLanguage } from '@/speech/languages';
-import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing } from '@/theme';
+import {
+  colors,
+  cornerRadius,
+  fonts,
+  minimumTouchSize,
+  panelShadow,
+  spacing,
+  textStyles,
+} from '@/theme';
 
 // Refreshing the countdown every few seconds is enough for a whole-minute display
 const CLOCK_TICK_MILLISECONDS = 5000;
@@ -157,7 +165,7 @@ export function ActiveSession({ session, language, onSessionChange }: ActiveSess
 
 const styles = StyleSheet.create({
   limits: {
-    fontSize: 15,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginBottom: spacing.small,
   },
@@ -168,31 +176,29 @@ const styles = StyleSheet.create({
     padding: spacing.medium,
   },
   speaker: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...textStyles.captionStrong,
     color: colors.mutedText,
     marginBottom: 4,
   },
   buddyLine: {
-    fontSize: 22,
-    lineHeight: 30,
+    ...textStyles.pip,
     color: colors.text,
   },
   limitReached: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
     marginTop: spacing.medium,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginTop: spacing.small,
   },
   finishArea: {
     marginTop: spacing.large,
   },
   hint: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 4,
     textAlign: 'center',
@@ -204,24 +210,24 @@ const styles = StyleSheet.create({
     marginTop: spacing.small,
   },
   toggleLabel: {
+    ...textStyles.body,
     color: colors.link,
-    fontSize: 16,
     textDecorationLine: 'underline',
   },
   turn: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.text,
     marginBottom: spacing.small,
   },
   turnSpeaker: {
-    fontWeight: '700',
+    fontFamily: fonts.bodyStrong,
   },
   checking: {
     alignItems: 'center',
     paddingVertical: spacing.large * 2,
   },
   checkingText: {
-    fontSize: 17,
+    ...textStyles.body,
     color: colors.text,
     marginTop: spacing.medium,
     textAlign: 'center',

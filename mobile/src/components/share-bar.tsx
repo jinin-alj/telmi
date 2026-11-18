@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/theme';
+import { colors, textStyles } from '@/theme';
 
 type ShareBarProps = {
   count: number;
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.data,
   },
   caption: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     marginTop: 4,
   },

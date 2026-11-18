@@ -16,7 +16,7 @@ import { lineToSpeak } from '@/features/session/session-text';
 import { getDefaultSpeechLanguage } from '@/speech/languages';
 import type { SpeechLanguage } from '@/speech/languages';
 import { speak, stopSpeaking } from '@/speech/text-to-speech';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 export default function SessionScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
@@ -96,14 +96,13 @@ export default function SessionScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    ...textStyles.title,
     color: colors.text,
     marginBottom: spacing.small,
   },
   error: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginVertical: spacing.medium,
   },
   settingsWide: {

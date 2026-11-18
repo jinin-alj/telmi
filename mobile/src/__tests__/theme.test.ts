@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
-import { colors, cornerRadius } from '@/theme';
+import { fontFiles } from '@/fonts';
+import { colors, cornerRadius, fonts, textStyles } from '@/theme';
 
 /** How bright a colour looks to the eye, as WCAG measures it. */
 function luminance(hex: string): number {
@@ -89,6 +90,48 @@ it('never uses coral for text, where it is too faint to read', () => {
   for (const file of appSourceFiles(join(__dirname, '..'))) {
     const source = readFileSync(file, 'utf8');
     if (/\bcolor: colors\.primary\b|color=\{colors\.primary\}/.test(source)) {
+      offenders.push(file);
+    }
+  }
+  expect(offenders).toEqual([]);
+});
+
+it('uses Fredoka for headings and Pip, and Figtree for everything else', () => {
+  expect(fonts.heading).toMatch(/^Fredoka_/);
+  expect(fonts.pip).toMatch(/^Fredoka_/);
+  expect(fonts.body).toMatch(/^Figtree_/);
+  expect(fonts.bodyStrong).toMatch(/^Figtree_/);
+});
+
+it('loads every font the styles ask for', () => {
+  for (const name of Object.values(fonts)) {
+    expect(Object.keys(fontFiles)).toContain(name);
+  }
+});
+
+it('follows the brand type scale for the app', () => {
+  expect(textStyles.title).toMatchObject({ fontFamily: fonts.heading, fontSize: 28 });
+  expect(textStyles.section).toMatchObject({ fontFamily: fonts.heading, fontSize: 22 });
+  expect(textStyles.pip).toMatchObject({ fontFamily: fonts.pip, fontSize: 20 });
+  expect(textStyles.body).toMatchObject({ fontFamily: fonts.body, fontSize: 17 });
+  expect(textStyles.caption).toMatchObject({ fontFamily: fonts.body, fontSize: 14 });
+});
+
+it('keeps all text at 14 or bigger', () => {
+  for (const style of Object.values(textStyles)) {
+    expect(style.fontSize).toBeGreaterThanOrEqual(14);
+  }
+});
+
+it('takes text sizes and weights only from the type scale', () => {
+  const offenders: string[] = [];
+  for (const file of appSourceFiles(join(__dirname, '..'))) {
+    if (file.endsWith('theme.ts')) {
+      continue;
+    }
+    const source = readFileSync(file, 'utf8');
+    // A weight on a one-weight font makes browsers fake a bolder version
+    if (/fontSize: \d|fontWeight:/.test(source)) {
       offenders.push(file);
     }
   }

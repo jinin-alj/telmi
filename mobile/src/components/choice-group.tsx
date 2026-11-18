@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, minimumTouchSize, pillRadius, spacing } from '@/theme';
+import { colors, fonts, minimumTouchSize, pillRadius, spacing, textStyles } from '@/theme';
 
 type ChoiceGroupProps<Value extends string> = {
   label: string;
@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dataSoft,
   },
   label: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.text,
   },
   selectedLabel: {
-    fontWeight: '700',
+    fontFamily: fonts.bodyStrong,
     color: colors.link,
   },
 });

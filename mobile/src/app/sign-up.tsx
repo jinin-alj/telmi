@@ -16,7 +16,7 @@ import { RolePicker } from '@/components/role-picker';
 import { Screen } from '@/components/screen';
 import { SlowRequestNotice } from '@/components/slow-request-notice';
 import { TextField } from '@/components/text-field';
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type FieldErrors = {
   username: string | null;
@@ -119,24 +119,23 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    ...textStyles.title,
     color: colors.text,
   },
   subtitle: {
-    fontSize: 16,
+    ...textStyles.body,
     color: colors.mutedText,
     marginTop: spacing.small,
     marginBottom: spacing.large,
   },
   formError: {
+    ...textStyles.body,
     color: colors.error,
-    fontSize: 15,
     marginBottom: spacing.small,
   },
   link: {
+    ...textStyles.body,
     color: colors.link,
-    fontSize: 16,
     textAlign: 'center',
     textDecorationLine: 'underline',
     marginTop: spacing.medium,

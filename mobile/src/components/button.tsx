@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, minimumTouchSize, pillRadius, spacing } from '@/theme';
+import { colors, minimumTouchSize, pillRadius, spacing, textStyles } from '@/theme';
 
 type ButtonProps = {
   label: string;
@@ -71,8 +71,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...textStyles.bodyStrong,
   },
   primaryLabel: {
     color: colors.onPrimary,

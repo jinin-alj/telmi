@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/auth/auth-context';
 import { goHome } from '@/components/back-to-home';
-import { colors, contentWidth, minimumTouchSize, spacing } from '@/theme';
+import { colors, contentWidth, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 /** The desktop header: the app name, who is signed in, and a way to sign out. */
 export function TopBar() {
@@ -55,8 +55,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   name: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...textStyles.section,
     color: colors.text,
   },
   account: {
@@ -65,11 +64,11 @@ const styles = StyleSheet.create({
     gap: spacing.large,
   },
   user: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.mutedText,
   },
   signOut: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.link,
     textDecorationLine: 'underline',
   },

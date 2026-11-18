@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { colors, spacing, textStyles } from '@/theme';
 
 // A normal request answers well within this; longer usually means the free server is waking up
 const SLOW_AFTER_MILLISECONDS = 5000;
@@ -33,7 +33,7 @@ export function SlowRequestNotice({ waiting }: { waiting: boolean }) {
 
 const styles = StyleSheet.create({
   notice: {
-    fontSize: 15,
+    ...textStyles.body,
     color: colors.mutedText,
     textAlign: 'center',
     marginTop: spacing.small,

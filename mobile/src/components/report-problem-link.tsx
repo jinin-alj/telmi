@@ -1,7 +1,7 @@
 import { router, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, minimumTouchSize, spacing } from '@/theme';
+import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 /** A quiet link to tell the Telmi team something went wrong, from any signed-in page. */
 export function ReportProblemLink() {
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.large,
   },
   label: {
-    fontSize: 14,
+    ...textStyles.caption,
     color: colors.mutedText,
     textDecorationLine: 'underline',
   },
