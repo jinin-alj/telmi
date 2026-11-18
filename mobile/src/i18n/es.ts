@@ -98,7 +98,6 @@ export const es: Texts = {
     finishFailed: 'No se ha podido revisar tu explicación.',
   },
   settings: {
-    speakingLanguage: 'Idioma en el que hablas',
     voice: 'Pip habla en voz alta',
   },
   results: {
