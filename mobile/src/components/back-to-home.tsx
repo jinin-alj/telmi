@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { useTexts } from '@/i18n/language-context';
 import { colors, minimumTouchSize, textStyles } from '@/theme';
 
 /** Go back to the home screen already open, so Back never lands on a second copy of it. */
@@ -15,14 +16,16 @@ export function goHome() {
 
 /** "‹ My classes" link back to the home screen. */
 export function BackToHome() {
+  const texts = useTexts();
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Back to my classes"
+      accessibilityLabel={texts.nav.backToClasses}
       onPress={goHome}
       style={styles.back}
     >
-      <Text style={styles.label}>‹ My classes</Text>
+      <Text style={styles.label}>{texts.nav.backToClassesShort}</Text>
     </Pressable>
   );
 }

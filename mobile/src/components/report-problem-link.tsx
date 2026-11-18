@@ -1,11 +1,13 @@
 import { router, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { useTexts } from '@/i18n/language-context';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 /** A quiet link to tell the Telmi team something went wrong, from any signed-in page. */
 export function ReportProblemLink() {
   const pathname = usePathname();
+  const texts = useTexts();
   if (pathname === '/report-problem') {
     return null;
   }
@@ -18,11 +20,11 @@ export function ReportProblemLink() {
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel="Report a problem"
+      accessibilityLabel={texts.nav.reportProblem}
       onPress={openReport}
       style={styles.link}
     >
-      <Text style={styles.label}>Report a problem</Text>
+      <Text style={styles.label}>{texts.nav.reportProblem}</Text>
     </Pressable>
   );
 }

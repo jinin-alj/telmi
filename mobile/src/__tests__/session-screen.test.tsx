@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { getSession } from '@/api/study';
 import type { StudySession } from '@/api/types';
@@ -49,8 +49,10 @@ it("reads Pip's line once, not again when the language changes", async () => {
   await render(<SessionScreen />);
   await screen.findByText('Hi! Can you explain it to me?');
 
-  await fireEvent.press(screen.getByRole('radio', { name: 'Español' }));
-  await fireEvent.press(screen.getByRole('radio', { name: 'English' }));
+  // The session's own choice of speaking language, not the app's language at the foot
+  const speakingLanguage = within(screen.getByLabelText('Language you are speaking'));
+  await fireEvent.press(speakingLanguage.getByRole('radio', { name: 'Español' }));
+  await fireEvent.press(speakingLanguage.getByRole('radio', { name: 'English' }));
 
   expect(speak).toHaveBeenCalledTimes(1);
   expect(speak).toHaveBeenCalledWith('Hi! Can you explain it to me?', 'en-US', expect.anything());

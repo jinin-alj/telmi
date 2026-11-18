@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 import { wakeBackend } from '@/api/health';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
 import { useBrandFonts } from '@/fonts';
+import { LanguageProvider, useLanguage } from '@/i18n/language-context';
 import { startErrorReporting } from '@/monitoring/error-reporting';
 
-// Keep the splash up until we know whether a saved session exists and the fonts are in, to avoid flashes
+// Keep the splash up until the saved session, fonts and language are known, to avoid flashes
 SplashScreen.preventAutoHideAsync();
 
 // The free backend sleeps when idle; start waking it while the person is still typing
@@ -23,7 +24,8 @@ const START_PAGES = ['/', '/sign-in', '/sign-up'];
 function RootNavigator() {
   const { status, user } = useAuth();
   const fontsReady = useBrandFonts();
-  const ready = status !== 'loading' && fontsReady;
+  const { loaded: languageReady } = useLanguage();
+  const ready = status !== 'loading' && fontsReady && languageReady;
   const signedIn = status === 'signedIn';
   const isStudent = user?.role === 'student';
   const isTeacher = user?.role === 'teacher';
@@ -69,8 +71,10 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

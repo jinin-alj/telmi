@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import type { StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LanguageSwitch } from '@/components/language-switch';
 import { ReportProblemLink } from '@/components/report-problem-link';
 import { TopBar } from '@/components/top-bar';
 import { useIsWide } from '@/hooks/use-is-wide';
@@ -57,6 +58,7 @@ export function Screen({ children, width = 'narrow', topBar = false }: ScreenPro
           >
             {body}
             {topBar ? <ReportProblemLink /> : null}
+            <LanguageSwitch />
           </ScrollView>
         </ScrollLockContext.Provider>
       </KeyboardAvoidingView>
