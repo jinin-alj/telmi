@@ -1,14 +1,9 @@
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { ChoiceGroup } from '@/components/choice-group';
 import { useTexts } from '@/i18n/language-context';
-import { SPEECH_LANGUAGES } from '@/speech/languages';
-import type { SpeechLanguage } from '@/speech/languages';
 import { colors, minimumTouchSize, spacing, textStyles } from '@/theme';
 
 type SessionSettingsProps = {
-  language: SpeechLanguage;
-  onLanguageChange: (language: SpeechLanguage) => void;
   voiceOn: boolean;
   onVoiceChange: (voiceOn: boolean) => void;
 };
@@ -17,23 +12,12 @@ type SessionSettingsProps = {
 const webSwitchColors =
   Platform.OS === 'web' ? ({ activeThumbColor: colors.panel } as object) : null;
 
-/** Which language to listen in, and whether Pip reads replies aloud. */
-export function SessionSettings({
-  language,
-  onLanguageChange,
-  voiceOn,
-  onVoiceChange,
-}: SessionSettingsProps) {
+/** Whether Pip reads its replies aloud; the language comes from the switch at the foot of the page. */
+export function SessionSettings({ voiceOn, onVoiceChange }: SessionSettingsProps) {
   const texts = useTexts();
 
   return (
     <View style={styles.container}>
-      <ChoiceGroup
-        label={texts.settings.speakingLanguage}
-        options={SPEECH_LANGUAGES}
-        value={language}
-        onChange={onLanguageChange}
-      />
       <View style={styles.voiceRow}>
         <Text style={styles.voiceLabel}>{texts.settings.voice}</Text>
         <Switch

@@ -28,6 +28,18 @@ export function startSession(unitId: string, language: AppLanguage): Promise<Stu
   });
 }
 
+/** Have Pip greet again in another language, if the student hasn't answered yet. */
+export function changeSessionLanguage(
+  sessionId: string,
+  language: AppLanguage,
+): Promise<StudySession> {
+  return apiClient.request<StudySession>(
+    'PUT',
+    `/sessions/${encodeURIComponent(sessionId)}/language`,
+    { body: { language } },
+  );
+}
+
 /** Load a session with its conversation and feedback. */
 export function getSession(sessionId: string): Promise<StudySession> {
   return apiClient.request<StudySession>('GET', `/sessions/${encodeURIComponent(sessionId)}`);

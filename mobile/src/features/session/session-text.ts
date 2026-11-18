@@ -14,6 +14,19 @@ export function summariseCoverage(feedback: CheckerFeedback, texts: ResultTexts)
   return texts.coverage(coveredCount, feedback.key_ideas.length);
 }
 
+/** Whether Pip's greeting can still switch language: the session is open and unanswered. */
+export function greetingCanChange(session: StudySession): boolean {
+  if (session.status !== 'active') {
+    return false;
+  }
+  for (const turn of session.turns) {
+    if (turn.speaker === 'student') {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** What Pip should say out loud for the current state of the session. */
 export function lineToSpeak(session: StudySession, texts: ResultTexts): string {
   if (session.status === 'completed' && session.feedback !== null) {

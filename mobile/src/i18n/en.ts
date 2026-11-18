@@ -96,7 +96,6 @@ export const en = {
     finishFailed: 'Could not check your answer.',
   },
   settings: {
-    speakingLanguage: 'Language you are speaking',
     voice: 'Pip speaks out loud',
   },
   results: {
