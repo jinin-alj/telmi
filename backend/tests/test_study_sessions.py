@@ -593,3 +593,58 @@ def test_unknown_input_modes_are_refused(client: TestClient) -> None:
     )
 
     assert response.status_code == 422
+
+
+def change_language(
+    client: TestClient, student: dict[str, str], session_id: object, language: str
+) -> httpx.Response:
+    """Ask Pip to greet in another language."""
+    response: httpx.Response = client.put(
+        f"/sessions/{session_id}/language", json={"language": language}, headers=student
+    )
+    return response
+
+
+def test_switching_language_before_answering_greets_again(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+
+    response = change_language(client, student, session["id"], "es")
+
+    assert response.status_code == 200
+    turns = response.json()["turns"]
+    assert len(turns) == 1
+    assert turns[0]["text"].startswith("¡Hola!")
+    # The greeting is fixed text, so no AI call is spent on it
+    assert fake_chat_model.requests == []
+
+
+def test_switching_language_after_answering_keeps_the_conversation(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    fake_chat_model.queue_reply("How does light help?")
+    say(client, student, session["id"], "Plants make food from light.")
+
+    response = change_language(client, student, session["id"], "es")
+
+    assert response.status_code == 200
+    assert response.json()["turns"][0]["text"].startswith("Hi!")
+
+
+def test_switching_language_refuses_unknown_languages(client: TestClient) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+
+    assert change_language(client, student, session["id"], "fr").status_code == 422
+
+
+def test_other_student_cannot_switch_the_language(client: TestClient) -> None:
+    student, unit_id = enrolled_student_with_unit(client)
+    session = start(client, student, unit_id)
+    other_student = sign_up_as(client, "bea_m", "student")
+
+    assert change_language(client, other_student, session["id"], "es").status_code == 404

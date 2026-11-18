@@ -69,6 +69,20 @@ def start_session(
     return study_session
 
 
+def change_greeting_language(
+    db: Session, study_session: StudySession, language: SessionLanguage
+) -> None:
+    """Say Pip's greeting again in another language, until the student has answered."""
+    locked = lock_session(db, study_session.id)
+    turns = list_turns(db, locked.id)
+    # Once the conversation has started, Pip follows the language the student speaks instead
+    if locked.status != SessionStatus.ACTIVE or count_student_turns(turns) > 0:
+        db.rollback()
+        return
+    turns[0].text = opening_line(get_unit(db, locked), language)
+    db.commit()
+
+
 def get_session_for_student(db: Session, student: User, session_id: uuid.UUID) -> StudySession:
     """Fetch one of the student's own sessions; anyone else's is 'not found'."""
     study_session = db.get(StudySession, session_id)
