@@ -3,40 +3,44 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { MisconceptionExample, UnitSummary } from '@/api/types';
 import { ShareBar } from '@/components/share-bar';
+import type { Texts } from '@/i18n/en';
+import { useTexts } from '@/i18n/language-context';
 import { colors, cornerRadius, minimumTouchSize, panelShadow, spacing, textStyles } from '@/theme';
 
+type SummaryTexts = Texts['unitSummary'];
+
 /** "8 students tried it · on average they explained 64% of the key ideas". */
-export function describeUnitReach(unit: UnitSummary): string {
+export function describeUnitReach(unit: UnitSummary, texts: SummaryTexts): string {
   if (unit.students_attempted === 0) {
-    return 'No students have explained this yet.';
+    return texts.noAttempts;
   }
-  const studentWord = unit.students_attempted === 1 ? 'student has' : 'students have';
-  const average =
-    unit.average_coverage_percent === null
-      ? ''
-      : ` On average they explained ${unit.average_coverage_percent}% of the key ideas.`;
-  return `${unit.students_attempted} ${studentWord} explained this.${average}`;
+  const reach = texts.reach(unit.students_attempted);
+  if (unit.average_coverage_percent === null) {
+    return reach;
+  }
+  return `${reach} ${texts.average(unit.average_coverage_percent)}`;
 }
 
 /** A note about sessions left open past their time, or null when there are none. */
-export function describeUnfinished(unit: UnitSummary): string | null {
+export function describeUnfinished(unit: UnitSummary, texts: SummaryTexts): string | null {
   if (unit.unfinished_sessions === 0) {
     return null;
   }
-  if (unit.unfinished_sessions === 1) {
-    return '1 session ran out of time before it was finished, so it has no results yet.';
-  }
-  return `${unit.unfinished_sessions} sessions ran out of time before they were finished, so they have no results yet.`;
+  return texts.unfinished(unit.unfinished_sessions);
 }
 
 function MisconceptionList({ examples }: { examples: MisconceptionExample[] }) {
+  const texts = useTexts();
+
   return (
     <>
       {/* Keys by position, since two students can say exactly the same thing */}
       {examples.map((example, index) => (
         <View key={index} style={styles.example}>
           <Text style={styles.exampleSaid}>“{example.student_said}”</Text>
-          <Text style={styles.exampleCorrection}>Correct idea: {example.correction}</Text>
+          <Text style={styles.exampleCorrection}>
+            {texts.unitSummary.correctIdea(example.correction)}
+          </Text>
         </View>
       ))}
     </>
@@ -46,28 +50,33 @@ function MisconceptionList({ examples }: { examples: MisconceptionExample[] }) {
 /** One unit across the whole class: how many students explained each key idea, and common mistakes. */
 export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
   const [expanded, setExpanded] = useState(false);
+  const texts = useTexts();
   const hasDetails = unit.ideas !== null && unit.students_attempted > 0;
-  const unfinishedNote = describeUnfinished(unit);
+  const unfinishedNote = describeUnfinished(unit, texts.unitSummary);
 
   return (
     <View style={styles.card}>
       <Text accessibilityRole="header" style={styles.title}>
         {unit.title}
       </Text>
-      <Text style={styles.reach}>{describeUnitReach(unit)}</Text>
+      <Text style={styles.reach}>{describeUnitReach(unit, texts.unitSummary)}</Text>
       {unfinishedNote !== null ? <Text style={styles.unfinished}>{unfinishedNote}</Text> : null}
 
       {hasDetails ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            expanded ? `Hide key ideas for ${unit.title}` : `Show key ideas for ${unit.title}`
+            expanded
+              ? texts.unitSummary.hideIdeasFor(unit.title)
+              : texts.unitSummary.showIdeasFor(unit.title)
           }
           accessibilityState={{ expanded }}
           onPress={() => setExpanded(!expanded)}
           style={styles.toggle}
         >
-          <Text style={styles.toggleLabel}>{expanded ? 'Hide key ideas' : 'Show key ideas'}</Text>
+          <Text style={styles.toggleLabel}>
+            {expanded ? texts.unitSummary.hideIdeas : texts.unitSummary.showIdeas}
+          </Text>
         </Pressable>
       ) : null}
 
@@ -80,13 +89,12 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
               <ShareBar
                 count={idea.students_covered}
                 total={idea.students_covered + idea.students_missing}
-                label="students explained this"
+                label={texts.unitSummary.explainedThis}
               />
               {idea.misconception_count > 0 ? (
                 <>
                   <Text style={styles.misconceptionCount}>
-                    {idea.misconception_count} common{' '}
-                    {idea.misconception_count === 1 ? 'mistake' : 'mistakes'}
+                    {texts.unitSummary.mistakes(idea.misconception_count)}
                   </Text>
                   <MisconceptionList examples={idea.examples} />
                 </>
@@ -97,7 +105,7 @@ export function UnitSummaryCard({ unit }: { unit: UnitSummary }) {
 
       {expanded && unit.other_misconceptions.length > 0 ? (
         <View style={styles.idea}>
-          <Text style={styles.misconceptionCount}>Other mistakes</Text>
+          <Text style={styles.misconceptionCount}>{texts.unitSummary.otherMistakes}</Text>
           <MisconceptionList examples={unit.other_misconceptions} />
         </View>
       ) : null}

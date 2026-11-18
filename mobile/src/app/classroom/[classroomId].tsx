@@ -2,7 +2,6 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { getClassroomDashboard } from '@/api/teaching';
 import type { ClassroomDashboard } from '@/api/types';
 import { Button } from '@/components/button';
@@ -18,6 +17,8 @@ import { AddUnitForm } from '@/features/teacher/add-unit-form';
 import { StudentSummaryRow } from '@/features/teacher/student-summary-row';
 import { UnitSummaryCard } from '@/features/teacher/unit-summary-card';
 import { useIsWide } from '@/hooks/use-is-wide';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, cornerRadius, spacing, textStyles } from '@/theme';
 
 export default function ClassroomScreen() {
@@ -26,6 +27,7 @@ export default function ClassroomScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [addingUnit, setAddingUnit] = useState(false);
   const isWide = useIsWide();
+  const texts = useTexts();
 
   const loadDashboard = useCallback(() => {
     getClassroomDashboard(classroomId)
@@ -34,9 +36,9 @@ export default function ClassroomScreen() {
         setLoadError(null);
       })
       .catch((error: unknown) => {
-        setLoadError(error instanceof ApiError ? error.message : 'Could not load this class.');
+        setLoadError(errorText(error, texts, texts.classroom.loadFailed));
       });
-  }, [classroomId]);
+  }, [classroomId, texts]);
 
   useFocusEffect(loadDashboard);
 
@@ -50,7 +52,9 @@ export default function ClassroomScreen() {
       <BackToHome />
 
       <ErrorMessage message={loadError} style={styles.error} />
-      {dashboard === null && loadError === null ? <Loading label="Loading the class" /> : null}
+      {dashboard === null && loadError === null ? (
+        <Loading label={texts.classroom.loading} />
+      ) : null}
 
       {dashboard !== null ? (
         <>
@@ -61,30 +65,25 @@ export default function ClassroomScreen() {
                 {dashboard.classroom.name}
               </Text>
               <Text style={styles.subtitle}>
-                {dashboard.classroom.subject} · {dashboard.student_count}{' '}
-                {dashboard.student_count === 1 ? 'student' : 'students'}
+                {dashboard.classroom.subject} ·{' '}
+                {texts.classroom.studentCount(dashboard.student_count)}
               </Text>
             </View>
             <JoinCode code={dashboard.classroom.join_code} />
           </Card>
 
-          <Text style={styles.notice}>
-            Results are checked by AI and can be wrong. Use them to decide where to look, not as
-            grades.
-          </Text>
+          <Text style={styles.notice}>{texts.classroom.aiNotice}</Text>
 
           <Columns
             leftShare={3}
             left={
               <>
                 <Text accessibilityRole="header" style={styles.sectionTitle}>
-                  Units
+                  {texts.classroom.units}
                 </Text>
                 {dashboard.units.length === 0 && !addingUnit ? (
                   <PipNote mood="curious">
-                    <Text style={styles.empty}>
-                      Add a unit so your students have something to explain.
-                    </Text>
+                    <Text style={styles.empty}>{texts.classroom.noUnits}</Text>
                   </PipNote>
                 ) : null}
                 {dashboard.units.map((unit) => (
@@ -97,7 +96,7 @@ export default function ClassroomScreen() {
                     onCancel={() => setAddingUnit(false)}
                   />
                 ) : (
-                  <Button label="Add a unit" onPress={() => setAddingUnit(true)} />
+                  <Button label={texts.classroom.addUnit} onPress={() => setAddingUnit(true)} />
                 )}
               </>
             }
@@ -105,13 +104,12 @@ export default function ClassroomScreen() {
             right={
               <>
                 <Text accessibilityRole="header" style={styles.sectionTitle}>
-                  Students
+                  {texts.classroom.students}
                 </Text>
                 {dashboard.students.length === 0 ? (
                   <PipNote mood="curious">
                     <Text style={styles.empty}>
-                      No students yet. Share the join code {dashboard.classroom.join_code} with your
-                      class.
+                      {texts.classroom.noStudents(dashboard.classroom.join_code)}
                     </Text>
                   </PipNote>
                 ) : null}

@@ -3,7 +3,6 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { sendFeedback } from '@/api/feedback';
 import { BackToHome, goHome } from '@/components/back-to-home';
 import { Button } from '@/components/button';
@@ -11,6 +10,8 @@ import { ErrorMessage } from '@/components/error-message';
 import { Pip } from '@/components/pip';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 // Matches FEEDBACK_MAX_CHARACTERS in backend/app/schemas/feedback.py
@@ -18,6 +19,7 @@ const MAX_CHARACTERS = 1000;
 
 export default function ReportProblemScreen() {
   const { from } = useLocalSearchParams<{ from?: string }>();
+  const texts = useTexts();
   const [message, setMessage] = useState('');
   const [messageError, setMessageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function ReportProblemScreen() {
 
   async function handleSend() {
     if (message.trim() === '') {
-      setMessageError('Say what went wrong first.');
+      setMessageError(texts.reportProblem.missing);
       return;
     }
     setMessageError(null);
@@ -40,7 +42,7 @@ export default function ReportProblemScreen() {
       });
       setSent(true);
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : 'That did not send. Try again.');
+      setFormError(errorText(error, texts, texts.reportProblem.sendFailed));
     } finally {
       setSending(false);
     }
@@ -51,12 +53,10 @@ export default function ReportProblemScreen() {
       <Screen topBar>
         <Pip mood="proud" size={96} />
         <Text accessibilityRole="header" style={styles.title}>
-          Thanks for telling us
+          {texts.reportProblem.thanks}
         </Text>
-        <Text style={styles.body}>
-          The Telmi team reads every report and uses it to fix things.
-        </Text>
-        <Button label="Back to my classes" onPress={goHome} />
+        <Text style={styles.body}>{texts.reportProblem.thanksBody}</Text>
+        <Button label={texts.reportProblem.back} onPress={goHome} />
       </Screen>
     );
   }
@@ -65,11 +65,11 @@ export default function ReportProblemScreen() {
     <Screen topBar>
       <BackToHome />
       <Text accessibilityRole="header" style={styles.title}>
-        Report a problem
+        {texts.reportProblem.title}
       </Text>
       <TextField
-        label="What went wrong?"
-        hint="Say what you were doing and what happened. Please don't include anyone's personal details."
+        label={texts.reportProblem.label}
+        hint={texts.reportProblem.hint}
         error={messageError}
         value={message}
         onChangeText={setMessage}
@@ -78,7 +78,7 @@ export default function ReportProblemScreen() {
         style={styles.message}
       />
       <ErrorMessage message={formError} style={styles.error} />
-      <Button label="Send report" onPress={handleSend} loading={sending} />
+      <Button label={texts.reportProblem.send} onPress={handleSend} loading={sending} />
     </Screen>
   );
 }

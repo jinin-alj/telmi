@@ -1,18 +1,24 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { StudentSummary, StudentUnitResult, UnitSummary } from '@/api/types';
+import type { Texts } from '@/i18n/en';
+import { useTexts } from '@/i18n/language-context';
 import { colors, spacing, textStyles } from '@/theme';
 
 /** "4 of 6 key ideas" for one student on one unit, or why there's no result yet. */
-export function describeStudentResult(result: StudentUnitResult, unit: UnitSummary): string {
+export function describeStudentResult(
+  result: StudentUnitResult,
+  unit: UnitSummary,
+  texts: Texts['studentRow'],
+): string {
   if (result.sessions_completed === 0) {
-    return 'Not explained yet';
+    return texts.notYet;
   }
   if (unit.ideas === null) {
-    return `${result.latest_coverage_percent ?? 0}% of key ideas`;
+    return texts.percentOfIdeas(result.latest_coverage_percent ?? 0);
   }
   const total = unit.ideas.length;
-  return `${total - result.missing_ideas.length} of ${total} key ideas`;
+  return texts.ideasOf(total - result.missing_ideas.length, total);
 }
 
 type StudentSummaryRowProps = {
@@ -22,6 +28,8 @@ type StudentSummaryRowProps = {
 
 /** One student's latest result on every unit, with the ideas still missing. Never a rank. */
 export function StudentSummaryRow({ student, units }: StudentSummaryRowProps) {
+  const texts = useTexts();
+
   return (
     <View style={styles.row}>
       <Text style={styles.name}>
@@ -35,11 +43,11 @@ export function StudentSummaryRow({ student, units }: StudentSummaryRowProps) {
         return (
           <View key={result.unit_id} style={styles.unit}>
             <Text style={styles.unitLine}>
-              {unit.title}: {describeStudentResult(result, unit)}
+              {unit.title}: {describeStudentResult(result, unit, texts.studentRow)}
             </Text>
             {result.missing_ideas.length > 0 ? (
               <>
-                <Text style={styles.missing}>Still to explain:</Text>
+                <Text style={styles.missing}>{texts.studentRow.stillToExplain}</Text>
                 {/* Keys by position, since the checker can repeat the same text */}
                 {result.missing_ideas.map((idea, index) => (
                   <Text key={index} style={styles.missing}>

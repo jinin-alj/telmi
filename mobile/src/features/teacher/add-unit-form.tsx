@@ -2,7 +2,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { addUnit, readMaterialFile } from '@/api/teaching';
 import { Button } from '@/components/button';
 import { ErrorMessage } from '@/components/error-message';
@@ -19,6 +18,8 @@ import {
   validateMaterial,
   validateUnitTitle,
 } from '@/features/teacher/validation';
+import { errorText } from '@/i18n/error-text';
+import { useTexts } from '@/i18n/language-context';
 import { colors, cornerRadius, panelShadow, spacing, textStyles } from '@/theme';
 
 type AddUnitFormProps = {
@@ -29,6 +30,7 @@ type AddUnitFormProps = {
 
 /** Add a topic and the material students will be checked against. */
 export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps) {
+  const texts = useTexts();
   const [title, setTitle] = useState('');
   const [material, setMaterial] = useState('');
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
         base64: false,
       });
     } catch {
-      setFormError("Couldn't open your files. Try again, or paste the text instead.");
+      setFormError(texts.addUnit.openFilesFailed);
       return;
     }
     if (picked.canceled) {
@@ -67,19 +69,19 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
         setMaterial((current) => appendMaterial(current, result.text));
         outcomes.push({ fileName: asset.name, read: true, truncated: result.truncated });
       } catch (error) {
-        const message = error instanceof ApiError ? error.message : 'Could not read this file.';
+        const message = errorText(error, texts, texts.addUnit.readFailed);
         outcomes.push({ fileName: asset.name, read: false, error: message });
       }
     }
-    setUploadNotice(describeUploads(outcomes));
+    setUploadNotice(describeUploads(outcomes, texts.addUnit));
     setFormError(describeUploadErrors(outcomes));
     setMaterialError(null);
     setUploading(false);
   }
 
   async function handleSave() {
-    const nextTitleError = validateUnitTitle(title);
-    const nextMaterialError = validateMaterial(material);
+    const nextTitleError = validateUnitTitle(title, texts);
+    const nextMaterialError = validateMaterial(material, texts);
     setTitleError(nextTitleError);
     setMaterialError(nextMaterialError);
     setFormError(null);
@@ -92,7 +94,7 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
       await addUnit(classroomId, title.trim(), material.trim());
       onAdded();
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : 'Could not add the unit.');
+      setFormError(errorText(error, texts, texts.addUnit.saveFailed));
       setSaving(false);
     }
   }
@@ -100,28 +102,30 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.heading}>
-        Add a unit
+        {texts.addUnit.heading}
       </Text>
-      <TextField label="Unit title" error={titleError} value={title} onChangeText={setTitle} />
+      <TextField
+        label={texts.addUnit.title}
+        error={titleError}
+        value={title}
+        onChangeText={setTitle}
+      />
       <Button
-        label="Upload a file"
+        label={texts.addUnit.upload}
         variant="secondary"
         onPress={handleUpload}
         loading={uploading}
         disabled={saving}
       />
-      <Text style={styles.uploadHint}>
-        PDF, Word, PowerPoint, text or Markdown files. You can pick several, and check the text
-        before saving.
-      </Text>
+      <Text style={styles.uploadHint}>{texts.addUnit.uploadHint}</Text>
       {uploadNotice ? (
         <Text accessibilityLiveRegion="polite" style={styles.notice}>
           {uploadNotice}
         </Text>
       ) : null}
       <TextField
-        label="Your material"
-        hint={`Paste or upload your notes, slides or textbook pages. Students never see this; Pip and the checker use it. ${material.trim().length} of ${MATERIAL_MAX_LENGTH} characters.`}
+        label={texts.addUnit.material}
+        hint={texts.addUnit.materialHint(material.trim().length, MATERIAL_MAX_LENGTH)}
         error={materialError}
         value={material}
         onChangeText={setMaterial}
@@ -132,8 +136,13 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
         style={styles.material}
       />
       <ErrorMessage message={formError} style={styles.error} />
-      <Button label="Save unit" onPress={handleSave} loading={saving} disabled={uploading} />
-      <Button label="Cancel" variant="secondary" onPress={onCancel} />
+      <Button
+        label={texts.addUnit.save}
+        onPress={handleSave}
+        loading={saving}
+        disabled={uploading}
+      />
+      <Button label={texts.addUnit.cancel} variant="secondary" onPress={onCancel} />
     </View>
   );
 }

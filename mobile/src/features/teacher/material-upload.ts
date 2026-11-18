@@ -1,3 +1,5 @@
+import type { Texts } from '@/i18n/en';
+
 // Mirrors the file types backend/app/services/material_files.py can read
 export const MATERIAL_FILE_TYPES = [
   'application/pdf',
@@ -21,17 +23,15 @@ export function appendMaterial(current: string, added: string): string {
 }
 
 /** One short message about what each upload did, or null when there's nothing to say. */
-export function describeUploads(outcomes: UploadOutcome[]): string | null {
+export function describeUploads(outcomes: UploadOutcome[], texts: Texts['addUnit']): string | null {
   const sentences: string[] = [];
   const readNames = outcomes.filter((outcome) => outcome.read).map((outcome) => outcome.fileName);
   if (readNames.length > 0) {
-    sentences.push(
-      `Added the text from ${readNames.join(', ')}. Check it and delete anything students shouldn't be checked on.`,
-    );
+    sentences.push(texts.added(readNames.join(', ')));
   }
   for (const outcome of outcomes) {
     if (outcome.read && outcome.truncated) {
-      sentences.push(`${outcome.fileName} is very long, so only its first part was added.`);
+      sentences.push(texts.truncated(outcome.fileName));
     }
   }
   return sentences.length === 0 ? null : sentences.join(' ');

@@ -164,6 +164,103 @@ export const en = {
       "This device can't recognise that language. Try the other language or type instead.",
     other: "Voice isn't working right now. You can type instead.",
   },
+  teacherHome: {
+    greeting: (name: string) => `Hi, ${name}`,
+    loading: 'Loading your classes',
+    loadFailed: 'Could not load your classes.',
+    empty: 'Create your first class, then share its join code with your students.',
+    open: (name: string) => `Open ${name}`,
+  },
+  createClass: {
+    heading: 'Create a class',
+    name: 'Class name',
+    nameHint: 'For example, Biology 3A.',
+    subject: 'Subject',
+    submit: 'Create class',
+    failed: 'Could not create the class.',
+  },
+  teacherValidation: {
+    classNameMissing: 'Add a class name.',
+    subjectMissing: 'Add a subject.',
+    titleMissing: 'Add a title.',
+    materialTooShort: (min: number) =>
+      `Add at least ${min} characters so the checker has enough to work with.`,
+    materialTooLong: (max: number) =>
+      `Use at most ${max} characters. Split long topics into several units.`,
+  },
+  joinCode: {
+    label: 'Join code',
+    // Spaced out so screen readers read each character
+    description: (code: string) => `Join code ${code.split('').join(' ')}`,
+  },
+  classroom: {
+    loading: 'Loading the class',
+    loadFailed: 'Could not load this class.',
+    studentCount: (count: number) => `${count} ${count === 1 ? 'student' : 'students'}`,
+    aiNotice:
+      'Results are checked by AI and can be wrong. Use them to decide where to look, not as grades.',
+    units: 'Units',
+    noUnits: 'Add a unit so your students have something to explain.',
+    addUnit: 'Add a unit',
+    students: 'Students',
+    noStudents: (code: string) => `No students yet. Share the join code ${code} with your class.`,
+  },
+  unitSummary: {
+    noAttempts: 'No students have explained this yet.',
+    reach: (count: number) =>
+      `${count} ${count === 1 ? 'student has' : 'students have'} explained this.`,
+    average: (percent: number) => `On average they explained ${percent}% of the key ideas.`,
+    unfinished: (count: number) =>
+      count === 1
+        ? '1 session ran out of time before it was finished, so it has no results yet.'
+        : `${count} sessions ran out of time before they were finished, so they have no results yet.`,
+    showIdeas: 'Show key ideas',
+    hideIdeas: 'Hide key ideas',
+    showIdeasFor: (title: string) => `Show key ideas for ${title}`,
+    hideIdeasFor: (title: string) => `Hide key ideas for ${title}`,
+    explainedThis: 'students explained this',
+    mistakes: (count: number) => `${count} common ${count === 1 ? 'mistake' : 'mistakes'}`,
+    otherMistakes: 'Other mistakes',
+    correctIdea: (correction: string) => `Correct idea: ${correction}`,
+  },
+  shareBar: {
+    countOf: (count: number, total: number, label: string) => `${count} of ${total} ${label}`,
+  },
+  studentRow: {
+    notYet: 'Not explained yet',
+    percentOfIdeas: (percent: number) => `${percent}% of key ideas`,
+    ideasOf: (explained: number, total: number) => `${explained} of ${total} key ideas`,
+    stillToExplain: 'Still to explain:',
+  },
+  addUnit: {
+    heading: 'Add a unit',
+    title: 'Unit title',
+    upload: 'Upload a file',
+    uploadHint:
+      'PDF, Word, PowerPoint, text or Markdown files. You can pick several, and check the text before saving.',
+    material: 'Your material',
+    materialHint: (count: number, max: number) =>
+      `Paste or upload your notes, slides or textbook pages. Students never see this; Pip and the checker use it. ${count} of ${max} characters.`,
+    save: 'Save unit',
+    cancel: 'Cancel',
+    openFilesFailed: "Couldn't open your files. Try again, or paste the text instead.",
+    readFailed: 'Could not read this file.',
+    saveFailed: 'Could not add the unit.',
+    added: (names: string) =>
+      `Added the text from ${names}. Check it and delete anything students shouldn't be checked on.`,
+    truncated: (name: string) => `${name} is very long, so only its first part was added.`,
+  },
+  reportProblem: {
+    title: 'Report a problem',
+    label: 'What went wrong?',
+    hint: "Say what you were doing and what happened. Please don't include anyone's personal details.",
+    missing: 'Say what went wrong first.',
+    send: 'Send report',
+    sendFailed: 'That did not send. Try again.',
+    thanks: 'Thanks for telling us',
+    thanksBody: 'The Telmi team reads every report and uses it to fix things.',
+    back: 'Back to my classes',
+  },
   errors: {
     username_taken: 'That username is already taken.',
     wrong_login: 'Wrong username or password.',
