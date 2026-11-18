@@ -102,7 +102,7 @@ def start_session(
 ) -> SessionDetail:
     """Start explaining a unit to the buddy."""
     try:
-        study_session = study_sessions.start_session(db, student, request.unit_id)
+        study_session = study_sessions.start_session(db, student, request.unit_id, request.language)
     except NotFoundError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     return build_session_detail(db, study_session, settings)

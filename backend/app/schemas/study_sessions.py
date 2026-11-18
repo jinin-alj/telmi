@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.ai.buddy import SessionLanguage
 from app.ai.checker import ApplicationResult, CheckerFeedback
 from app.models import SessionStatus, Speaker
 from app.schemas.text import TrimmedText
@@ -13,9 +14,11 @@ TURN_MAX_CHARACTERS = 2000
 
 
 class StartSessionRequest(BaseModel):
-    """Which unit the student wants to explain."""
+    """Which unit the student wants to explain, and the language they will speak."""
 
     unit_id: uuid.UUID
+    # The language Pip greets in; older app versions don't send it
+    language: SessionLanguage = "en"
 
 
 InputMode = Literal["talk", "type", "draw"]

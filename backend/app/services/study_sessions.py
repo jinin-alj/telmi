@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.ai.buddy import generate_buddy_reply, opening_line
+from app.ai.buddy import SessionLanguage, generate_buddy_reply, opening_line
 from app.ai.chat_model import ChatModel
 from app.ai.checker import (
     CheckerFeedback,
@@ -48,7 +48,9 @@ def count_student_turns(turns: list[SessionTurn]) -> int:
     return count
 
 
-def start_session(db: Session, student: User, unit_id: uuid.UUID) -> StudySession:
+def start_session(
+    db: Session, student: User, unit_id: uuid.UUID, language: SessionLanguage
+) -> StudySession:
     """Open a session with the buddy's fixed greeting, so it starts with no model wait."""
     unit = get_unit_for_student(db, student, unit_id)
     study_session = StudySession(student_id=student.id, unit_id=unit.id)
@@ -59,7 +61,7 @@ def start_session(db: Session, student: User, unit_id: uuid.UUID) -> StudySessio
             session_id=study_session.id,
             position=0,
             speaker=Speaker.BUDDY,
-            text=opening_line(unit),
+            text=opening_line(unit, language),
         )
     )
     db.commit()

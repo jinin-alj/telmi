@@ -1,7 +1,18 @@
+from typing import Literal
+
 from app.ai.attribution import MIN_SHARE_FROM_STUDENT, content_words, share_found
 from app.ai.chat_model import ChatMessage, ChatModel
 from app.ai.transcript import escape_tags, wrap_student_text
 from app.models import SessionTurn, Speaker, Unit
+
+# The languages Pip can greet in; after the greeting it follows the student
+SessionLanguage = Literal["en", "es"]
+
+# Fixed so a session starts instantly with no model call
+OPENING_LINES: dict[SessionLanguage, str] = {
+    "en": "Hi! I missed the class on {title}. Can you explain it to me from the start?",
+    "es": "¡Hola! Me perdí la clase de {title}. ¿Me la explicas desde el principio?",
+}
 
 # Warm and curious, but a little random so questions don't repeat
 BUDDY_TEMPERATURE = 0.7
@@ -133,9 +144,9 @@ def last_student_text(turns: list[SessionTurn]) -> str:
     return ""
 
 
-def opening_line(unit: Unit) -> str:
-    """The buddy's first line; fixed text so a session starts instantly with no model call."""
-    return f"Hi! I missed the class on {unit.title}. Can you explain it to me from the start?"
+def opening_line(unit: Unit, language: SessionLanguage) -> str:
+    """The buddy's first line, in the language the student chose to speak."""
+    return OPENING_LINES[language].format(title=unit.title)
 
 
 def build_buddy_messages(unit: Unit, turns: list[SessionTurn]) -> list[ChatMessage]:
