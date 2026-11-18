@@ -1,11 +1,12 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from sqlalchemy.orm import Session
 
 from app.ai.chat_model import ChatModelBusyError, ChatModelError
 from app.ai.checker import ApplicationResult, CheckerFeedback
+from app.api_errors import ApiError, api_error_for
 from app.config import Settings
 from app.dependencies import (
     AppSettings,
@@ -26,7 +27,7 @@ from app.schemas.study_sessions import (
     TurnPublic,
 )
 from app.services import study_sessions
-from app.services.errors import ConflictError, NotFoundError
+from app.services.errors import ConflictError, ErrorCode, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -74,23 +75,24 @@ def load_own_session(db: Session, student: User, session_id: uuid.UUID) -> Study
     try:
         return study_sessions.get_session_for_student(db, student, session_id)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
 
 
 # The free AI tier counts tokens per minute, so a minute's wait is usually enough
 BUSY_RETRY_SECONDS = 60
 
 
-def buddy_unavailable(error: ChatModelError, message: str) -> HTTPException:
+def buddy_unavailable(error: ChatModelError, code: ErrorCode, message: str) -> ApiError:
     """Log the model failure and give the app a retryable 503."""
     logger.error("Chat model failed: %s", error)
     if isinstance(error, ChatModelBusyError):
-        return HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Pip is busy right now. Wait a minute, then try again.",
+        return ApiError(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "pip_busy",
+            "Pip is busy right now. Wait a minute, then try again.",
             headers={"Retry-After": str(BUSY_RETRY_SECONDS)},
         )
-    return HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=message)
+    return ApiError(status.HTTP_503_SERVICE_UNAVAILABLE, code, message)
 
 
 BUDDY_DOWN_MESSAGE = "Your buddy can't answer right now. Please try again."
@@ -104,7 +106,7 @@ def start_session(
     try:
         study_session = study_sessions.start_session(db, student, request.unit_id, request.language)
     except NotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise api_error_for(status.HTTP_404_NOT_FOUND, error) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -144,10 +146,10 @@ def add_turn(
             db, chat_model, settings, study_session, request.text, request.input_mode
         )
     except ConflictError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise api_error_for(status.HTTP_409_CONFLICT, error) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
+        raise buddy_unavailable(error, "pip_down", BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -164,10 +166,10 @@ def finish_session(
     try:
         study_sessions.finish_session(db, chat_model, study_session)
     except ConflictError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise api_error_for(status.HTTP_409_CONFLICT, error) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
+        raise buddy_unavailable(error, "pip_down", BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -185,10 +187,10 @@ def answer_application_question(
     try:
         study_sessions.answer_application_question(db, chat_model, study_session, request.text)
     except ConflictError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise api_error_for(status.HTTP_409_CONFLICT, error) from error
     except ChatModelError as error:
         db.rollback()
-        raise buddy_unavailable(error, BUDDY_DOWN_MESSAGE) from error
+        raise buddy_unavailable(error, "pip_down", BUDDY_DOWN_MESSAGE) from error
     return build_session_detail(db, study_session, settings)
 
 
@@ -206,16 +208,19 @@ def read_drawing(
     try:
         text = study_sessions.read_session_drawing(db, chat_model, settings, study_session, request)
     except ConflictError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise api_error_for(status.HTTP_409_CONFLICT, error) from error
     except ChatModelError as error:
         # Only the error is logged, never the drawing or what it said
         raise buddy_unavailable(
-            error, "Pip can't read your drawing right now. Try again, or type instead."
+            error,
+            "drawing_unavailable",
+            "Pip can't read your drawing right now. Try again, or type instead.",
         ) from error
 
     if text == "":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="We couldn't find any writing. Try writing bigger, or type instead.",
+        raise ApiError(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "no_writing_found",
+            "We couldn't find any writing. Try writing bigger, or type instead.",
         )
     return DrawingText(text=text)

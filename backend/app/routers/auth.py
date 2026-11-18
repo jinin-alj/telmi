@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Request, Response, status
 
+from app.api_errors import ApiError
 from app.config import Settings
 from app.dependencies import AppSettings, CurrentUser, DbSession, unauthorized
 from app.models import User
@@ -54,8 +55,8 @@ def register(
     try:
         user = register_user(db, request)
     except UsernameTakenError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="That username is already taken"
+        raise ApiError(
+            status.HTTP_409_CONFLICT, "username_taken", "That username is already taken"
         ) from error
     return sign_in(db, user, settings)
 
@@ -71,7 +72,7 @@ def login(
     user = authenticate_user(db, request.username, request.password)
     if user is None:
         # Same message for unknown user and wrong password so usernames can't be probed
-        raise unauthorized("Wrong username or password")
+        raise unauthorized("wrong_login", "Wrong username or password")
     return sign_in(db, user, settings)
 
 
@@ -81,7 +82,7 @@ def refresh(request: RefreshRequest, db: DbSession, settings: AppSettings) -> Au
     try:
         user, new_refresh_token = rotate_refresh_token(db, request.refresh_token, settings)
     except InvalidTokenError as error:
-        raise unauthorized("Session expired, please log in again") from error
+        raise unauthorized("session_expired", "Session expired, please log in again") from error
     return build_auth_response(user, new_refresh_token, settings)
 
 

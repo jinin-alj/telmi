@@ -1,7 +1,9 @@
 import threading
 import time
 
-from fastapi import HTTPException, status
+from fastapi import status
+
+from app.api_errors import ApiError
 
 # Long enough to make guessing passwords slow, short enough not to lock out a real student
 RETRY_AFTER_SECONDS = 60
@@ -54,8 +56,9 @@ class RateLimiter:
 def check_rate_limit(limiter: RateLimiter, key: str) -> None:
     """Answer 429 once this key has used up its attempts."""
     if not limiter.allow(key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many tries. Wait a minute, then try again.",
+        raise ApiError(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "too_many_tries",
+            "Too many tries. Wait a minute, then try again.",
             headers={"Retry-After": str(RETRY_AFTER_SECONDS)},
         )

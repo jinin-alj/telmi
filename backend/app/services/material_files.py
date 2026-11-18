@@ -21,6 +21,7 @@ from pptx.shapes.group import GroupShape
 from pypdf import PdfReader
 
 from app.schemas.classrooms import MaterialText
+from app.services.errors import AppError
 
 # Slides full of pictures can be large even when their text is short
 MAX_FILE_BYTES = 20 * 1024 * 1024
@@ -50,31 +51,34 @@ NO_TEXT_MESSAGE = (
 )
 
 
-class UnsupportedFileError(Exception):
+class UnsupportedFileError(AppError):
     """The file type isn't one we can read."""
 
 
-class FileTooLargeError(Exception):
+class FileTooLargeError(AppError):
     """The upload is bigger than we accept."""
 
 
-class UnreadableFileError(Exception):
+class UnreadableFileError(AppError):
     """The file is damaged, locked, or has no text we can find."""
 
 
 def read_material_file(file_name: str, content: bytes) -> MaterialText:
     """Read the text from a PDF, Word, PowerPoint, plain text or Markdown file."""
     if len(content) > MAX_FILE_BYTES:
-        raise FileTooLargeError(f"Files can be at most {MAX_FILE_BYTES // (1024 * 1024)} MB.")
+        raise FileTooLargeError(
+            "file_too_large", f"Files can be at most {MAX_FILE_BYTES // (1024 * 1024)} MB."
+        )
 
     reader = READERS.get(PurePath(file_name).suffix.lower())
     if reader is None:
         raise UnsupportedFileError(
-            "Upload a PDF, Word (.docx), PowerPoint (.pptx), text (.txt) or Markdown (.md) file."
+            "file_unsupported",
+            "Upload a PDF, Word (.docx), PowerPoint (.pptx), text (.txt) or Markdown (.md) file.",
         )
 
     if content.startswith(OLD_OFFICE_SIGNATURE):
-        raise UnreadableFileError(LOCKED_FILE_MESSAGE)
+        raise UnreadableFileError("file_locked", LOCKED_FILE_MESSAGE)
 
     try:
         with reading_slot:
@@ -83,10 +87,10 @@ def read_material_file(file_name: str, content: bytes) -> MaterialText:
         raise
     # Each parser fails differently on a damaged file, and all of them mean the same to a teacher
     except Exception as error:
-        raise UnreadableFileError(DAMAGED_FILE_MESSAGE) from error
+        raise UnreadableFileError("file_damaged", DAMAGED_FILE_MESSAGE) from error
 
     if material.text == "":
-        raise UnreadableFileError(NO_TEXT_MESSAGE)
+        raise UnreadableFileError("file_no_text", NO_TEXT_MESSAGE)
     return material
 
 
@@ -94,7 +98,9 @@ def read_pdf(content: bytes) -> Iterator[str]:
     """Yield the text of each page; scanned pages have none."""
     reader = PdfReader(io.BytesIO(content))
     if reader.is_encrypted:
-        raise UnreadableFileError("This PDF is password-protected. Remove the password first.")
+        raise UnreadableFileError(
+            "file_locked", "This PDF is password-protected. Remove the password first."
+        )
     for page in reader.pages:
         yield page.extract_text()
 
@@ -172,7 +178,7 @@ def check_unzipped_size(content: bytes) -> None:
     with zipfile.ZipFile(io.BytesIO(content)) as archive:
         unzipped_bytes = sum(member.file_size for member in archive.infolist())
     if unzipped_bytes > MAX_UNZIPPED_BYTES:
-        raise UnreadableFileError(DAMAGED_FILE_MESSAGE)
+        raise UnreadableFileError("file_damaged", DAMAGED_FILE_MESSAGE)
 
 
 def join_pieces(pieces: Iterable[str]) -> MaterialText:
