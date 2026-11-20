@@ -9,6 +9,7 @@ from tests.fakes import FakeChatModel
 from tests.helpers import (
     KEY_IDEAS,
     MISCONCEPTION_SAID,
+    SPANISH_KEY_IDEAS,
     checker_reply,
     create_class_with_unit,
     finish_session,
@@ -25,6 +26,7 @@ def run_session(
     covered_numbers: list[int],
     first_on_unit: bool,
     misconception_idea: int | None = 2,
+    restated_ideas: list[str] | None = None,
 ) -> None:
     """Start, speak once and finish a session with a chosen verdict."""
     session = client.post("/sessions", json={"unit_id": unit_id}, headers=student).json()
@@ -32,7 +34,7 @@ def run_session(
     client.post(
         f"/sessions/{session['id']}/turns", json={"text": MISCONCEPTION_SAID}, headers=student
     )
-    verdict = checker_reply(covered_numbers, misconception_idea)
+    verdict = checker_reply(covered_numbers, misconception_idea, restated_ideas=restated_ideas)
     response = finish_session(
         client, fake_chat_model, student, session["id"], verdict, first_on_unit
     )
@@ -218,3 +220,27 @@ def test_dashboard_counts_sessions_left_unfinished(
     body = read_dashboard(client, setup)
 
     assert body["units"][0]["unfinished_sessions"] == 1
+
+
+def test_spanish_speaker_sees_spanish_gaps_and_teacher_sees_the_materials_words(
+    client: TestClient, fake_chat_model: FakeChatModel
+) -> None:
+    setup = class_with_two_students(client)
+    run_session(
+        client,
+        fake_chat_model,
+        setup["ana"],
+        setup["unit_id"],
+        [1, 2],
+        first_on_unit=True,
+        restated_ideas=SPANISH_KEY_IDEAS,
+    )
+
+    progress = client.get("/progress/me", headers=setup["ana"]).json()
+    dashboard = client.get(
+        f"/classrooms/{setup['classroom_id']}/dashboard", headers=setup["teacher"]
+    ).json()
+
+    assert progress["classrooms"][0]["units"][0]["still_missing"] == [SPANISH_KEY_IDEAS[2]]
+    ana = dashboard["students"][0]
+    assert ana["units"][0]["missing_ideas"] == [KEY_IDEAS[2]]

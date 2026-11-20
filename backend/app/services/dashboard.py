@@ -92,14 +92,19 @@ def average_percent(values: list[int]) -> int | None:
     return round(sum(values) / len(values))
 
 
-def missing_ideas(feedback: CheckerFeedback | None) -> list[str]:
-    """The ideas the student didn't explain in this session."""
+def missing_ideas(
+    feedback: CheckerFeedback | None, idea_texts: list[str] | None = None
+) -> list[str]:
+    """Ideas the student didn't explain, in idea_texts' words if given, else as they saw them."""
     if feedback is None:
         return []
     missing = []
-    for key_idea in feedback.key_ideas:
+    for position, key_idea in enumerate(feedback.key_ideas):
         if key_idea.status == IdeaStatus.MISSING:
-            missing.append(key_idea.idea)
+            if idea_texts is None:
+                missing.append(key_idea.idea)
+            else:
+                missing.append(idea_texts[position])
     return missing
 
 
@@ -204,7 +209,8 @@ def build_student_summary(
                 sessions_completed=len(sessions),
                 latest_coverage_percent=latest.coverage_percent,
                 last_completed_at=latest.completed_at,
-                missing_ideas=missing_ideas(aligned_feedback(latest, unit)),
+                # The teacher reads the material's own words, whatever language the student used
+                missing_ideas=missing_ideas(aligned_feedback(latest, unit), unit.key_ideas),
             )
         )
 

@@ -74,11 +74,19 @@ APPLICATION_REPLY = json.dumps(
 
 MISCONCEPTION_SAID = "Plants get their food from the soil"
 
+# KEY_IDEAS as the checker restates them for a student who explained in Spanish
+SPANISH_KEY_IDEAS = [
+    "La fotosíntesis ocurre en los cloroplastos",
+    "Las plantas usan dióxido de carbono, agua y luz solar para fabricar glucosa",
+    "El oxígeno se libera como subproducto",
+]
+
 
 def checker_reply(
     covered_numbers: list[int],
     misconception_idea: int | None = 2,
     student_said: str = MISCONCEPTION_SAID,
+    restated_ideas: list[str] | None = None,
 ) -> str:
     """A checker verdict covering these 1-based ideas, with one misconception."""
     idea_results = []
@@ -97,6 +105,10 @@ def checker_reply(
             ],
             "application_question": "Why does a plant kept in the dark stop growing?",
             "next_step": "Explain what happens to the oxygen made in photosynthesis.",
+            # A student who spoke the material's language gets the ideas back word for word
+            "key_ideas_in_student_language": KEY_IDEAS
+            if restated_ideas is None
+            else restated_ideas,
         }
     )
 
