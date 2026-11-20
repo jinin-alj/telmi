@@ -10,16 +10,25 @@ type TextFieldProps = TextInputProps & {
   error?: string | null;
 };
 
+// Hints and errors are read out one after the other, so each needs to end like a sentence
+const SENTENCE_END = /[.!?…]$/;
+
+/** The text as a sentence, adding a full stop only when it has no ending of its own. */
+function asSentence(text: string): string {
+  const trimmed = text.trim();
+  return SENTENCE_END.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
 /** A labelled text input that announces its hint and error to screen readers. */
 export function TextField({ label, hint, error, style, ...inputProps }: TextFieldProps) {
   const descriptionParts: string[] = [];
   if (hint) {
-    descriptionParts.push(hint);
+    descriptionParts.push(asSentence(hint));
   }
   if (error) {
-    descriptionParts.push(error);
+    descriptionParts.push(asSentence(error));
   }
-  const description = descriptionParts.join('. ');
+  const description = descriptionParts.join(' ');
 
   return (
     <View style={styles.container}>
