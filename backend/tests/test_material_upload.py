@@ -208,7 +208,9 @@ def test_refuses_a_zip_that_unpacks_to_something_huge(
     # A real, readable Word file, so only the size check can refuse it
     word_file = build_docx()
     with zipfile.ZipFile(io.BytesIO(word_file)) as archive:
-        unzipped_bytes = sum(member.file_size for member in archive.infolist())
+        unzipped_bytes = 0
+        for member in archive.infolist():
+            unzipped_bytes += member.file_size
     monkeypatch.setattr(material_files, "MAX_UNZIPPED_BYTES", unzipped_bytes - 1)
 
     response = upload(client, teacher, classroom_id, "bomb.docx", word_file)

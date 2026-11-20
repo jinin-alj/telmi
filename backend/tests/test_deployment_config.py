@@ -97,7 +97,7 @@ def test_hosted_ai_needs_a_key() -> None:
 def test_hosted_ai_gives_pip_and_the_checker_their_own_models(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("app.dependencies.get_settings", lambda: hosted_settings())
+    monkeypatch.setattr("app.dependencies.get_settings", hosted_settings)
 
     buddy = build_chat_model("openai/gpt-oss-20b", for_grading=False)
     checker = build_chat_model("openai/gpt-oss-120b", for_grading=True)

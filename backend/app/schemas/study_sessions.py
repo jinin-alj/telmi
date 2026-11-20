@@ -67,7 +67,10 @@ class DrawingRequest(BaseModel):
     @model_validator(mode="after")
     def limit_total_points(self) -> "DrawingRequest":
         """Cap the whole drawing, not just each stroke, so one request stays small."""
-        if sum(len(stroke.points) for stroke in self.strokes) > MAX_POINTS:
+        total_points = 0
+        for stroke in self.strokes:
+            total_points += len(stroke.points)
+        if total_points > MAX_POINTS:
             raise ValueError(f"A drawing can have at most {MAX_POINTS} points")
         return self
 

@@ -130,8 +130,7 @@ export function AddUnitForm({ classroomId, onAdded, onCancel }: AddUnitFormProps
         value={material}
         onChangeText={setMaterial}
         multiline
-        // Typing stops a little past the limit, but uploaded text may be longer so the teacher
-        // can choose what to cut; a lower cap here would hide part of it
+        // Uploads may run past the limit, so the cap never hides text the teacher still has to cut
         maxLength={Math.max(MATERIAL_MAX_LENGTH + 500, material.length)}
         style={styles.material}
       />

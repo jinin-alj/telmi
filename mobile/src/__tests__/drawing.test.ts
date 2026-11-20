@@ -65,6 +65,16 @@ describe('hasRoomForMore', () => {
 describe('strokePath', () => {
   it('draws a line through every point', () => {
     expect(strokePath(LINE)).toBe('M0 0 L100 0');
+    expect(
+      strokePath({
+        color: 'black',
+        points: [
+          [0, 0],
+          [10, 5],
+          [20, 0],
+        ],
+      }),
+    ).toBe('M0 0 L10 5 L20 0');
   });
 
   it('draws a tap as a dot', () => {

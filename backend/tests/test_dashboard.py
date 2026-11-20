@@ -12,6 +12,7 @@ from tests.helpers import (
     SPANISH_KEY_IDEAS,
     checker_reply,
     create_class_with_unit,
+    field_values,
     finish_session,
     run_out_of_time,
     sign_up_as,
@@ -99,7 +100,7 @@ def test_dashboard_lists_students_by_name_not_score(
 
     dashboard = read_dashboard(client, setup)
 
-    assert [student["username"] for student in dashboard["students"]] == ["ana_g", "bea_m"]
+    assert field_values(dashboard["students"], "username") == ["ana_g", "bea_m"]
 
 
 def test_dashboard_uses_each_students_latest_session(

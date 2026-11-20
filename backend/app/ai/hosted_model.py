@@ -29,7 +29,9 @@ def add_schema_instruction(
 
 def attach_images(messages: list[ChatMessage], images: list[bytes]) -> list[dict[str, Any]]:
     """Turn the last message into text plus images, in the OpenAI-compatible format."""
-    attached: list[dict[str, Any]] = [dict(message) for message in messages]
+    attached: list[dict[str, Any]] = []
+    for message in messages:
+        attached.append(dict(message))
     parts: list[dict[str, Any]] = [{"type": "text", "text": attached[-1]["content"]}]
     for image in images:
         encoded = base64.b64encode(image).decode("ascii")

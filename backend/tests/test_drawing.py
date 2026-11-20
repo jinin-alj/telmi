@@ -59,7 +59,9 @@ def test_render_draws_each_stroke_in_its_colour_on_white() -> None:
     assert image.size == (drawing.RENDER_LONGEST_SIDE, drawing.RENDER_LONGEST_SIDE // 2)
     counted = image.convert("RGB").getcolors(maxcolors=drawing.RENDER_LONGEST_SIDE**2)
     assert counted is not None
-    colours = {colour for _count, colour in counted}
+    colours = set()
+    for _count, colour in counted:
+        colours.add(colour)
     assert (255, 255, 255) in colours
     for pen_colour in ("black", "blue", "red"):
         assert drawing.PEN_COLORS[pen_colour] in colours
