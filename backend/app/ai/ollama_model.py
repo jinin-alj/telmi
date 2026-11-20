@@ -34,12 +34,15 @@ class OllamaChatModel(ChatModel):
         images: list[bytes] | None = None,
     ) -> str:
         """Send the chat to Ollama and return the reply text."""
-        sent_messages: list[dict[str, Any]] = [dict(message) for message in messages]
+        sent_messages: list[dict[str, Any]] = []
+        for message in messages:
+            sent_messages.append(dict(message))
         if images:
             # Ollama takes images as base64 strings on the message they belong to
-            sent_messages[-1]["images"] = [
-                base64.b64encode(image).decode("ascii") for image in images
-            ]
+            encoded_images = []
+            for image in images:
+                encoded_images.append(base64.b64encode(image).decode("ascii"))
+            sent_messages[-1]["images"] = encoded_images
         payload: dict[str, Any] = {
             "model": self.model_name,
             "messages": sent_messages,

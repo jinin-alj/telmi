@@ -1,8 +1,4 @@
-"""Turn a student's scratchpad drawing into text they can check before sending.
-
-The app sends pen strokes, not a picture, so every device gives the model the same clean
-image. The image only exists in memory while it's read; nothing is stored.
-"""
+"""Turn scratchpad pen strokes into a clean image, read it as text, and store nothing."""
 
 import io
 
@@ -58,7 +54,9 @@ def render_drawing(drawing: DrawingRequest) -> bytes:
     for stroke in drawing.strokes:
         color = PEN_COLORS[stroke.color]
         # Anything dragged past the edge simply falls outside the image
-        points = [(x * scale, y * scale) for x, y in stroke.points]
+        points = []
+        for x, y in stroke.points:
+            points.append((x * scale, y * scale))
         if len(points) == 1:
             # A tap leaves a dot, such as the point of an i or a decimal point
             x, y = points[0]

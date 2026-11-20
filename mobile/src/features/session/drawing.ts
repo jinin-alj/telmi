@@ -49,7 +49,11 @@ export function eraseAt(strokes: Stroke[], point: Point, radius = ERASER_RADIUS)
 
 /** Total points across the drawing, to stay within what the backend accepts. */
 export function countPoints(strokes: Stroke[]): number {
-  return strokes.reduce((total, stroke) => total + stroke.points.length, 0);
+  let total = 0;
+  for (const stroke of strokes) {
+    total += stroke.points.length;
+  }
+  return total;
 }
 
 /** Whether another stroke can be started without going over the backend's limits. */
@@ -65,7 +69,11 @@ export function strokePath(stroke: Stroke): string {
   }
   // A zero-length line with round caps draws as a dot
   const tail = rest.length === 0 ? [first] : rest;
-  return `M${first[0]} ${first[1]} ${tail.map(([x, y]) => `L${x} ${y}`).join(' ')}`;
+  let path = `M${first[0]} ${first[1]}`;
+  for (const [x, y] of tail) {
+    path += ` L${x} ${y}`;
+  }
+  return path;
 }
 
 /** Add text read from a drawing after what the student already has, on a new line. */

@@ -16,6 +16,7 @@ import { colors, cornerRadius, fonts, minimumTouchSize, spacing, textStyles } fr
 // Matches TURN_MAX_CHARACTERS in backend/app/schemas/study_sessions.py
 const MAX_CHARACTERS = 2000;
 const MICROPHONE_SIZE = 96;
+const INPUT_MODES: InputMode[] = ['talk', 'type', 'draw'];
 
 type VoiceInputProps = {
   sessionId: string;
@@ -68,9 +69,13 @@ export function VoiceInput({
   const text = editedText ?? speech.transcript;
   const hasText = text.trim() !== '';
   const typing = mode === 'type';
-  const otherModes = (['talk', 'type', 'draw'] as const).filter(
-    (option) => option !== mode && (option !== 'talk' || speech.isAvailable),
-  );
+  const otherModes: InputMode[] = [];
+  for (const option of INPUT_MODES) {
+    // Talking is only offered where the device can recognise speech
+    if (option !== mode && (option !== 'talk' || speech.isAvailable)) {
+      otherModes.push(option);
+    }
+  }
 
   function switchMode(next: InputMode) {
     if (speech.isListening) {

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.ai.chat_model import ChatModelBusyError
 from app.ai.checker import (
     CHECKER_INSTRUCTIONS,
+    CheckerFeedback,
     CheckerVerdict,
     build_feedback,
     calculate_coverage_percent,
@@ -25,6 +26,7 @@ from tests.helpers import (
     change_settings,
     checker_reply,
     enrolled_student_with_unit,
+    field_values,
     finish_session,
     run_out_of_time,
     sign_up_as,
@@ -122,8 +124,8 @@ def test_turn_saves_student_line_and_buddy_reply(
 
     assert response.status_code == 200
     turns = response.json()["turns"]
-    assert [turn["speaker"] for turn in turns] == ["buddy", "student", "buddy"]
-    assert [turn["position"] for turn in turns] == [0, 1, 2]
+    assert field_values(turns, "speaker") == ["buddy", "student", "buddy"]
+    assert field_values(turns, "position") == [0, 1, 2]
     assert turns[2]["text"] == "Ooh, but why do plants need sunlight for that?"
     assert response.json()["student_turns_left"] == get_settings().max_student_turns - 1
 
@@ -228,7 +230,7 @@ def test_finish_returns_gap_map_and_closes_session(
     body = response.json()
     assert body["status"] == "completed"
     assert body["coverage_percent"] == 67
-    assert [idea["idea"] for idea in body["feedback"]["key_ideas"]] == KEY_IDEAS
+    assert field_values(body["feedback"]["key_ideas"], "idea") == KEY_IDEAS
     assert body["feedback"]["misconceptions"][0]["idea_number"] == 2
     assert body["feedback"]["next_step"] != ""
     checker_request = fake_chat_model.requests[-1]
@@ -348,6 +350,22 @@ def test_coverage_counts_only_covered_ideas() -> None:
     assert calculate_coverage_percent(feedback) == 67
 
 
+def idea_texts(feedback: CheckerFeedback) -> list[str]:
+    """The key ideas' wording, in order."""
+    texts: list[str] = []
+    for key_idea in feedback.key_ideas:
+        texts.append(key_idea.idea)
+    return texts
+
+
+def idea_statuses(feedback: CheckerFeedback) -> list[str]:
+    """Whether each key idea was covered, in order."""
+    statuses: list[str] = []
+    for key_idea in feedback.key_ideas:
+        statuses.append(key_idea.status)
+    return statuses
+
+
 def test_student_sees_the_key_ideas_in_their_own_language() -> None:
     verdict = CheckerVerdict.model_validate_json(
         checker_reply([1], restated_ideas=SPANISH_KEY_IDEAS)
@@ -355,8 +373,8 @@ def test_student_sees_the_key_ideas_in_their_own_language() -> None:
 
     feedback = build_feedback(verdict, KEY_IDEAS)
 
-    assert [idea.idea for idea in feedback.key_ideas] == SPANISH_KEY_IDEAS
-    assert [idea.status for idea in feedback.key_ideas] == ["covered", "missing", "missing"]
+    assert idea_texts(feedback) == SPANISH_KEY_IDEAS
+    assert idea_statuses(feedback) == ["covered", "missing", "missing"]
 
 
 def test_restated_ideas_that_do_not_line_up_are_ignored() -> None:
@@ -366,7 +384,7 @@ def test_restated_ideas_that_do_not_line_up_are_ignored() -> None:
 
         feedback = build_feedback(verdict, KEY_IDEAS)
 
-        assert [idea.idea for idea in feedback.key_ideas] == KEY_IDEAS
+        assert idea_texts(feedback) == KEY_IDEAS
 
 
 def test_checker_is_asked_to_restate_the_ideas() -> None:
@@ -390,8 +408,7 @@ def test_skipped_or_invented_idea_numbers_count_as_missing() -> None:
 
     feedback = build_feedback(verdict, KEY_IDEAS)
 
-    statuses = [idea.status for idea in feedback.key_ideas]
-    assert statuses == ["covered", "missing", "missing"]
+    assert idea_statuses(feedback) == ["covered", "missing", "missing"]
     assert feedback.misconceptions[0].idea_number is None
 
 

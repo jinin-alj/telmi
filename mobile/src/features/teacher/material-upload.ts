@@ -25,7 +25,12 @@ export function appendMaterial(current: string, added: string): string {
 /** One short message about what each upload did, or null when there's nothing to say. */
 export function describeUploads(outcomes: UploadOutcome[], texts: Texts['addUnit']): string | null {
   const sentences: string[] = [];
-  const readNames = outcomes.filter((outcome) => outcome.read).map((outcome) => outcome.fileName);
+  const readNames: string[] = [];
+  for (const outcome of outcomes) {
+    if (outcome.read) {
+      readNames.push(outcome.fileName);
+    }
+  }
   if (readNames.length > 0) {
     sentences.push(texts.added(readNames.join(', ')));
   }

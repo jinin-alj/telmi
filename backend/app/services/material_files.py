@@ -1,8 +1,4 @@
-"""Turn a teacher's uploaded file into plain text for the unit material box.
-
-Nothing is stored: the text goes back to the app, the teacher checks and edits it,
-and the existing "add unit" request saves it exactly like pasted material.
-"""
+"""Turn a teacher's uploaded file into plain text for them to check; nothing is stored here."""
 
 import io
 import re
@@ -35,8 +31,7 @@ OLD_OFFICE_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 # One file is read at a time, so several teachers uploading together can't use up the memory
 reading_slot = threading.BoundedSemaphore(1)
 
-# Well above a unit's limit, so the teacher can choose what to keep from a long file,
-# but small enough that one upload can't flood the app
+# Well above a unit's limit so teachers can choose what to keep, but small enough to be safe
 MAX_EXTRACTED_CHARACTERS = 60000
 
 PIECE_SEPARATOR = "\n\n"
@@ -153,10 +148,7 @@ def read_pptx(content: bytes) -> list[str]:
 
 
 def read_txt(content: bytes) -> Iterator[str]:
-    """Yield the whole file as is; teachers on Windows often save in the older Western encoding.
-
-    Markdown is read the same way: its headings and lists are plain text the models read well.
-    """
+    """Yield the whole text or Markdown file, also in the older Western encoding Windows uses."""
     try:
         yield content.decode("utf-8-sig")
     except UnicodeDecodeError:
@@ -176,7 +168,9 @@ READERS: dict[str, Callable[[bytes], Iterable[str]]] = {
 def check_unzipped_size(content: bytes) -> None:
     """Refuse a zip that claims to unpack to far more than any real document."""
     with zipfile.ZipFile(io.BytesIO(content)) as archive:
-        unzipped_bytes = sum(member.file_size for member in archive.infolist())
+        unzipped_bytes = 0
+        for member in archive.infolist():
+            unzipped_bytes += member.file_size
     if unzipped_bytes > MAX_UNZIPPED_BYTES:
         raise UnreadableFileError("file_damaged", DAMAGED_FILE_MESSAGE)
 
@@ -200,5 +194,7 @@ def join_pieces(pieces: Iterable[str]) -> MaterialText:
 def clean_text(text: str) -> str:
     """Trim trailing spaces, collapse runs of blank lines, and drop characters Postgres refuses."""
     # Postgres text columns reject NUL, which some PDFs contain
-    lines = [line.rstrip() for line in text.replace("\x00", "").splitlines()]
+    lines = []
+    for line in text.replace("\x00", "").splitlines():
+        lines.append(line.rstrip())
     return re.sub(r"\n{3,}", PIECE_SEPARATOR, "\n".join(lines)).strip()

@@ -1,5 +1,6 @@
 import json
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import httpx
 from fastapi import FastAPI
@@ -80,6 +81,14 @@ SPANISH_KEY_IDEAS = [
     "Las plantas usan dióxido de carbono, agua y luz solar para fabricar glucosa",
     "El oxígeno se libera como subproducto",
 ]
+
+
+def field_values(items: list[dict[str, Any]], field: str) -> list[Any]:
+    """One field from each item of a JSON list, in order."""
+    values = []
+    for item in items:
+        values.append(item[field])
+    return values
 
 
 def checker_reply(

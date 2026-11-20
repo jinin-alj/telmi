@@ -12,7 +12,14 @@ type TextFieldProps = TextInputProps & {
 
 /** A labelled text input that announces its hint and error to screen readers. */
 export function TextField({ label, hint, error, style, ...inputProps }: TextFieldProps) {
-  const description = [hint, error].filter(Boolean).join('. ');
+  const descriptionParts: string[] = [];
+  if (hint) {
+    descriptionParts.push(hint);
+  }
+  if (error) {
+    descriptionParts.push(error);
+  }
+  const description = descriptionParts.join('. ');
 
   return (
     <View style={styles.container}>

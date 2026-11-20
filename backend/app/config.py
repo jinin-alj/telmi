@@ -50,13 +50,11 @@ class Settings(BaseSettings):
     # A fast model keeps Pip's replies quick; grading uses a stronger one
     ai_buddy_model: str = "openai/gpt-oss-20b"
     ai_checker_model: str = "openai/gpt-oss-120b"
-    # Reads students' scratchpad drawings into text; must accept images. Swap it freely: the
-    # prompt lives in app/ai/drawing.py, not in the provider (see "Scratchpad" in the README)
+    # Reads scratchpad drawings, so it must accept images; the prompt lives in app/ai/drawing.py
     ai_vision_model: str = "qwen/qwen3.8-27b"
     # Groq's gpt-oss models accept a JSON schema; set false for models that only do plain JSON
     ai_checker_json_schema: bool = True
-    # Both gpt-oss models reason before answering; low effort keeps that short and saves the
-    # free daily token budget. Set it empty for models that do not reason.
+    # Low reasoning effort saves the free daily tokens; leave it empty for models that don't reason
     ai_reasoning_effort: str | None = "low"
     # Free tiers count this cap against tokens per minute, so keep it modest
     ai_checker_max_tokens: int = Field(default=2048, gt=0)
