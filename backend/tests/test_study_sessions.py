@@ -6,7 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.ai.chat_model import ChatModelBusyError
-from app.ai.checker import CheckerVerdict, build_feedback, calculate_coverage_percent
+from app.ai.checker import (
+    CHECKER_INSTRUCTIONS,
+    CheckerVerdict,
+    build_feedback,
+    calculate_coverage_percent,
+)
 from app.ai.transcript import wrap_student_text
 from app.config import get_settings
 from app.models import SessionStatus, SessionTurn, Speaker, StudySession
@@ -16,6 +21,7 @@ from tests.helpers import (
     KEY_IDEAS,
     KEY_IDEAS_REPLY,
     MATERIAL,
+    SPANISH_KEY_IDEAS,
     change_settings,
     checker_reply,
     enrolled_student_with_unit,
@@ -342,6 +348,32 @@ def test_coverage_counts_only_covered_ideas() -> None:
     assert calculate_coverage_percent(feedback) == 67
 
 
+def test_student_sees_the_key_ideas_in_their_own_language() -> None:
+    verdict = CheckerVerdict.model_validate_json(
+        checker_reply([1], restated_ideas=SPANISH_KEY_IDEAS)
+    )
+
+    feedback = build_feedback(verdict, KEY_IDEAS)
+
+    assert [idea.idea for idea in feedback.key_ideas] == SPANISH_KEY_IDEAS
+    assert [idea.status for idea in feedback.key_ideas] == ["covered", "missing", "missing"]
+
+
+def test_restated_ideas_that_do_not_line_up_are_ignored() -> None:
+    # One idea short or one left blank: the material's wording is safer than a guess
+    for restated in [SPANISH_KEY_IDEAS[:2], [SPANISH_KEY_IDEAS[0], " ", SPANISH_KEY_IDEAS[2]]]:
+        verdict = CheckerVerdict.model_validate_json(checker_reply([1], restated_ideas=restated))
+
+        feedback = build_feedback(verdict, KEY_IDEAS)
+
+        assert [idea.idea for idea in feedback.key_ideas] == KEY_IDEAS
+
+
+def test_checker_is_asked_to_restate_the_ideas() -> None:
+    assert "key_ideas_in_student_language" in CheckerVerdict.model_json_schema()["required"]
+    assert "Restate every numbered key idea" in CHECKER_INSTRUCTIONS
+
+
 def test_skipped_or_invented_idea_numbers_count_as_missing() -> None:
     verdict = CheckerVerdict.model_validate(
         {
@@ -352,6 +384,7 @@ def test_skipped_or_invented_idea_numbers_count_as_missing() -> None:
             "misconceptions": [{"student_said": "Wrong", "correction": "Right", "idea_number": 7}],
             "application_question": "Question?",
             "next_step": "Next.",
+            "key_ideas_in_student_language": KEY_IDEAS,
         }
     )
 
